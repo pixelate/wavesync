@@ -12,23 +12,20 @@ module Wavesync
       @audio_files = find_audio_files
     end
   
-    def scan
-      @audio_files.each_with_index do |file, index|
-        print "\rScanning: #{index + 1}/#{@audio_files.count}"
-        scan_file(file)
-      end
-  
-      puts
-    end
-  
-    def sync(target_library_path)
+    def sync(target_library_path, device)
       skipped_count = 0
+      conversion_count = 0
   
       @audio_files.each_with_index do |file, index|
-        copied = copy_file(file, target_library_path)
+        requires_conversion = requires_conversion?(file, device)
+
+        unless requires_conversion
+          copied = copy_file(file, target_library_path)
+        end
   
         skipped_count = skipped_count + 1 unless copied
-        print "\rCopying:  #{index + 1}/#{@audio_files.count} (#{skipped_count} skipped)"
+        conversion_count = conversion_count + 1 if requires_conversion
+        print "\rSyncing:  #{index + 1}/#{@audio_files.count} (#{skipped_count} skipped/#{conversion_count} require conversion)"
       end
   
       puts
@@ -39,18 +36,6 @@ module Wavesync
     def find_audio_files
       Dir.glob(File.join(@source_library_path, '**', '*'))
         .select { |f| SUPPORTED_FORMATS.include?(File.extname(f).downcase) }
-    end
-  
-    def scan_file(file_path)
-      tag = WahWah.open(file_path)
-  
-#      puts tag.sample_rate
-  
-      @catalog << {
-        file_path: file_path,
-        sample_rate: tag.sample_rate,
-        format: File.extname(file_path)[1..-1].upcase
-      }
     end
   
     def copy_file(source_file_path, target_library_path)
@@ -64,6 +49,17 @@ module Wavesync
         FileUtils.install(source_file_path, target_path) unless target_path.exist?
         true
       end
+    end
+
+    def requires_conversion?(source_file_path, device)
+      tag = WahWah.open(source_file_path)
+
+      file_extension = File.extname(source_file_path).downcase[1..]
+
+      return true unless device.file_types.include?(file_extension)
+      return true unless device.sample_rates.include?(tag.sample_rate)
+
+      false
     end
   end
 end
