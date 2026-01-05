@@ -44,6 +44,8 @@ module Wavesync
     def scan_file(file_path)
       tag = WahWah.open(file_path)
   
+#      puts tag.sample_rate
+  
       @catalog << {
         file_path: file_path,
         sample_rate: tag.sample_rate,
@@ -65,7 +67,3 @@ module Wavesync
     end
   end
 end
-
-scanner = Wavesync::Scanner.new("~/Music/Library")
-scanner.scan
-scanner.sync("~/tmp")
