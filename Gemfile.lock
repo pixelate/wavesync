@@ -1,0 +1,17 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    wahwah (1.6.7)
+
+PLATFORMS
+  ruby
+  x86_64-darwin-24
+
+DEPENDENCIES
+  wahwah (~> 1.6)
+
+CHECKSUMS
+  wahwah (1.6.7) sha256=3272c847c19ac7d047ba2521734429bc99f03dff604c58a57b7e687d8dc2011d
+
+BUNDLED WITH
+  4.0.3
