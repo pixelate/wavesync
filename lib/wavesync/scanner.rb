@@ -10,7 +10,6 @@ module Wavesync
 
     def initialize(source_library_path)
       @source_library_path = File.expand_path(source_library_path)
-      @catalog = []
       @audio_files = find_audio_files
 
       FFMPEG.logger = Logger.new(File::NULL)
