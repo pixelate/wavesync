@@ -1,6 +1,9 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    multi_json (1.19.1)
+    streamio-ffmpeg (3.0.2)
+      multi_json (~> 1.8)
     wahwah (1.6.7)
 
 PLATFORMS
@@ -8,9 +11,12 @@ PLATFORMS
   x86_64-darwin-24
 
 DEPENDENCIES
+  streamio-ffmpeg (~> 3.0)
   wahwah (~> 1.6)
 
 CHECKSUMS
+  multi_json (1.19.1) sha256=7aefeff8f2c854bf739931a238e4aea64592845e0c0395c8a7d2eea7fdd631b7
+  streamio-ffmpeg (3.0.2) sha256=9f2434d4bf010b8b8d4da47c876ff35f4b775690123f3301e43b9c01d88fddda
   wahwah (1.6.7) sha256=3272c847c19ac7d047ba2521734429bc99f03dff604c58a57b7e687d8dc2011d
 
 BUNDLED WITH
