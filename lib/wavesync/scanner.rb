@@ -1,6 +1,7 @@
 require 'wahwah'
 require 'fileutils'
 require 'pathname'
+require 'streamio-ffmpeg'
 
 module Wavesync
   class Scanner
@@ -10,6 +11,8 @@ module Wavesync
       @source_library_path = File.expand_path(source_library_path)
       @catalog = []
       @audio_files = find_audio_files
+      
+      FFMPEG.logger = Logger.new(File::NULL)
     end
   
     def sync(target_library_path, device)
@@ -17,15 +20,19 @@ module Wavesync
       conversion_count = 0
   
       @audio_files.each_with_index do |file, index|
-        requires_conversion = requires_conversion?(file, device)
+        file_type = target_file_type(file, device)
+        sample_rate = target_sample_rate(file, device)
 
-        unless requires_conversion
+        if file_type || sample_rate
+          requires_conversion = true
+          converted = convert_file(file, target_library_path, file_type, sample_rate)
+        else
           copied = copy_file(file, target_library_path)
         end
   
-        skipped_count = skipped_count + 1 unless copied
-        conversion_count = conversion_count + 1 if requires_conversion
-        print "\rSyncing:  #{index + 1}/#{@audio_files.count} (#{skipped_count} skipped/#{conversion_count} require conversion)"
+        skipped_count = skipped_count + 1 if !copied && !converted
+        conversion_count = conversion_count + 1 if converted
+        print "\rSyncing:  #{index + 1}/#{@audio_files.count} (#{skipped_count} skipped/#{conversion_count} converted)"
       end
   
       puts
@@ -51,14 +58,41 @@ module Wavesync
       end
     end
 
-    def requires_conversion?(source_file_path, device)
-      tag = WahWah.open(source_file_path)
-
+    def target_file_type(source_file_path, device)
       file_extension = File.extname(source_file_path).downcase[1..]
 
-      return true unless device.file_types.include?(file_extension)
-      return true unless device.sample_rates.include?(tag.sample_rate)
+      return nil if device.file_types.include?(file_extension)
 
+      device.file_types.first
+    end
+
+    def target_sample_rate(source_file_path, device)
+      tag = WahWah.open(source_file_path)
+
+      return nil if device.sample_rates.include?(tag.sample_rate)
+
+      device.sample_rates.min_by { |n| [ (n - tag.sample_rate).abs, -n ] }
+    end
+
+    def convert_file(source_file_path, target_library_path, target_file_type, target_sample_rate)
+      audio = FFMPEG::Movie.new(source_file_path)
+
+      if target_file_type || target_sample_rate
+        relative_source_path_name = Pathname(source_file_path).relative_path_from(@source_library_path)
+        target_libary_path_name = Pathname(File.expand_path(target_library_path))
+        target_path = target_libary_path_name.join(relative_source_path_name)
+
+        target_path = target_path.sub_ext("." + target_file_type) if target_file_type
+
+        unless target_path.exist?
+          options = {audio_sample_rate: target_sample_rate, custom: %w(-loglevel warning -nostats -hide_banner)}
+          target_path.dirname.mkpath
+          audio.transcode(target_path.to_s, options)
+          
+          return true
+        end
+      end
+      
       false
     end
   end
