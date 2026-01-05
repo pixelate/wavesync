@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Wavesync
   class Device
     attr_reader :name, :sample_rates, :file_types
@@ -15,19 +17,19 @@ module Wavesync
     end
 
     TP7 = new(
-      name: "TP-7",
-      sample_rates: [44100, 48000, 88200, 96000],
+      name: 'TP-7',
+      sample_rates: [44_100, 48_000, 88_200, 96_000],
       file_types: %w[wav mp3]
     )
 
     OCTATRACK = new(
-      name: "Octatrack",
-      sample_rates: [44100],
+      name: 'Octatrack',
+      sample_rates: [44_100],
       file_types: %w[wav aiff aif]
     )
 
     ALL = [
       TP7, OCTATRACK
-    ]
+    ].freeze
   end
 end

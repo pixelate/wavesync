@@ -1,55 +1,55 @@
+# frozen_string_literal: true
+
 require 'wahwah'
 require 'fileutils'
-require 'pathname'
 require 'streamio-ffmpeg'
 
 module Wavesync
   class Scanner
     SUPPORTED_FORMATS = %w[.mp3 .wav].freeze
-  
+
     def initialize(source_library_path)
       @source_library_path = File.expand_path(source_library_path)
       @catalog = []
       @audio_files = find_audio_files
-      
+
       FFMPEG.logger = Logger.new(File::NULL)
     end
-  
+
     def sync(target_library_path, device)
       skipped_count = 0
       conversion_count = 0
-  
+
       @audio_files.each_with_index do |file, index|
         file_type = target_file_type(file, device)
         sample_rate = target_sample_rate(file, device)
 
         if file_type || sample_rate
-          requires_conversion = true
           converted = convert_file(file, target_library_path, file_type, sample_rate)
         else
           copied = copy_file(file, target_library_path)
         end
-  
-        skipped_count = skipped_count + 1 if !copied && !converted
-        conversion_count = conversion_count + 1 if converted
+
+        skipped_count += 1 if !copied && !converted
+        conversion_count += 1 if converted
         print "\rSyncing:  #{index + 1}/#{@audio_files.count} (#{skipped_count} skipped/#{conversion_count} converted)"
       end
-  
+
       puts
     end
-  
+
     private
-  
+
     def find_audio_files
       Dir.glob(File.join(@source_library_path, '**', '*'))
-        .select { |f| SUPPORTED_FORMATS.include?(File.extname(f).downcase) }
+         .select { |f| SUPPORTED_FORMATS.include?(File.extname(f).downcase) }
     end
-  
+
     def copy_file(source_file_path, target_library_path)
       relative_source_path_name = Pathname(source_file_path).relative_path_from(@source_library_path)
       target_libary_path_name = Pathname(File.expand_path(target_library_path))
       target_path = target_libary_path_name.join(relative_source_path_name)
-  
+
       if target_path.exist?
         false
       else
@@ -71,7 +71,7 @@ module Wavesync
 
       return nil if device.sample_rates.include?(tag.sample_rate)
 
-      device.sample_rates.min_by { |n| [ (n - tag.sample_rate).abs, -n ] }
+      device.sample_rates.min_by { |n| [(n - tag.sample_rate).abs, -n] }
     end
 
     def convert_file(source_file_path, target_library_path, target_file_type, target_sample_rate)
@@ -82,17 +82,17 @@ module Wavesync
         target_libary_path_name = Pathname(File.expand_path(target_library_path))
         target_path = target_libary_path_name.join(relative_source_path_name)
 
-        target_path = target_path.sub_ext("." + target_file_type) if target_file_type
+        target_path = target_path.sub_ext(".#{target_file_type}") if target_file_type
 
         unless target_path.exist?
-          options = {audio_sample_rate: target_sample_rate, custom: %w(-loglevel warning -nostats -hide_banner)}
+          options = { audio_sample_rate: target_sample_rate, custom: %w[-loglevel warning -nostats -hide_banner] }
           target_path.dirname.mkpath
           audio.transcode(target_path.to_s, options)
-          
+
           return true
         end
       end
-      
+
       false
     end
   end
