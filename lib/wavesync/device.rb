@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'yaml'
+
 module Wavesync
   class Device
     attr_reader :name, :sample_rates, :file_types
@@ -10,26 +12,36 @@ module Wavesync
       @file_types = file_types
     end
 
-    def self.find_by(name:)
-      ALL.find do |device|
-        name == device.name
-      end
+    class << self
+      attr_writer :config_path
     end
 
-    TP7 = new(
-      name: 'TP-7',
-      sample_rates: [44_100, 48_000, 88_200, 96_000],
-      file_types: %w[wav mp3]
-    )
+    def self.config_path
+      @config_path ||= File.expand_path('../../config/devices.yml', __dir__)
+    end
 
-    OCTATRACK = new(
-      name: 'Octatrack',
-      sample_rates: [44_100],
-      file_types: %w[wav aiff aif]
-    )
+    def self.configure(path:)
+      self.config_path = path
+      @all = nil
+    end
 
-    ALL = [
-      TP7, OCTATRACK
-    ].freeze
+    def self.all
+      @all ||= load_from_yaml
+    end
+
+    def self.find_by(name:)
+      all.find { |device| device.name == name }
+    end
+
+    def self.load_from_yaml
+      data = YAML.load_file(config_path)
+      data.fetch('devices').map do |attrs|
+        new(
+          name: attrs['name'],
+          sample_rates: attrs['sample_rates'],
+          file_types: attrs['file_types']
+        )
+      end
+    end
   end
 end

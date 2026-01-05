@@ -1,0 +1,18 @@
+devices:
+- name: TP-7
+  sample_rates:
+    - 44100
+    - 48000
+    - 88200
+    - 96000
+  file_types:
+    - wav
+    - mp3
+
+- name: Octatrack
+  sample_rates:
+    - 44100
+  file_types:
+    - wav
+    - aiff
+    - aif

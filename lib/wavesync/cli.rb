@@ -20,9 +20,15 @@ module Wavesync
         opts.on('-d', '--device DEVICE_MODEL', 'Target device model (Octatrack or TP-7)') do |v|
           options[:device] = v
         end
+
+        opts.on('-c', '--config PATH', 'Path to device config YAML file') do |v|
+          options[:config] = v
+        end
       end
 
       parser.parse!
+
+      Wavesync::Device.configure(path: options[:config]) if options[:config]
 
       unless options[:source] && options[:target] && options[:device]
         puts parser
