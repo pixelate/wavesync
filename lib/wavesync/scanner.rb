@@ -3,6 +3,8 @@
 require 'wahwah'
 require 'fileutils'
 require 'streamio-ffmpeg'
+require 'securerandom'
+require 'tmpdir'
 
 module Wavesync
   class Scanner
@@ -78,17 +80,31 @@ module Wavesync
 
       if target_file_type || target_sample_rate
         relative_source_path_name = Pathname(source_file_path).relative_path_from(@source_library_path)
-        target_libary_path_name = Pathname(File.expand_path(target_library_path))
-        target_path = target_libary_path_name.join(relative_source_path_name)
+        target_library_path_name = Pathname(File.expand_path(target_library_path))
+        target_path = target_library_path_name.join(relative_source_path_name)
 
         target_path = target_path.sub_ext(".#{target_file_type}") if target_file_type
 
         unless target_path.exist?
           options = { audio_sample_rate: target_sample_rate, custom: %w[-loglevel warning -nostats -hide_banner] }
           target_path.dirname.mkpath
-          audio.transcode(target_path.to_s, options)
 
-          return true
+          ext = target_file_type || File.extname(source_file_path).delete_prefix('.')
+
+          temp_path = File.join(
+            Dir.tmpdir,
+            "wavesync_transcode_#{SecureRandom.hex}.#{ext}"
+          )
+
+          begin
+            audio.transcode(temp_path, options)
+
+            FileUtils.cp(temp_path, target_path.to_s)
+
+            return true
+          ensure
+            FileUtils.rm_f(temp_path)
+          end
         end
       end
 
