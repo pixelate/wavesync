@@ -54,9 +54,14 @@ module Wavesync
       if target_path.exist?
         false
       else
-        FileUtils.install(source_file_path, target_path) unless target_path.exist?
+        safe_copy(source_file_path, target_path)
         true
       end
+    end
+
+    def safe_copy(source, target)
+      FileUtils.install(source, target)
+    rescue Errno::ENOENT
     end
 
     def target_file_type(source_file_path, device)
@@ -99,7 +104,7 @@ module Wavesync
           begin
             audio.transcode(temp_path, options)
 
-            FileUtils.cp(temp_path, target_path.to_s)
+            safe_copy(temp_path, target_path.to_s)
 
             return true
           ensure
