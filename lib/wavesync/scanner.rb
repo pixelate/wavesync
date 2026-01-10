@@ -22,14 +22,17 @@ module Wavesync
       skipped_count = 0
       conversion_count = 0
 
+      @ui.sync_progress(0, @audio_files.size, skipped_count, conversion_count)
+
       @audio_files.each_with_index do |file, index|
         file_type = target_file_type(file, device)
-        sample_rate = target_sample_rate(file, device)
+        source_sample_rate = source_sample_rate(file)
+        target_sample_rate = target_sample_rate(source_sample_rate, device)
 
         @ui.file_progress(file)
 
-        if file_type || sample_rate
-          converted = convert_file(file, target_library_path, file_type, sample_rate)
+        if file_type || target_sample_rate
+          converted = convert_file(file, target_library_path, file_type, source_sample_rate, target_sample_rate)
         else
           copied = copy_file(file, target_library_path)
         end
@@ -76,15 +79,18 @@ module Wavesync
       device.file_types.first
     end
 
-    def target_sample_rate(source_file_path, device)
+    def source_sample_rate(source_file_path)
       tag = WahWah.open(source_file_path)
+      tag.sample_rate
+    end
+    
+    def target_sample_rate(source_sample_rate, device)
+      return nil if device.sample_rates.include?(source_sample_rate)
 
-      return nil if device.sample_rates.include?(tag.sample_rate)
-
-      device.sample_rates.min_by { |n| [(n - tag.sample_rate).abs, -n] }
+      device.sample_rates.min_by { |n| [(n - source_sample_rate).abs, -n] }
     end
 
-    def convert_file(source_file_path, target_library_path, target_file_type, target_sample_rate)
+    def convert_file(source_file_path, target_library_path, target_file_type, source_sample_rate, target_sample_rate)
       audio = FFMPEG::Movie.new(source_file_path)
 
       if target_file_type || target_sample_rate
@@ -98,7 +104,10 @@ module Wavesync
           options = { audio_sample_rate: target_sample_rate, custom: %w[-loglevel warning -nostats -hide_banner] }
           target_path.dirname.mkpath
 
-          ext = target_file_type || File.extname(source_file_path).delete_prefix('.')
+          source_file_type = File.extname(source_file_path).delete_prefix('.')
+          ext = target_file_type || source_file_type
+
+          @ui.conversion_progress(source_sample_rate, target_sample_rate, source_file_type, target_file_type)
 
           temp_path = File.join(
             Dir.tmpdir,

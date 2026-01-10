@@ -42,6 +42,7 @@ PLATFORMS
   x86_64-darwin-24
 
 DEPENDENCIES
+  rainbow (~> 3.1)
   rubocop (~> 1.82)
   streamio-ffmpeg (~> 3.0)
   tty-cursor (~> 0.7.1)
