@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'wahwah'
 require 'fileutils'
 require 'streamio-ffmpeg'
 require 'securerandom'
@@ -22,24 +21,31 @@ module Wavesync
       skipped_count = 0
       conversion_count = 0
 
-      @ui.sync_progress(0, @audio_files.size, skipped_count, conversion_count)
+      @ui.sync_progress(0, @audio_files.size, device)
 
       @audio_files.each_with_index do |file, index|
+        audio = FFMPEG::Movie.new(file)
         file_type = target_file_type(file, device)
-        source_sample_rate = source_sample_rate(file)
+        source_sample_rate = source_sample_rate(audio)
         target_sample_rate = target_sample_rate(source_sample_rate, device)
 
         @ui.file_progress(file)
 
         if file_type || target_sample_rate
-          converted = convert_file(file, target_library_path, file_type, source_sample_rate, target_sample_rate)
+          converted = convert_file(audio, file, target_library_path, file_type, source_sample_rate, target_sample_rate)
         else
           copied = copy_file(file, target_library_path)
+          source_file_type = File.extname(file).delete_prefix('.')
+          @ui.copy(source_sample_rate, source_file_type)
         end
 
-        skipped_count += 1 if !copied && !converted
+        if !copied && !converted
+          skipped_count += 1
+          @ui.skip
+        end
+
         conversion_count += 1 if converted
-        @ui.sync_progress(index, @audio_files.size, skipped_count, conversion_count)
+        @ui.sync_progress(index, @audio_files.size, device)
       end
 
       puts
@@ -79,20 +85,18 @@ module Wavesync
       device.file_types.first
     end
 
-    def source_sample_rate(source_file_path)
-      tag = WahWah.open(source_file_path)
-      tag.sample_rate
+    def source_sample_rate(audio)
+      audio.audio_sample_rate
     end
-    
+
     def target_sample_rate(source_sample_rate, device)
       return nil if device.sample_rates.include?(source_sample_rate)
 
       device.sample_rates.min_by { |n| [(n - source_sample_rate).abs, -n] }
     end
 
-    def convert_file(source_file_path, target_library_path, target_file_type, source_sample_rate, target_sample_rate)
-      audio = FFMPEG::Movie.new(source_file_path)
-
+    def convert_file(audio, source_file_path, target_library_path, target_file_type, source_sample_rate,
+                     target_sample_rate)
       if target_file_type || target_sample_rate
         relative_source_path_name = Pathname(source_file_path).relative_path_from(@source_library_path)
         target_library_path_name = Pathname(File.expand_path(target_library_path))
