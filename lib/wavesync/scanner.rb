@@ -26,11 +26,7 @@ module Wavesync
         file_type = target_file_type(file, device)
         sample_rate = target_sample_rate(file, device)
 
-        path = Pathname.new(file)
-        file_stem = path.basename(path.extname).to_s
-        parent_name = path.parent.basename.to_s
-        @ui.sticky(parent_name, 1)
-        @ui.sticky(file_stem, 2)
+        @ui.file_progress(file)
 
         if file_type || sample_rate
           converted = convert_file(file, target_library_path, file_type, sample_rate)
@@ -40,9 +36,7 @@ module Wavesync
 
         skipped_count += 1 if !copied && !converted
         conversion_count += 1 if converted
-        @ui.sticky(
-          "Syncing:  #{index + 1}/#{@audio_files.count} (#{skipped_count} skipped/#{conversion_count} converted)", 0
-        )
+        @ui.sync_progress(index, @audio_files.size, skipped_count, conversion_count)
       end
 
       puts
