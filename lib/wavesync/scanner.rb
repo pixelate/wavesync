@@ -13,6 +13,7 @@ module Wavesync
     def initialize(source_library_path)
       @source_library_path = File.expand_path(source_library_path)
       @audio_files = find_audio_files
+      @ui = Wavesync::UI.new
 
       FFMPEG.logger = Logger.new(File::NULL)
     end
@@ -25,6 +26,12 @@ module Wavesync
         file_type = target_file_type(file, device)
         sample_rate = target_sample_rate(file, device)
 
+        path = Pathname.new(file)
+        file_stem = path.basename(path.extname).to_s
+        parent_name = path.parent.basename.to_s
+        @ui.sticky(parent_name, 1)
+        @ui.sticky(file_stem, 2)
+
         if file_type || sample_rate
           converted = convert_file(file, target_library_path, file_type, sample_rate)
         else
@@ -33,7 +40,9 @@ module Wavesync
 
         skipped_count += 1 if !copied && !converted
         conversion_count += 1 if converted
-        print "\rSyncing:  #{index + 1}/#{@audio_files.count} (#{skipped_count} skipped/#{conversion_count} converted)"
+        @ui.sticky(
+          "Syncing:  #{index + 1}/#{@audio_files.count} (#{skipped_count} skipped/#{conversion_count} converted)", 0
+        )
       end
 
       puts
@@ -62,6 +71,7 @@ module Wavesync
     def safe_copy(source, target)
       FileUtils.install(source, target)
     rescue Errno::ENOENT
+      puts 'Errno::ENOENT'
     end
 
     def target_file_type(source_file_path, device)

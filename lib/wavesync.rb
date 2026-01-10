@@ -4,5 +4,6 @@ module Wavesync
 end
 
 require 'wavesync/device'
+require 'wavesync/ui'
 require 'wavesync/scanner'
 require 'wavesync/cli'
