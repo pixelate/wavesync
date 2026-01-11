@@ -7,7 +7,7 @@ require 'tmpdir'
 
 module Wavesync
   class Scanner
-    SUPPORTED_FORMATS = %w[.m4a .mp3 .wav].freeze
+    SUPPORTED_FORMATS = %w[.m4a .mp3 .wav .aif .aiff].freeze
 
     def initialize(source_library_path)
       @source_library_path = File.expand_path(source_library_path)
