@@ -27,6 +27,7 @@ module Wavesync
         audio = FFMPEG::Movie.new(file)
         file_type = target_file_type(file, device)
         source_sample_rate = source_sample_rate(audio)
+        source_bit_depth = source_bit_depth(audio)
         target_sample_rate = target_sample_rate(source_sample_rate, device)
 
         @ui.file_progress(file)
@@ -36,7 +37,7 @@ module Wavesync
         else
           copied = copy_file(file, target_library_path)
           source_file_type = File.extname(file).delete_prefix('.')
-          @ui.copy(source_sample_rate, source_file_type)
+          @ui.copy(source_sample_rate, source_bit_depth, source_file_type)
         end
 
         if !copied && !converted
@@ -93,6 +94,20 @@ module Wavesync
       return nil if device.sample_rates.include?(source_sample_rate)
 
       device.sample_rates.min_by { |n| [(n - source_sample_rate).abs, -n] }
+    end
+
+    def source_bit_depth(audio)
+      data = audio.metadata
+      return nil unless data && data[:streams]
+
+      audio_stream = data[:streams].find { |s| s[:codec_type] == 'audio' }
+      return nil unless audio_stream
+
+      bits_per_sample = audio_stream[:bits_per_sample]
+
+      return bits_per_sample if bits_per_sample&.positive?
+
+      nil
     end
 
     def convert_file(audio, source_file_path, target_library_path, target_file_type, source_sample_rate,

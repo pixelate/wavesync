@@ -41,13 +41,18 @@ module Wavesync
       target_file_type = source_file_type if target_file_type.nil?
 
       formatted_line = in_color(
-        "Converting #{source_file_type} (#{source_sample_rate}) ⇢ #{target_file_type} (#{target_sample_rate})", :highlight
+        "Converting #{source_file_type} (#{sample_rate_to_khz(source_sample_rate)}) ⇢ #{target_file_type} (#{sample_rate_to_khz(target_sample_rate)})", :highlight
       )
       sticky(formatted_line, 3)
     end
 
-    def copy(source_sample_rate, source_file_type)
-      sticky(in_color("Copying #{source_file_type} (#{source_sample_rate})", :highlight), 3)
+    def copy(source_sample_rate, source_bit_depth, source_file_type)
+      info_chunks = [
+        sample_rate_to_khz(source_sample_rate),
+        source_bit_depth
+      ].compact
+      
+      sticky(in_color("Copying #{source_file_type} (#{info_chunks.join("/")})", :highlight), 3)
     end
 
     def skip
@@ -69,6 +74,11 @@ module Wavesync
       print @cursor.clear_screen
       print @cursor.move_to(0, 0)
       puts @sticky_lines.join("\n")
+    end
+
+    def sample_rate_to_khz(rate)
+      khz = rate.to_f / 1000
+      (khz % 1).zero? ? khz.to_i.to_s : khz.round(1).to_s
     end
   end
 end
