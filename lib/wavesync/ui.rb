@@ -36,23 +36,23 @@ module Wavesync
       sticky(parts.join(' '), 0)
     end
 
-    def conversion_progress(source_sample_rate, target_sample_rate, source_file_type, target_file_type)
+    def conversion_progress(source_sample_rate, target_sample_rate, source_bit_depth, source_file_type,
+                            target_file_type)
       target_sample_rate = source_sample_rate if target_sample_rate.nil?
       target_file_type = source_file_type if target_file_type.nil?
 
+      source_info = audio_info(source_sample_rate, source_bit_depth)
+
       formatted_line = in_color(
-        "Converting #{source_file_type} (#{sample_rate_to_khz(source_sample_rate)}) ⇢ #{target_file_type} (#{sample_rate_to_khz(target_sample_rate)})", :highlight
+        "Converting #{source_file_type} (#{source_info}) ⇢ #{target_file_type} (#{sample_rate_to_khz(target_sample_rate)})", :highlight
       )
       sticky(formatted_line, 3)
     end
 
     def copy(source_sample_rate, source_bit_depth, source_file_type)
-      info_chunks = [
-        sample_rate_to_khz(source_sample_rate),
-        source_bit_depth
-      ].compact
-      
-      sticky(in_color("Copying #{source_file_type} (#{info_chunks.join("/")})", :highlight), 3)
+      info = audio_info(source_sample_rate, source_bit_depth)
+
+      sticky(in_color("Copying #{source_file_type} (#{info})", :highlight), 3)
     end
 
     def skip
@@ -60,6 +60,13 @@ module Wavesync
     end
 
     private
+
+    def audio_info(sample_rate, bit_depth)
+      [
+        sample_rate_to_khz(sample_rate),
+        bit_depth
+      ].compact.join('/')
+    end
 
     def in_color(string, key)
       Rainbow(string).color(THEME[key])
