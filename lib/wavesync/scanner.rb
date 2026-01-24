@@ -2,8 +2,6 @@
 
 require 'fileutils'
 require 'streamio-ffmpeg'
-require 'securerandom'
-require 'tmpdir'
 
 module Wavesync
   class Scanner
@@ -24,17 +22,17 @@ module Wavesync
       @ui.sync_progress(0, @audio_files.size, device)
 
       @audio_files.each_with_index do |file, index|
-        audio = FFMPEG::Movie.new(file)
+        audio = Audio.new(file)
         file_type = target_file_type(file, device)
-        source_sample_rate = source_sample_rate(audio)
-        source_bit_depth = source_bit_depth(audio)
+        source_sample_rate = audio.sample_rate
+        source_bit_depth = audio.bit_depth
         target_sample_rate = target_sample_rate(source_sample_rate, device)
 
         @ui.file_progress(file)
 
         if file_type || target_sample_rate
-          converted = convert_file(audio, file, target_library_path, file_type, source_sample_rate, target_sample_rate,
-                                   source_bit_depth)
+          converted = convert_file(audio, file, target_library_path, file_type, source_sample_rate,
+                                   target_sample_rate, source_bit_depth)
         else
           copied = copy_file(file, target_library_path)
           source_file_type = File.extname(file).delete_prefix('.')
@@ -87,67 +85,33 @@ module Wavesync
       device.file_types.first
     end
 
-    def source_sample_rate(audio)
-      audio.audio_sample_rate
-    end
-
     def target_sample_rate(source_sample_rate, device)
       return nil if device.sample_rates.include?(source_sample_rate)
 
       device.sample_rates.min_by { |n| [(n - source_sample_rate).abs, -n] }
     end
 
-    def source_bit_depth(audio)
-      data = audio.metadata
-      return nil unless data && data[:streams]
-
-      audio_stream = data[:streams].find { |s| s[:codec_type] == 'audio' }
-      return nil unless audio_stream
-
-      bits_per_sample = audio_stream[:bits_per_sample]
-
-      return bits_per_sample if bits_per_sample&.positive?
-
-      nil
-    end
-
     def convert_file(audio, source_file_path, target_library_path, target_file_type, source_sample_rate,
                      target_sample_rate, source_bit_depth)
-      if target_file_type || target_sample_rate
-        relative_source_path_name = Pathname(source_file_path).relative_path_from(@source_library_path)
-        target_library_path_name = Pathname(File.expand_path(target_library_path))
-        target_path = target_library_path_name.join(relative_source_path_name)
+      return false unless target_file_type || target_sample_rate
 
-        target_path = target_path.sub_ext(".#{target_file_type}") if target_file_type
+      relative_source_path_name = Pathname(source_file_path).relative_path_from(@source_library_path)
+      target_library_path_name = Pathname(File.expand_path(target_library_path))
+      target_path = target_library_path_name.join(relative_source_path_name)
 
-        unless target_path.exist?
-          options = { audio_sample_rate: target_sample_rate, custom: %w[-loglevel warning -nostats -hide_banner] }
-          target_path.dirname.mkpath
+      target_path = target_path.sub_ext(".#{target_file_type}") if target_file_type
 
-          source_file_type = File.extname(source_file_path).delete_prefix('.')
-          ext = target_file_type || source_file_type
+      return false if target_path.exist?
 
-          @ui.conversion_progress(source_sample_rate, target_sample_rate, source_bit_depth, source_file_type,
-                                  target_file_type)
+      target_path.dirname.mkpath
 
-          temp_path = File.join(
-            Dir.tmpdir,
-            "wavesync_transcode_#{SecureRandom.hex}.#{ext}"
-          )
+      source_file_type = File.extname(source_file_path).delete_prefix('.')
 
-          begin
-            audio.transcode(temp_path, options)
+      @ui.conversion_progress(source_sample_rate, target_sample_rate, source_bit_depth, source_file_type,
+                              target_file_type)
 
-            safe_copy(temp_path, target_path.to_s)
-
-            return true
-          ensure
-            FileUtils.rm_f(temp_path)
-          end
-        end
-      end
-
-      false
+      audio.transcode(target_path.to_s, target_sample_rate: target_sample_rate,
+                                        target_file_type: target_file_type)
     end
   end
 end
