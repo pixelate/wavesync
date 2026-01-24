@@ -23,6 +23,7 @@ module Wavesync
 
       @audio_files.each_with_index do |file, index|
         audio = Audio.new(file)
+        @ui.bpm(audio.bpm)
         file_type = target_file_type(file, device)
         source_sample_rate = audio.sample_rate
         source_bit_depth = audio.bit_depth

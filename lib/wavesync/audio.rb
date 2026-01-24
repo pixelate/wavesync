@@ -4,12 +4,14 @@ require 'streamio-ffmpeg'
 require 'securerandom'
 require 'tmpdir'
 require 'fileutils'
+require 'taglib'
 
 module Wavesync
   class Audio
     def initialize(file_path)
       @file_path = file_path
       @audio = FFMPEG::Movie.new(file_path)
+      @bpm = read_bpm_from_tag(file_path)
     end
 
     def sample_rate
@@ -19,6 +21,8 @@ module Wavesync
     def bit_depth
       @bit_depth ||= calculate_bit_depth
     end
+
+    attr_reader :bpm
 
     def transcode(target_path, target_sample_rate: nil, target_file_type: nil)
       options = build_transcode_options(target_sample_rate)
@@ -61,6 +65,13 @@ module Wavesync
       options = { custom: %w[-loglevel warning -nostats -hide_banner] }
       options[:audio_sample_rate] = target_sample_rate if target_sample_rate
       options
+    end
+
+    def read_bpm_from_tag(file_path)
+      TagLib::MPEG::File.open(file_path) do |file|
+        tag = file.id3v2_tag
+        tag.frame_list('TBPM').first&.to_s
+      end
     end
   end
 end

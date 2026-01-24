@@ -9,3 +9,5 @@ gem 'rubocop', '~> 1.82', require: false
 gem 'tty-cursor', '~> 0.7.1'
 
 gem 'rainbow', '~> 3.1'
+
+gem 'taglib-ruby', '~> 2.0'

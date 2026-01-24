@@ -59,6 +59,14 @@ module Wavesync
       sticky(in_color('↷ Skipping, already synced', :highlight), 3)
     end
 
+    def bpm(tbpm)
+      if tbpm.nil?
+        sticky('', 4)
+      else
+        sticky("#{tbpm}bpm", 4)
+      end
+    end
+
     private
 
     def audio_info(sample_rate, bit_depth)
