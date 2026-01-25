@@ -8,10 +8,13 @@ require 'taglib'
 
 module Wavesync
   class Audio
+    SUPPORTED_FORMATS = %w[.m4a .mp3 .wav .aif .aiff].freeze
+
     def initialize(file_path)
       @file_path = file_path
+      @file_ext = File.extname(@file_path)
       @audio = FFMPEG::Movie.new(file_path)
-      @bpm = read_bpm_from_tag(file_path)
+      @bpm = bpm_from_file
     end
 
     def sample_rate
@@ -26,7 +29,7 @@ module Wavesync
 
     def transcode(target_path, target_sample_rate: nil, target_file_type: nil)
       options = build_transcode_options(target_sample_rate)
-      ext = target_file_type || File.extname(@file_path).delete_prefix('.')
+      ext = target_file_type || @file_ext.delete_prefix('.')
 
       temp_path = File.join(
         Dir.tmpdir,
@@ -67,11 +70,40 @@ module Wavesync
       options
     end
 
-    def read_bpm_from_tag(file_path)
-      TagLib::MPEG::File.open(file_path) do |file|
-        tag = file.id3v2_tag
-        tag.frame_list('TBPM').first&.to_s
+    def bpm_from_file
+      ext = @file_ext.downcase
+
+      case ext
+      when '.m4a'
+        TagLib::MP4::File.open(@file_path) do |file|
+          tag = file.tag
+          return bpm_from_item_map(tag) if tag
+        end
+      when '.mp3'
+        TagLib::MPEG::File.open(@file_path) do |file|
+          tag = file.id3v2_tag
+          return bpm_from_frame_list(tag) if tag
+        end
+      when '.wav'
+        TagLib::RIFF::WAV::File.open(@file_path) do |file|
+          tag = file.id3v2_tag
+          return bpm_from_frame_list(tag) if tag
+        end
+      when '.aif', '.aiff'
+        TagLib::RIFF::AIFF::File.open(@file_path) do |file|
+          tag = file.tag
+          return bpm_from_frame_list(tag) if tag
+        end
       end
+    end
+
+    def bpm_from_item_map(tag)
+      tmpo = tag.item_map['tmpo']&.to_int
+      tmpo&.zero? ? nil : tmpo
+    end
+
+    def bpm_from_frame_list(tag)
+      tag.frame_list('TBPM').first&.to_s
     end
   end
 end

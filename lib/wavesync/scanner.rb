@@ -5,8 +5,6 @@ require 'streamio-ffmpeg'
 
 module Wavesync
   class Scanner
-    SUPPORTED_FORMATS = %w[.m4a .mp3 .wav .aif .aiff].freeze
-
     def initialize(source_library_path)
       @source_library_path = File.expand_path(source_library_path)
       @audio_files = find_audio_files
@@ -56,7 +54,7 @@ module Wavesync
 
     def find_audio_files
       Dir.glob(File.join(@source_library_path, '**', '*'))
-         .select { |f| SUPPORTED_FORMATS.include?(File.extname(f).downcase) }
+         .select { |f| Wavesync::Audio::SUPPORTED_FORMATS.include?(File.extname(f).downcase) }
     end
 
     def copy_file(source_file_path, target_library_path)
