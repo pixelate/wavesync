@@ -54,8 +54,42 @@ module Wavesync
       assert_equal %w[wav aiff aif], octatrack.file_types
     end
 
-    test 'find_by returns nil for unknown device' do
+    test '#find_by returns nil for unknown device' do
       assert_nil Device.find_by(name: 'Non-exist-ent')
+    end
+
+    test '.target_file_type returns nil when source format is supported' do
+      tp7 = Device.find_by(name: 'TP-7')
+      assert_nil tp7.target_file_type('song.wav')
+    end
+
+    test '.target_file_type returns first supported format when source is unsupported' do
+      tp7 = Device.find_by(name: 'TP-7')
+      assert_equal 'wav', tp7.target_file_type('song.aiff')
+    end
+
+    test 'target_file_type handles uppercase extensions' do
+      tp7 = Device.find_by(name: 'TP-7')
+      assert_nil tp7.target_file_type('SONG.WAV')
+      assert_equal 'wav', tp7.target_file_type('SONG.AIFF')
+    end
+
+    test 'target_sample_rate returns nil when source rate is supported' do
+      tp7 = Device.find_by(name: 'TP-7')
+      assert_nil tp7.target_sample_rate(44_100)
+      assert_nil tp7.target_sample_rate(48_000)
+      assert_nil tp7.target_sample_rate(88_200)
+      assert_nil tp7.target_sample_rate(96_000)
+    end
+
+    test 'target_sample_rate returns closest supported rate' do
+      octatrack = Device.find_by(name: 'Octatrack')
+      assert_equal 44_100, octatrack.target_sample_rate(32_000)
+      assert_equal 44_100, octatrack.target_sample_rate(48_000)
+      assert_equal 44_100, octatrack.target_sample_rate(96_000)
+
+      tp7 = Device.find_by(name: 'TP-7')
+      assert_equal 96_000, tp7.target_sample_rate(192_000)
     end
   end
 end

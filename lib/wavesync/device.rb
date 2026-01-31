@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'yaml'
-
 module Wavesync
   class Device
     attr_reader :name, :sample_rates, :file_types
@@ -42,6 +41,19 @@ module Wavesync
           file_types: attrs['file_types']
         )
       end
+    end
+
+    def target_file_type(source_file_path)
+      file_extension = File.extname(source_file_path).downcase[1..]
+      return nil if file_types.include?(file_extension)
+
+      file_types.first
+    end
+
+    def target_sample_rate(source_sample_rate)
+      return nil if sample_rates.include?(source_sample_rate)
+
+      sample_rates.min_by { |n| [(n - source_sample_rate).abs, -n] }
     end
   end
 end
