@@ -3,11 +3,12 @@
 require 'yaml'
 module Wavesync
   class Device
-    attr_reader :name, :sample_rates, :file_types
+    attr_reader :name, :sample_rates, :bit_depths, :file_types
 
-    def initialize(name:, sample_rates:, file_types:)
+    def initialize(name:, sample_rates:, bit_depths:, file_types:)
       @name = name
       @sample_rates = sample_rates
+      @bit_depths = bit_depths
       @file_types = file_types
     end
 
@@ -38,6 +39,7 @@ module Wavesync
         new(
           name: attrs['name'],
           sample_rates: attrs['sample_rates'],
+          bit_depths: attrs['bit_depths'],
           file_types: attrs['file_types']
         )
       end
@@ -54,6 +56,12 @@ module Wavesync
       return nil if sample_rates.include?(source_sample_rate)
 
       sample_rates.min_by { |n| [(n - source_sample_rate).abs, -n] }
+    end
+
+    def target_bit_depth(source_bit_depth)
+      return nil if source_bit_depth.nil? || bit_depths.include?(source_bit_depth)
+
+      bit_depths.min_by { |n| [(n - source_bit_depth).abs, -n] }
     end
   end
 end

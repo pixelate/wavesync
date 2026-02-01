@@ -16,11 +16,13 @@ module Wavesync
       device = Device.new(
         name: 'Test',
         sample_rates: [44_100],
-        file_types: ['wav']
+        file_types: ['wav'],
+        bit_depths: [16]
       )
       assert_equal 'Test', device.name
       assert_equal [44_100], device.sample_rates
       assert_equal ['wav'], device.file_types
+      assert_equal [16], device.bit_depths
     end
 
     test '#config_path returns config path' do
@@ -68,13 +70,13 @@ module Wavesync
       assert_equal 'wav', tp7.target_file_type('song.aiff')
     end
 
-    test 'target_file_type handles uppercase extensions' do
+    test '.target_file_type handles uppercase extensions' do
       tp7 = Device.find_by(name: 'TP-7')
       assert_nil tp7.target_file_type('SONG.WAV')
       assert_equal 'wav', tp7.target_file_type('SONG.AIFF')
     end
 
-    test 'target_sample_rate returns nil when source rate is supported' do
+    test '.target_sample_rate returns nil when source rate is supported' do
       tp7 = Device.find_by(name: 'TP-7')
       assert_nil tp7.target_sample_rate(44_100)
       assert_nil tp7.target_sample_rate(48_000)
@@ -82,7 +84,7 @@ module Wavesync
       assert_nil tp7.target_sample_rate(96_000)
     end
 
-    test 'target_sample_rate returns closest supported rate' do
+    test '.target_sample_rate returns closest supported rate' do
       octatrack = Device.find_by(name: 'Octatrack')
       assert_equal 44_100, octatrack.target_sample_rate(32_000)
       assert_equal 44_100, octatrack.target_sample_rate(48_000)
@@ -90,6 +92,25 @@ module Wavesync
 
       tp7 = Device.find_by(name: 'TP-7')
       assert_equal 96_000, tp7.target_sample_rate(192_000)
+    end
+
+    test '.target_bit_depth returns nil when source bit depth is nil' do
+      tp7 = Device.find_by(name: 'TP-7')
+      assert_nil tp7.target_bit_depth(nil)
+    end
+
+    test '.target_bit_depth returns nil when source bit depth is supported' do
+      tp7 = Device.find_by(name: 'TP-7')
+      assert_nil tp7.target_bit_depth(16)
+      assert_nil tp7.target_bit_depth(24)
+    end
+
+    test '.target_bit_depth returns closest supported bit depth' do
+      tp7 = Device.find_by(name: 'TP-7')
+      assert_equal 16, tp7.target_bit_depth(8)
+      assert_equal 16, tp7.target_bit_depth(12)
+      assert_equal 24, tp7.target_bit_depth(20)
+      assert_equal 24, tp7.target_bit_depth(32)
     end
   end
 end

@@ -27,8 +27,8 @@ module Wavesync
 
     attr_reader :bpm
 
-    def transcode(target_path, target_sample_rate: nil, target_file_type: nil)
-      options = build_transcode_options(target_sample_rate)
+    def transcode(target_path, target_sample_rate: nil, target_file_type: nil, target_bit_depth: nil)
+      options = build_transcode_options(target_sample_rate, target_bit_depth)
       ext = target_file_type || @file_ext.delete_prefix('.')
 
       temp_path = File.join(
@@ -64,8 +64,17 @@ module Wavesync
       nil
     end
 
-    def build_transcode_options(target_sample_rate)
+    def build_transcode_options(target_sample_rate, target_bit_depth)
       options = { custom: %w[-loglevel warning -nostats -hide_banner] }
+
+      if target_bit_depth == 24
+        options[:audio_codec] = 'pcm_s24le'
+      elsif target_bit_depth == 16
+        options[:audio_codec] = 'pcm_s16le'
+      end
+
+      options[:audio_codec] = 'pcm_s24le'
+
       options[:audio_sample_rate] = target_sample_rate if target_sample_rate
       options
     end

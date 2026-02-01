@@ -37,14 +37,16 @@ module Wavesync
     end
 
     def conversion_progress(source_sample_rate, target_sample_rate, source_bit_depth, source_file_type,
-                            target_file_type)
+                            target_file_type, target_bit_depth = nil)
       target_sample_rate = source_sample_rate if target_sample_rate.nil?
       target_file_type = source_file_type if target_file_type.nil?
+      target_bit_depth = source_bit_depth if target_bit_depth.nil?
 
       source_info = audio_info(source_sample_rate, source_bit_depth)
+      target_info = audio_info(target_sample_rate, target_bit_depth)
 
       formatted_line = in_color(
-        "Converting #{source_file_type} (#{source_info}) ⇢ #{target_file_type} (#{sample_rate_to_khz(target_sample_rate)})", :highlight
+        "Converting #{source_file_type} (#{source_info}) ⇢ #{target_file_type} (#{target_info})", :highlight
       )
       sticky(formatted_line, 3)
     end

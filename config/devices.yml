@@ -5,6 +5,9 @@ devices:
     - 48000
     - 88200
     - 96000
+  bit_depths:
+    - 16
+    - 24
   file_types:
     - wav
     - mp3
@@ -12,6 +15,9 @@ devices:
 - name: Octatrack
   sample_rates:
     - 44100
+  bit_depths:
+    - 16
+    - 24
   file_types:
     - wav
     - aiff

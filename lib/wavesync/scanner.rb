@@ -24,12 +24,13 @@ module Wavesync
         source_sample_rate = audio.sample_rate
         source_bit_depth = audio.bit_depth
         target_sample_rate = device.target_sample_rate(source_sample_rate)
+        target_bit_depth = device.target_bit_depth(source_bit_depth)
 
         @ui.file_progress(file)
 
-        if file_type || target_sample_rate
+        if file_type || target_sample_rate || target_bit_depth
           converted = convert_file(audio, file, target_library_path, file_type, source_sample_rate,
-                                   target_sample_rate, source_bit_depth)
+                                   target_sample_rate, source_bit_depth, target_bit_depth)
         else
           copied = copy_file(file, target_library_path)
           source_file_type = File.extname(file).delete_prefix('.')
@@ -75,8 +76,8 @@ module Wavesync
     end
 
     def convert_file(audio, source_file_path, target_library_path, target_file_type, source_sample_rate,
-                     target_sample_rate, source_bit_depth)
-      return false unless target_file_type || target_sample_rate
+                     target_sample_rate, source_bit_depth, target_bit_depth)
+      return false unless target_file_type || target_sample_rate || target_bit_depth
 
       relative_source_path_name = Pathname(source_file_path).relative_path_from(@source_library_path)
       target_library_path_name = Pathname(File.expand_path(target_library_path))
@@ -88,10 +89,11 @@ module Wavesync
       target_path.dirname.mkpath
       source_file_type = File.extname(source_file_path).delete_prefix('.')
       @ui.conversion_progress(source_sample_rate, target_sample_rate, source_bit_depth, source_file_type,
-                              target_file_type)
+                              target_file_type, target_bit_depth)
 
       audio.transcode(target_path.to_s, target_sample_rate: target_sample_rate,
-                                        target_file_type: target_file_type)
+                                        target_file_type: target_file_type,
+                                        target_bit_depth: target_bit_depth || source_bit_depth)
     end
   end
 end
