@@ -6,16 +6,14 @@ Wavesync is a Ruby-based CLI tool that scans your music library and automaticall
 
 Out of the box, Wavesync supports:
 
-| Device | Sample Rates | Formats |
-|---|---|---|
-| **TP-7** | 44.1kHz, 48kHz, 88.2kHz, 96kHz | WAV, MP3 |
-| **Octatrack** | 44.1kHz | WAV, AIFF, AIF |
+- teenage engineering TP-7
+- Elektron Octatrack MKII
 
 Custom devices can be added via a YAML configuration file.
 
 ## Supported file types
 
-Wavesync currently supports the following file types:
+Wavesync supports the following file types in your source library:
 
 - M4A
 - MP3
