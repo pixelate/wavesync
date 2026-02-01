@@ -1,6 +1,6 @@
 # Wavesync
 
-Wavesync is a Ruby-based CLI tool that scans your music library and automatically converts audio files to match the specifications of specific hardware music devices like the teenage engineering TP-7 and Elektron Octatrack, adjusting sample rate and file format as needed while preserving your original library structure and only converting files that don't already meet the device requirements.
+Wavesync is a Ruby-based CLI tool that scans your music library and automatically converts audio files to match the specifications of specific hardware music devices like the teenage engineering TP-7 and Elektron Octatrack, adjusting sample rate, bit depth and file format as needed while preserving your original library structure and only converting files that don't already meet the device requirements.
 
 ## Supported devices
 
