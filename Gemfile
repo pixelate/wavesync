@@ -13,3 +13,5 @@ gem 'rainbow', '~> 3.1'
 gem 'taglib-ruby', '~> 2.0'
 
 gem 'minitest', '~> 6.0'
+
+gem 'mocha', '~> 3.0'

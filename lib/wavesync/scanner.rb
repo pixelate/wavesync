@@ -13,7 +13,7 @@ module Wavesync
     end
 
     def sync(target_library_path, device)
-      path_resolver = PathResolver.new(@source_library_path, target_library_path)
+      path_resolver = PathResolver.new(@source_library_path, target_library_path, device)
       skipped_count = 0
       conversion_count = 0
       @ui.sync_progress(0, @audio_files.size, device)
@@ -34,7 +34,7 @@ module Wavesync
           converted = convert_file(audio, file, path_resolver, file_type, source_sample_rate,
                                    target_sample_rate, source_bit_depth, target_bit_depth)
         else
-          copied = copy_file(file, path_resolver)
+          copied = copy_file(audio, file, path_resolver)
           source_file_type = File.extname(file).delete_prefix('.')
           @ui.copy(source_sample_rate, source_bit_depth, source_file_type)
         end
@@ -58,8 +58,11 @@ module Wavesync
          .select { |f| Wavesync::Audio::SUPPORTED_FORMATS.include?(File.extname(f).downcase) }
     end
 
-    def copy_file(source_file_path, path_resolver)
-      target_path = path_resolver.resolve(source_file_path)
+    def copy_file(audio, source_file_path, path_resolver)
+      target_path = path_resolver.resolve(source_file_path, audio)
+
+      files_to_cleanup = path_resolver.find_files_to_cleanup(target_path, audio)
+      files_to_cleanup.each { |file| FileUtils.rm_f(file) }
 
       if target_path.exist?
         false
@@ -79,7 +82,10 @@ module Wavesync
                      target_sample_rate, source_bit_depth, target_bit_depth)
       return false unless target_file_type || target_sample_rate || target_bit_depth
 
-      target_path = path_resolver.resolve(source_file_path, target_file_type: target_file_type)
+      target_path = path_resolver.resolve(source_file_path, audio, target_file_type: target_file_type)
+
+      files_to_cleanup = path_resolver.find_files_to_cleanup(target_path, audio)
+      files_to_cleanup.each { |file| FileUtils.rm_f(file) }
 
       return false if target_path.exist?
 
