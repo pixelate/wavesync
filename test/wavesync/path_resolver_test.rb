@@ -148,6 +148,60 @@ module Wavesync
       assert_equal [], files
     end
 
+    test 'find_files_to_cleanup finds files with different bpm values' do
+      FileUtils.mkdir_p('/tmp/test_cleanup_bpm/artist')
+      FileUtils.touch('/tmp/test_cleanup_bpm/artist/song 120 bpm.wav')
+      FileUtils.touch('/tmp/test_cleanup_bpm/artist/song 125 bpm.wav')
+
+      device = Device.find_by(name: 'Octatrack')
+      resolver = PathResolver.new(@source_library, '/tmp/test_cleanup_bpm', device)
+      target_path = Pathname.new('/tmp/test_cleanup_bpm/artist/song 140 bpm.wav')
+      audio = stub(bpm: 140)
+      files = resolver.find_files_to_cleanup(target_path, audio)
+
+      assert_equal 2, files.size
+      assert_includes files.map(&:to_s), '/tmp/test_cleanup_bpm/artist/song 120 bpm.wav'
+      assert_includes files.map(&:to_s), '/tmp/test_cleanup_bpm/artist/song 125 bpm.wav'
+
+      FileUtils.rm_rf('/tmp/test_cleanup_bpm')
+    end
+
+    test 'find_files_to_cleanup finds both file without bpm and files with different bpm' do
+      FileUtils.mkdir_p('/tmp/test_cleanup_mixed/artist')
+      FileUtils.touch('/tmp/test_cleanup_mixed/artist/song.wav')
+      FileUtils.touch('/tmp/test_cleanup_mixed/artist/song 120 bpm.wav')
+
+      device = Device.find_by(name: 'Octatrack')
+      resolver = PathResolver.new(@source_library, '/tmp/test_cleanup_mixed', device)
+      target_path = Pathname.new('/tmp/test_cleanup_mixed/artist/song 140 bpm.wav')
+      audio = stub(bpm: 140)
+      files = resolver.find_files_to_cleanup(target_path, audio)
+
+      assert_equal 2, files.size
+      assert_includes files.map(&:to_s), '/tmp/test_cleanup_mixed/artist/song.wav'
+      assert_includes files.map(&:to_s), '/tmp/test_cleanup_mixed/artist/song 120 bpm.wav'
+
+      FileUtils.rm_rf('/tmp/test_cleanup_mixed')
+    end
+
+    test 'find_files_to_cleanup does not include the target file itself' do
+      FileUtils.mkdir_p('/tmp/test_cleanup_self/artist')
+      FileUtils.touch('/tmp/test_cleanup_self/artist/song 140 bpm.wav')
+      FileUtils.touch('/tmp/test_cleanup_self/artist/song 120 bpm.wav')
+
+      device = Device.find_by(name: 'Octatrack')
+      resolver = PathResolver.new(@source_library, '/tmp/test_cleanup_self', device)
+      target_path = Pathname.new('/tmp/test_cleanup_self/artist/song 140 bpm.wav')
+      audio = stub(bpm: 140)
+      files = resolver.find_files_to_cleanup(target_path, audio)
+
+      assert_equal 1, files.size
+      assert_equal '/tmp/test_cleanup_self/artist/song 120 bpm.wav', files.first.to_s
+      refute_includes files.map(&:to_s), '/tmp/test_cleanup_self/artist/song 140 bpm.wav'
+
+      FileUtils.rm_rf('/tmp/test_cleanup_self')
+    end
+
     private
 
     def resolver_for(device_name)

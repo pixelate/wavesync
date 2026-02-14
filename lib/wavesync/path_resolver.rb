@@ -2,6 +2,8 @@
 
 module Wavesync
   class PathResolver
+    BPM_PATTERN = / \d+ bpm/
+
     def initialize(source_library_path, target_library_path, device)
       @source_library_path = Pathname(File.expand_path(source_library_path))
       @target_library_path = Pathname(File.expand_path(target_library_path))
@@ -22,13 +24,12 @@ module Wavesync
     def find_files_to_cleanup(target_path, audio)
       return [] unless @device.bpm_source == :filename && audio.bpm
 
-      path_without_bpm = remove_bpm_from_filename(target_path)
+      ext = target_path.extname
+      basename = target_path.basename(ext).to_s.gsub(BPM_PATTERN, '')
 
-      if path_without_bpm != target_path && path_without_bpm.exist?
-        [path_without_bpm]
-      else
-        []
-      end
+      pattern = target_path.dirname.join("#{basename}{, * bpm}#{ext}")
+      Dir.glob(pattern.to_s).map { |f| Pathname(f) }
+         .reject { |path| path == target_path }
     end
 
     private
@@ -37,7 +38,7 @@ module Wavesync
       ext = path.extname
       basename = path.basename(ext).to_s
 
-      basename = basename.gsub(/ \d+ bpm/, '')
+      basename = basename.gsub(BPM_PATTERN, '')
 
       new_basename = "#{basename} #{bpm} bpm#{ext}"
       path.dirname.join(new_basename)
@@ -46,7 +47,7 @@ module Wavesync
     def remove_bpm_from_filename(path)
       ext = path.extname
       basename = path.basename(ext).to_s
-      basename_without_bpm = basename.gsub(/ \d+ bpm/, '')
+      basename_without_bpm = basename.gsub(BPM_PATTERN, '')
 
       path.dirname.join("#{basename_without_bpm}#{ext}")
     end
