@@ -33,10 +33,18 @@ module Wavesync
         if file_type || target_sample_rate || target_bit_depth
           converted = convert_file(audio, file, path_resolver, file_type, source_sample_rate,
                                    target_sample_rate, source_bit_depth, target_bit_depth)
+          target_path = path_resolver.resolve(file, audio, target_file_type: file_type)
         else
           copied = copy_file(audio, file, path_resolver)
           source_file_type = File.extname(file).delete_prefix('.')
           @ui.copy(source_sample_rate, source_bit_depth, source_file_type)
+          target_path = path_resolver.resolve(file, audio)
+        end
+
+        if (copied || converted) && device.bpm_source == :acid_chunk && audio.bpm && target_path.extname.downcase == '.wav'
+          temp_path = "#{target_path}.tmp"
+          AcidChunk.write_bpm(target_path.to_s, temp_path, audio.bpm)
+          FileUtils.mv(temp_path, target_path.to_s)
         end
 
         if !copied && !converted
@@ -97,6 +105,8 @@ module Wavesync
       audio.transcode(target_path.to_s, target_sample_rate: target_sample_rate,
                                         target_file_type: target_file_type,
                                         target_bit_depth: target_bit_depth || source_bit_depth)
+
+      true
     end
   end
 end

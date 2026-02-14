@@ -131,7 +131,7 @@ module Wavesync
     end
 
     def bpm_from_acid_chunk
-      tmpo = Wavesync::AcidChunkReader.extract_bpm(@file_path).to_i
+      tmpo = Wavesync::AcidChunk.read_bpm(@file_path).to_i
       tmpo&.zero? ? nil : tmpo
     end
   end

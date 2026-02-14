@@ -11,6 +11,7 @@ devices:
   file_types:
     - wav
     - mp3
+  bpm_source: :acid_chunk
 
 - name: Octatrack
   sample_rates:

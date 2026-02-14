@@ -3,7 +3,7 @@
 module Wavesync
 end
 
-require 'wavesync/acid_chunk_reader'
+require 'wavesync/acid_chunk'
 require 'wavesync/audio'
 require 'wavesync/device'
 require 'wavesync/ui'
