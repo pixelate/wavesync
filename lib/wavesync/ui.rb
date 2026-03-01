@@ -4,6 +4,8 @@ require 'tty-cursor'
 require 'rainbow'
 
 module Wavesync
+  # Renders progress output to the terminal using sticky lines
+  # that redraw in place as files are processed.
   class UI
     THEME = {
       primary: :lightgray,
@@ -36,11 +38,10 @@ module Wavesync
       sticky(parts.join(' '), 0)
     end
 
-    def conversion_progress(source_sample_rate, target_sample_rate, source_bit_depth, source_file_type,
-                            target_file_type, target_bit_depth = nil)
-      target_sample_rate = source_sample_rate if target_sample_rate.nil?
-      target_file_type = source_file_type if target_file_type.nil?
-      target_bit_depth = source_bit_depth if target_bit_depth.nil?
+    def conversion_progress(source_sample_rate, source_bit_depth, source_file_type, conversions = {})
+      target_sample_rate = conversions[:sample_rate] || source_sample_rate
+      target_file_type = (conversions[:file_type] || source_file_type).to_s
+      target_bit_depth = conversions[:bit_depth] || source_bit_depth
 
       source_info = audio_info(source_sample_rate, source_bit_depth)
       target_info = audio_info(target_sample_rate, target_bit_depth)

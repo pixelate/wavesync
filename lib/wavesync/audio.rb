@@ -7,6 +7,8 @@ require 'fileutils'
 require 'taglib'
 
 module Wavesync
+  # Wraps an audio file providing format detection, BPM reading,
+  # and transcoding to a target format and sample rate.
   class Audio
     SUPPORTED_FORMATS = %w[.m4a .mp3 .wav .aif .aiff].freeze
 
@@ -30,24 +32,22 @@ module Wavesync
     def transcode(target_path, target_sample_rate: nil, target_file_type: nil, target_bit_depth: nil)
       options = build_transcode_options(target_sample_rate, target_bit_depth)
       ext = target_file_type || @file_ext.delete_prefix('.')
-      temp_path = File.join(
-        Dir.tmpdir,
-        "wavesync_transcode_#{SecureRandom.hex}.#{ext}"
-      )
-
-      begin
-        @audio.transcode(temp_path, options)
-        FileUtils.install(temp_path, target_path)
-        true
-      rescue Errno::ENOENT
-        puts 'Errno::ENOENT'
-        false
-      ensure
-        FileUtils.rm_f(temp_path)
-      end
+      temp_path = File.join(Dir.tmpdir, "wavesync_transcode_#{SecureRandom.hex}.#{ext}")
+      transcode_to_temp(temp_path, target_path, options)
     end
 
     private
+
+    def transcode_to_temp(temp_path, target_path, options)
+      @audio.transcode(temp_path, options)
+      FileUtils.install(temp_path, target_path)
+      true
+    rescue Errno::ENOENT
+      puts 'Errno::ENOENT'
+      false
+    ensure
+      FileUtils.rm_f(temp_path)
+    end
 
     def calculate_bit_depth
       data = @audio.metadata
@@ -77,16 +77,11 @@ module Wavesync
     end
 
     def bpm_from_file
-      ext = @file_ext.downcase
-      case ext
-      when '.m4a'
-        bpm_from_m4a
-      when '.mp3'
-        bpm_from_mp3
-      when '.wav'
-        bpm_from_wav
-      when '.aif', '.aiff'
-        bpm_from_aiff
+      case @file_ext.downcase
+      when '.m4a' then bpm_from_m4a
+      when '.mp3' then bpm_from_mp3
+      when '.wav' then bpm_from_wav
+      when '.aif', '.aiff' then bpm_from_aiff
       end
     end
 

@@ -3,47 +3,50 @@
 require 'optparse'
 
 module Wavesync
+  # Command-line interface entry point for running a wavesync operation.
   class CLI
-    def self.start
-      options = {}
-      parser = OptionParser.new do |opts|
-        opts.banner = 'Usage: wavesync [options]'
+    class << self
+      def start
+        options = parse_options
+        device = find_device(options[:device])
+        Wavesync::Scanner.new(options[:source]).sync(options[:target], device)
+      end
 
-        opts.on('-s', '--source PATH', 'Source music library') do |v|
-          options[:source] = v
-        end
+      private
 
-        opts.on('-t', '--target PATH', 'Target sync directory') do |v|
-          options[:target] = v
-        end
+      def parse_options
+        options = {}
+        parser = build_parser(options)
+        parser.parse!
+        validate_options(options, parser)
+        options
+      end
 
-        opts.on('-d', '--device DEVICE_MODEL', 'Target device model (Octatrack or TP-7)') do |v|
-          options[:device] = v
-        end
-
-        opts.on('-c', '--config PATH', 'Path to device config YAML file') do |v|
-          options[:config] = v
+      def build_parser(options)
+        OptionParser.new do |opts|
+          opts.banner = 'Usage: wavesync [options]'
+          opts.on('-s', '--source PATH', 'Source music library') { |v| options[:source] = v }
+          opts.on('-t', '--target PATH', 'Target sync directory') { |v| options[:target] = v }
+          opts.on('-d', '--device DEVICE_MODEL', 'Target device model (Octatrack or TP-7)') { |v| options[:device] = v }
+          opts.on('-c', '--config PATH', 'Path to device config YAML file') { |v| options[:config] = v }
         end
       end
 
-      parser.parse!
+      def validate_options(options, parser)
+        Wavesync::Device.configure(path: options[:config]) if options[:config]
+        return if options[:source] && options[:target] && options[:device]
 
-      Wavesync::Device.configure(path: options[:config]) if options[:config]
-
-      unless options[:source] && options[:target] && options[:device]
         puts parser
         exit 1
       end
 
-      device = Wavesync::Device.find_by(name: options[:device])
+      def find_device(name)
+        device = Wavesync::Device.find_by(name: name)
+        return device if device
 
-      unless device
-        puts "Device #{options[:device]} does not exist."
+        puts "Device #{name} does not exist."
         exit 1
       end
-
-      scanner = Wavesync::Scanner.new(options[:source])
-      scanner.sync(options[:target], device)
     end
   end
 end

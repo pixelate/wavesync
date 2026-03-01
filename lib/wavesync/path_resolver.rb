@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module Wavesync
+  # Resolves source file paths to their target locations on the device,
+  # optionally embedding BPM in filenames.
   class PathResolver
     BPM_PATTERN = / \d+ bpm/
 
@@ -28,8 +30,7 @@ module Wavesync
       basename = target_path.basename(ext).to_s.gsub(BPM_PATTERN, '')
 
       pattern = target_path.dirname.join("#{basename}{, * bpm}#{ext}")
-      Dir.glob(pattern.to_s).map { |f| Pathname(f) }
-         .reject { |path| path == target_path }
+      Dir.glob(pattern.to_s).map { |f| Pathname(f) }.reject { |path| path == target_path }
     end
 
     private

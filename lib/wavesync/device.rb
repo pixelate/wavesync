@@ -2,6 +2,8 @@
 
 require 'yaml'
 module Wavesync
+  # Represents a target hardware device with its supported
+  # audio formats, sample rates, and BPM metadata strategy.
   class Device
     attr_reader :name, :sample_rates, :bit_depths, :file_types, :bpm_source
 
