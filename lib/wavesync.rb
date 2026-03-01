@@ -5,6 +5,7 @@ end
 
 require 'wavesync/acid_chunk'
 require 'wavesync/audio'
+require 'wavesync/config'
 require 'wavesync/device'
 require 'wavesync/ui'
 require 'wavesync/path_resolver'

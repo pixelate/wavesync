@@ -9,41 +9,28 @@ module Wavesync
       parser = OptionParser.new do |opts|
         opts.banner = 'Usage: wavesync [options]'
 
-        opts.on('-s', '--source PATH', 'Source music library') do |v|
-          options[:source] = v
-        end
-
-        opts.on('-t', '--target PATH', 'Target sync directory') do |v|
-          options[:target] = v
-        end
-
-        opts.on('-d', '--device DEVICE_MODEL', 'Target device model (Octatrack or TP-7)') do |v|
-          options[:device] = v
-        end
-
-        opts.on('-c', '--config PATH', 'Path to device config YAML file') do |v|
+        opts.on('-c', '--config PATH', 'Path to wavesync config YAML file') do |v|
           options[:config] = v
         end
       end
 
       parser.parse!
 
-      Wavesync::Device.configure(path: options[:config]) if options[:config]
+      config_path = options[:config] || Wavesync::Config::DEFAULT_PATH
+      config = Wavesync::Config.load(config_path)
 
-      unless options[:source] && options[:target] && options[:device]
-        puts parser
-        exit 1
+      scanner = Wavesync::Scanner.new(config.library)
+
+      config.device_configs.each do |dc|
+        device = Wavesync::Device.find_by(name: dc[:name])
+
+        unless device
+          puts "Device #{dc[:name]} is not supported."
+          next
+        end
+
+        scanner.sync(dc[:path], device)
       end
-
-      device = Wavesync::Device.find_by(name: options[:device])
-
-      unless device
-        puts "Device #{options[:device]} does not exist."
-        exit 1
-      end
-
-      scanner = Wavesync::Scanner.new(options[:source])
-      scanner.sync(options[:target], device)
     end
   end
 end

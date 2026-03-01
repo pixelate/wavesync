@@ -6,12 +6,6 @@ require_relative '../../lib/wavesync/device'
 
 module Wavesync
   class DeviceTest < Wavesync::TestCase
-    CONFIG_PATH = File.expand_path('../../config/devices.yml', __dir__)
-
-    def setup
-      Device.configure(path: CONFIG_PATH)
-    end
-
     test 'initialization sets attributes' do
       device = Device.new(
         name: 'Test',
@@ -23,10 +17,6 @@ module Wavesync
       assert_equal [44_100], device.sample_rates
       assert_equal ['wav'], device.file_types
       assert_equal [16], device.bit_depths
-    end
-
-    test '#config_path returns config path' do
-      assert_equal CONFIG_PATH, Device.config_path
     end
 
     test '#all loads devices from YAML' do
