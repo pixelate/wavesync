@@ -3,7 +3,6 @@
 require_relative 'test_case'
 require_relative '../../lib/wavesync/path_resolver'
 require_relative '../../lib/wavesync/device'
-require_relative '../../lib/wavesync/audio'
 
 module Wavesync
   class PathResolverTest < Wavesync::TestCase

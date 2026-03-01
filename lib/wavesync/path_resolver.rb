@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'pathname'
+
 module Wavesync
   class PathResolver
     BPM_PATTERN = / \d+ bpm/
