@@ -19,17 +19,18 @@ module Wavesync
       config_path = options[:config] || Wavesync::Config::DEFAULT_PATH
       config = Wavesync::Config.load(config_path)
 
+      config.device_configs.each do |dc|
+        unless Wavesync::Device.find_by(name: dc[:name])
+          supported = Wavesync::Device.all.map(&:name).join(', ')
+          puts "Unknown device \"#{dc[:name]}\" in config. Supported devices: #{supported}"
+          exit 1
+        end
+      end
+
       scanner = Wavesync::Scanner.new(config.library)
 
       config.device_configs.each do |dc|
-        device = Wavesync::Device.find_by(name: dc[:name])
-
-        unless device
-          puts "Device #{dc[:name]} is not supported."
-          next
-        end
-
-        scanner.sync(dc[:path], device)
+        scanner.sync(dc[:path], Wavesync::Device.find_by(name: dc[:name]))
       end
     end
   end
