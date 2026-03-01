@@ -4,12 +4,8 @@ Wavesync is a Ruby-based CLI tool that scans your music library and automaticall
 
 ## Supported devices
 
-Out of the box, Wavesync supports:
-
 - teenage engineering TP-7
 - Elektron Octatrack MKII
-
-Custom devices can be added via a YAML configuration file.
 
 ## Supported file types
 
@@ -35,47 +31,44 @@ brew install taglib
 
 https://teenage.engineering/guides/fieldkit
 
-## Usage
+## Configuration
 
-### Command-line options
+Wavesync is configured via a YAML file. By default it looks for `~/wavesync.yml`. You can also pass a path explicitly with the `-c` flag.
 
-- `-s, --source PATH`: Path to your source music library
-- `-t, --target PATH`: Path to the target sync directory
-- `-d, --device DEVICE_MODEL`: Target device model (TP-7 or Octatrack)
-- `-c, --config PATH`: Path to custom device configuration YAML file (optional)
-
-### Examples
-
-Sync to TP-7:
-```bash
-./bin/wavesync -s ~/Music/Library -t /Users/username/Library/Containers/engineering.teenage.fieldkit/Data/Documents/TP-7\ MTP\ Device-F1ELN21A/library -d TP-7
-```
-
-Sync to Octatrack:
-```bash
-./bin/wavesync -s ~/Music/Library -t /Volumes/OCTATRACK/LIBRARY/AUDIO -d Octatrack
-```
-
-## Custom device configuration
-
-Create a YAML file to define custom devices:
+### wavesync.yml format
 
 ```yaml
+library: ~/Music/Library
 devices:
-  - name: MyCustomDevice
-    sample_rates:
-      - 44100
-      - 48000
-    file_types:
-      - wav
-      - mp3
+  - name: TP-7
+    model: TP-7
+    path: ~/Library/Containers/engineering.teenage.fieldkit/Data/Documents/TP-7 MTP Device-F1ELN21A/library
+  - name: Octatrack
+    model: Octatrack
+    path: /Volumes/OCTATRACK/LIBRARY/AUDIO
 ```
 
-Then use it with the `-c` flag:
+- `library`: path to your source music library
+- `devices`: list of devices to sync to, each with:
+  - `name`: a label for this device, used with the `-d` command-line option
+  - `model`: device model (`TP-7` or `Octatrack`)
+  - `path`: path to the device's library directory
+
+Wavesync will exit with an error if a device model in the config is not supported.
+
+## Usage
 
 ```bash
-wavesync -s ~/Music -t /Volumes/DEVICE -d MyCustomDevice -c path/to/config.yml
+# Use the default config at ~/wavesync.yml
+wavesync
+
+# Use a config at a specific path
+wavesync -c /path/to/wavesync.yml
+
+# Sync to a specific device only (by name as defined in config)
+wavesync -d Octatrack
 ```
+
 ## Sample Rate Selection
 
 When a source file's sample rate isn't supported by the target device, Wavesync selects the closest supported rate. For files with equal distance to two rates, it chooses the higher rate to minimize quality loss.

@@ -9,41 +9,43 @@ module Wavesync
       parser = OptionParser.new do |opts|
         opts.banner = 'Usage: wavesync [options]'
 
-        opts.on('-s', '--source PATH', 'Source music library') do |v|
-          options[:source] = v
+        opts.on('-d', '--device NAME', 'Name of device to sync (as defined in config)') do |value|
+          options[:device] = value
         end
 
-        opts.on('-t', '--target PATH', 'Target sync directory') do |v|
-          options[:target] = v
-        end
-
-        opts.on('-d', '--device DEVICE_MODEL', 'Target device model (Octatrack or TP-7)') do |v|
-          options[:device] = v
-        end
-
-        opts.on('-c', '--config PATH', 'Path to device config YAML file') do |v|
-          options[:config] = v
+        opts.on('-c', '--config PATH', 'Path to wavesync config YAML file') do |value|
+          options[:config] = value
         end
       end
 
       parser.parse!
 
-      Wavesync::Device.configure(path: options[:config]) if options[:config]
+      config_path = options[:config] || Wavesync::Config::DEFAULT_PATH
+      config = Wavesync::Config.load(config_path)
 
-      unless options[:source] && options[:target] && options[:device]
-        puts parser
+      device_configs = config.device_configs
+      if options[:device]
+        device_configs = device_configs.select { |device_config| device_config[:name] == options[:device] }
+        if device_configs.empty?
+          known = config.device_configs.map { |device_config| device_config[:name] }.join(', ')
+          puts "Unknown device \"#{options[:device]}\". Devices in config: #{known}"
+          exit 1
+        end
+      end
+
+      device_configs.each do |device_config|
+        next if Wavesync::Device.find_by(name: device_config[:model])
+
+        supported = Wavesync::Device.all.map(&:name).join(', ')
+        puts "Unknown device model \"#{device_config[:model]}\" in config. Supported models: #{supported}"
         exit 1
       end
 
-      device = Wavesync::Device.find_by(name: options[:device])
+      scanner = Wavesync::Scanner.new(config.library)
 
-      unless device
-        puts "Device #{options[:device]} does not exist."
-        exit 1
+      device_configs.each do |device_config|
+        scanner.sync(device_config[:path], Wavesync::Device.find_by(name: device_config[:model]))
       end
-
-      scanner = Wavesync::Scanner.new(options[:source])
-      scanner.sync(options[:target], device)
     end
   end
 end
