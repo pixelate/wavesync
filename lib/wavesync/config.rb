@@ -15,8 +15,8 @@ module Wavesync
 
     def initialize(data)
       @library = File.expand_path(data.fetch('library'))
-      @device_configs = data.fetch('devices').map do |d|
-        { name: d['name'], path: File.expand_path(d['path']) }
+      @device_configs = data.fetch('devices').map do |device|
+        { name: device['name'], path: File.expand_path(device['path']) }
       end
     end
   end
