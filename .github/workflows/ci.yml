@@ -22,7 +22,9 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg libtag1-dev
+          sudo add-apt-repository universe -y
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg libtag1-dev pkg-config
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
