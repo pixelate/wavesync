@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     name: Test (Ruby ${{ matrix.ruby }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     strategy:
       fail-fast: false
@@ -22,9 +22,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update -qq
-          sudo add-apt-repository universe -y
-          sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg libtag1-dev pkg-config
+          sudo apt-get install -y ffmpeg libtag1-dev
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -37,7 +35,7 @@ jobs:
 
   lint:
     name: Lint (RuboCop)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
