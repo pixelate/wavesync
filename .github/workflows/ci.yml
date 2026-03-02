@@ -22,7 +22,15 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg libtag1-dev
+          sudo apt-get install -y ffmpeg cmake
+          # Ubuntu LTS only ships TagLib 1.x; taglib-ruby 2.0 requires TagLib 2.x
+          curl -sSL https://taglib.org/releases/taglib-2.2.tar.gz | tar -xz
+          cmake -S taglib-2.2 -B taglib-2.2/build \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DBUILD_SHARED_LIBS=ON
+          cmake --build taglib-2.2/build --parallel $(nproc)
+          sudo cmake --install taglib-2.2/build
+          sudo ldconfig
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -31,7 +39,7 @@ jobs:
 
       - name: Install gems
         run: |
-          bundle config build.taglib-ruby --with-tag-lib=/usr/lib/x86_64-linux-gnu
+          bundle config build.taglib-ruby --with-tag-dir=/usr/local
           bundle install --jobs 4
 
       - name: Run tests
@@ -47,7 +55,15 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y libtag1-dev
+          sudo apt-get install -y cmake
+          # Ubuntu LTS only ships TagLib 1.x; taglib-ruby 2.0 requires TagLib 2.x
+          curl -sSL https://taglib.org/releases/taglib-2.2.tar.gz | tar -xz
+          cmake -S taglib-2.2 -B taglib-2.2/build \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DBUILD_SHARED_LIBS=ON
+          cmake --build taglib-2.2/build --parallel $(nproc)
+          sudo cmake --install taglib-2.2/build
+          sudo ldconfig
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -56,7 +72,7 @@ jobs:
 
       - name: Install gems
         run: |
-          bundle config build.taglib-ruby --with-tag-lib=/usr/lib/x86_64-linux-gnu
+          bundle config build.taglib-ruby --with-tag-dir=/usr/local
           bundle install --jobs 4
 
       - name: Run RuboCop
