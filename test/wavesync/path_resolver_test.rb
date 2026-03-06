@@ -7,10 +7,7 @@ require_relative '../../lib/wavesync/audio'
 
 module Wavesync
   class PathResolverTest < Wavesync::TestCase
-    CONFIG_PATH = File.expand_path('../../config/devices.yml', __dir__)
-
     def setup
-      Device.configure(path: CONFIG_PATH)
       @source_library = '/home/user/music'
       @target_library = '/media/device/music'
     end

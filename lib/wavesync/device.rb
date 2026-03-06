@@ -13,17 +13,8 @@ module Wavesync
       @bpm_source = bpm_source
     end
 
-    class << self
-      attr_writer :config_path
-    end
-
     def self.config_path
-      @config_path ||= File.expand_path('../../config/devices.yml', __dir__)
-    end
-
-    def self.configure(path:)
-      self.config_path = path
-      @all = nil
+      File.expand_path('../../config/devices.yml', __dir__)
     end
 
     def self.all
