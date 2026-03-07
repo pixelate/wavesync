@@ -62,8 +62,7 @@ module Wavesync
     private
 
     def find_audio_files
-      Dir.glob(File.join(@source_library_path, '**', '*'))
-         .select { |f| Wavesync::Audio::SUPPORTED_FORMATS.include?(File.extname(f).downcase) }
+      Audio.find_all(@source_library_path)
     end
 
     def copy_file(audio, source_file_path, path_resolver)

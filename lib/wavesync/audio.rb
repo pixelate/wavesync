@@ -10,9 +10,14 @@ module Wavesync
   class Audio
     SUPPORTED_FORMATS = %w[.m4a .mp3 .wav .aif .aiff].freeze
 
+    def self.find_all(library_path)
+      Dir.glob(File.join(library_path, '**', '*'))
+         .select { |f| SUPPORTED_FORMATS.include?(File.extname(f).downcase) }
+    end
+
     def initialize(file_path)
       @file_path = file_path
-      @file_ext = File.extname(@file_path)
+      @file_ext = File.extname(@file_path).downcase
       @audio = FFMPEG::Movie.new(file_path)
       @bpm = bpm_from_file
     end
@@ -26,6 +31,20 @@ module Wavesync
     end
 
     attr_reader :bpm
+
+    def write_bpm(bpm)
+      case @file_ext
+      when '.m4a'
+        write_bpm_to_m4a(bpm)
+      when '.mp3'
+        write_bpm_to_mp3(bpm)
+      when '.wav'
+        write_bpm_to_wav(bpm)
+      when '.aif', '.aiff'
+        write_bpm_to_aiff(bpm)
+      end
+      @bpm = bpm
+    end
 
     def transcode(target_path, target_sample_rate: nil, target_file_type: nil, target_bit_depth: nil)
       options = build_transcode_options(target_sample_rate, target_bit_depth)
@@ -77,8 +96,7 @@ module Wavesync
     end
 
     def bpm_from_file
-      ext = @file_ext.downcase
-      case ext
+      case @file_ext
       when '.m4a'
         bpm_from_m4a
       when '.mp3'
@@ -133,6 +151,41 @@ module Wavesync
     def bpm_from_acid_chunk
       tmpo = Wavesync::AcidChunk.read_bpm(@file_path).to_i
       tmpo&.zero? ? nil : tmpo
+    end
+
+    def write_bpm_to_wav(bpm)
+      temp_path = "#{@file_path}.tmp"
+      AcidChunk.write_bpm(@file_path, temp_path, bpm)
+      FileUtils.mv(temp_path, @file_path)
+    end
+
+    def write_bpm_to_mp3(bpm)
+      TagLib::MPEG::File.open(@file_path) do |file|
+        write_id3v2_bpm(file.id3v2_tag(true), bpm)
+        file.save
+      end
+    end
+
+    def write_bpm_to_m4a(bpm)
+      TagLib::MP4::File.open(@file_path) do |file|
+        tag = file.tag
+        tag.item_map.insert('tmpo', TagLib::MP4::Item.from_int(bpm.to_i))
+        file.save
+      end
+    end
+
+    def write_bpm_to_aiff(bpm)
+      TagLib::RIFF::AIFF::File.open(@file_path) do |file|
+        write_id3v2_bpm(file.tag, bpm)
+        file.save
+      end
+    end
+
+    def write_id3v2_bpm(tag, bpm)
+      tag.remove_frames('TBPM')
+      frame = TagLib::ID3v2::TextIdentificationFrame.new('TBPM', TagLib::String::UTF8)
+      frame.text = bpm.to_s
+      tag.add_frame(frame)
     end
   end
 end
