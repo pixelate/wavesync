@@ -69,6 +69,23 @@ module Wavesync
       end
     end
 
+    def analyze_progress(index, total_count)
+      parts = [
+        in_color('wavesync analyze', :primary),
+        in_color("#{index + 1}/#{total_count}", :extra)
+      ]
+      sticky(parts.join(' '), 0)
+    end
+
+    def analyze_skip(file, bpm)
+      set_analyze_file_stickies(file, in_color("↷ #{bpm} BPM already set", :highlight))
+    end
+
+    def analyze_result(file, bpm)
+      label = bpm ? in_color("#{bpm} BPM", :highlight) : in_color('No BPM detected', :highlight)
+      set_analyze_file_stickies(file, label)
+    end
+
     private
 
     def audio_info(sample_rate, bit_depth)
@@ -83,7 +100,19 @@ module Wavesync
     end
 
     def sticky(text, index)
+      set_sticky(text, index)
+      redraw
+    end
+
+    def set_sticky(text, index)
       @sticky_lines[index] = text
+    end
+
+    def set_analyze_file_stickies(file, label)
+      path = Pathname.new(file)
+      set_sticky(in_color(path.parent.basename.to_s, :secondary), 1)
+      set_sticky(in_color(path.basename(path.extname).to_s, :tertiary), 2)
+      set_sticky(label, 3)
       redraw
     end
 

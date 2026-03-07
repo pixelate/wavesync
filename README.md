@@ -20,11 +20,12 @@ Unsupported file types will be ignored when syncing.
 
 ## Installation
 
-1. Install ffmpeg and taglib
+1. Install dependencies
 
 ```bash
-brew install ffmpeg
-brew install taglib
+brew install ffmpeg    # required for all commands
+brew install taglib    # required for all commands
+brew install bpm-tools # required for analyze command
 ```
 
 2. Install field kit (only required for syncing to TP-7)
@@ -59,14 +60,25 @@ Wavesync will exit with an error if a device model in the config is not supporte
 ## Usage
 
 ```bash
-# Use the default config at ~/wavesync.yml
-wavesync
+# Sync library to all devices (uses default config at ~/wavesync.yml)
+wavesync sync
 
 # Use a config at a specific path
-wavesync -c /path/to/wavesync.yml
+wavesync sync -c /path/to/wavesync.yml
 
 # Sync to a specific device only (by name as defined in config)
-wavesync -d Octatrack
+wavesync sync -d Octatrack
+
+# Analyze library files for BPM and write results to file metadata
+# Files that already have BPM set are skipped
+wavesync analyze
+
+# Overwrite existing BPM values
+wavesync analyze --force
+
+# Analyze with a specific config path
+wavesync analyze -c /path/to/wavesync.yml
+
 ```
 
 ## Sample Rate Selection
