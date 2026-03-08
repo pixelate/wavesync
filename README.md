@@ -78,8 +78,24 @@ wavesync analyze --force
 
 # Analyze with a specific config path
 wavesync analyze -c /path/to/wavesync.yml
-
 ```
+
+## Sets
+
+A set is a named, ordered selection of tracks from your library. Sets are stored as YAML files inside a `.sets` folder within the library directory.
+
+```bash
+# Create a new set and open the interactive editor
+wavesync set create <name>
+
+# Edit an existing set
+wavesync set edit <name>
+
+# List all sets
+wavesync set list
+```
+
+The interactive editor lets you add tracks (with arrow-key navigation and live filtering), remove tracks, and move tracks up or down in the order. Changes are only written to disk when you choose **Save & quit**.
 
 ## Sample Rate Selection
 

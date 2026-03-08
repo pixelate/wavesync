@@ -86,6 +86,15 @@ module Wavesync
       set_analyze_file_stickies(file, label)
     end
 
+    def color(text, key)
+      in_color(text, key)
+    end
+
+    def clear
+      print @cursor.clear_screen
+      print @cursor.move_to(0, 0)
+    end
+
     private
 
     def audio_info(sample_rate, bit_depth)
