@@ -12,9 +12,11 @@ module Wavesync
         start_sync
       when 'analyze'
         start_analyze
+      when 'set'
+        start_set
       else
         puts "Unknown command: #{command}"
-        puts 'Available commands: sync, analyze'
+        puts 'Available commands: sync, analyze, set'
         exit 1
       end
     end
@@ -61,6 +63,63 @@ module Wavesync
       device_configs.each do |device_config|
         scanner.sync(device_config[:path], Wavesync::Device.find_by(name: device_config[:model]))
       end
+    end
+
+    def self.start_set
+      subcommand = ARGV.shift
+
+      options = {}
+      parser = OptionParser.new do |opts|
+        opts.banner = 'Usage: wavesync set <subcommand> [options]'
+
+        opts.on('-c', '--config PATH', 'Path to wavesync config YAML file') do |value|
+          options[:config] = value
+        end
+      end
+
+      parser.parse!
+
+      config_path = options[:config] || Wavesync::Config::DEFAULT_PATH
+      config = Wavesync::Config.load(config_path)
+
+      case subcommand
+      when 'create'
+        name = require_set_name('create')
+        if Wavesync::Set.exists?(config.library, name)
+          puts "Set '#{name}' already exists. Use 'wavesync set edit #{name}' to edit it."
+          exit 1
+        end
+        set = Wavesync::Set.new(config.library, name)
+        Wavesync::SetEditor.new(set, config.library).run
+      when 'edit'
+        name = require_set_name('edit')
+        unless Wavesync::Set.exists?(config.library, name)
+          puts "Set '#{name}' not found. Use 'wavesync set create #{name}' to create it."
+          exit 1
+        end
+        set = Wavesync::Set.load(config.library, name)
+        Wavesync::SetEditor.new(set, config.library).run
+      when 'list'
+        sets = Wavesync::Set.all(config.library)
+        if sets.empty?
+          puts 'No sets found.'
+        else
+          sets.each { |s| puts "#{s.name} (#{s.tracks.size} tracks)" }
+        end
+      else
+        puts "Unknown subcommand: #{subcommand || '(none)'}"
+        puts 'Available subcommands: create, edit, list'
+        exit 1
+      end
+    end
+
+    def self.require_set_name(subcommand)
+      name = ARGV.shift
+      unless name
+        puts "Usage: wavesync set #{subcommand} <name>"
+        exit 1
+      end
+      name
     end
 
     def self.start_analyze
