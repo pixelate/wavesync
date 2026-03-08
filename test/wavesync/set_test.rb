@@ -17,8 +17,6 @@ module Wavesync
       FileUtils.rm_rf(@tmp)
     end
 
-    # --- class helpers ---
-
     test 'sets_path returns .sets inside the library' do
       assert_equal File.join(@library, '.sets'), Set.sets_path(@library)
     end
@@ -36,8 +34,6 @@ module Wavesync
       assert Set.exists?(@library, 'demo')
     end
 
-    # --- initialize ---
-
     test 'new set has empty tracks by default' do
       assert_empty Set.new(@library, 'empty').tracks
     end
@@ -54,16 +50,12 @@ module Wavesync
       assert_equal ['/a.wav'], set.tracks
     end
 
-    # --- add_track ---
-
     test 'add_track appends to the track list' do
       set = Set.new(@library, 's')
       set.add_track('/a.wav')
       set.add_track('/b.wav')
       assert_equal ['/a.wav', '/b.wav'], set.tracks
     end
-
-    # --- remove_track ---
 
     test 'remove_track deletes the track at the given index' do
       set = Set.new(@library, 's', ['/a.wav', '/b.wav', '/c.wav'])
@@ -83,8 +75,6 @@ module Wavesync
       assert_equal ['/a.wav'], set.tracks
     end
 
-    # --- move_up ---
-
     test 'move_up swaps the track with the one above it' do
       set = Set.new(@library, 's', ['/a.wav', '/b.wav', '/c.wav'])
       set.move_up(1)
@@ -97,8 +87,6 @@ module Wavesync
       assert_equal ['/a.wav', '/b.wav'], set.tracks
     end
 
-    # --- move_down ---
-
     test 'move_down swaps the track with the one below it' do
       set = Set.new(@library, 's', ['/a.wav', '/b.wav', '/c.wav'])
       set.move_down(1)
@@ -110,8 +98,6 @@ module Wavesync
       set.move_down(1)
       assert_equal ['/a.wav', '/b.wav'], set.tracks
     end
-
-    # --- save ---
 
     test 'save creates the .sets directory if it does not exist' do
       Set.new(@library, 'fresh').save
@@ -133,8 +119,6 @@ module Wavesync
       assert_equal [], data['tracks']
     end
 
-    # --- load ---
-
     test 'load returns a Set with the persisted name and absolute tracks' do
       track = File.join(@library, 'x.wav')
       Set.new(@library, 'persisted', [track]).save
@@ -146,8 +130,6 @@ module Wavesync
     test 'load raises when the set does not exist' do
       assert_raises(Errno::ENOENT) { Set.load(@library, 'ghost') }
     end
-
-    # --- all ---
 
     test 'all returns empty array when .sets folder is absent' do
       assert_empty Set.all(@library)
