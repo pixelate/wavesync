@@ -8,14 +8,21 @@ module Wavesync
     FILE_NAME = 'library.yml'
 
     def self.load(library_path)
-      instance = new(library_path)
-      instance.send(:load_from_disk)
-      instance
+      new(library_path, load_tracks(library_path))
     end
 
-    def initialize(library_path)
+    def self.load_tracks(library_path)
+      file = File.join(library_path, FILE_NAME)
+      return {} unless File.exist?(file)
+
+      data = YAML.load_file(file)
+      (data['tracks'] || []).each_with_object({}) { |t, h| h[t['path']] = t }
+    end
+    private_class_method :load_tracks
+
+    def initialize(library_path, tracks = {})
       @library_path = library_path
-      @tracks = {}
+      @tracks = tracks
     end
 
     def update_track(relative_path, length:, bars:)
@@ -31,15 +38,6 @@ module Wavesync
 
     def file_path
       File.join(@library_path, FILE_NAME)
-    end
-
-    def load_from_disk
-      return unless File.exist?(file_path)
-
-      data = YAML.load_file(file_path)
-      (data['tracks'] || []).each do |track|
-        @tracks[track['path']] = track
-      end
     end
   end
 end
