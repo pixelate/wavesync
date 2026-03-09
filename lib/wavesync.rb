@@ -4,6 +4,7 @@ module Wavesync
 end
 
 require 'wavesync/acid_chunk'
+require 'wavesync/audio_format'
 require 'wavesync/audio'
 require 'wavesync/config'
 require 'wavesync/device'

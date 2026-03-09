@@ -3,6 +3,7 @@
 require 'tempfile'
 require 'fileutils'
 require_relative 'test_case'
+require_relative '../../lib/wavesync/audio_format'
 require_relative '../../lib/wavesync/audio'
 require_relative '../../lib/wavesync/acid_chunk'
 
@@ -85,6 +86,14 @@ module Wavesync
         Audio.new(path).write_bpm(130)
         assert_equal '130', Audio.new(path).bpm
       end
+    end
+
+    test '#format returns an AudioFormat with file type, sample rate, and bit depth' do
+      format = audio('44100_16.wav').format
+      assert_instance_of AudioFormat, format
+      assert_equal 'wav', format.file_type
+      assert_equal 44_100, format.sample_rate
+      assert_equal 16, format.bit_depth
     end
 
     test 'find_all returns files for all supported extensions' do

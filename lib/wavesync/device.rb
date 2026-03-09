@@ -38,6 +38,14 @@ module Wavesync
       end
     end
 
+    def target_format(source_format, source_file_path)
+      AudioFormat.new(
+        file_type: target_file_type(source_file_path),
+        sample_rate: target_sample_rate(source_format.sample_rate),
+        bit_depth: target_bit_depth(source_format.bit_depth)
+      )
+    end
+
     def target_file_type(source_file_path)
       file_extension = File.extname(source_file_path).downcase[1..]
       return nil if file_types.include?(file_extension)
