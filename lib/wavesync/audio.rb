@@ -23,7 +23,7 @@ module Wavesync
     end
 
     def sample_rate
-      @audio.audio_sample_rate
+      @sample_rate ||= @audio.audio_sample_rate
     end
 
     def bit_depth
@@ -31,6 +31,14 @@ module Wavesync
     end
 
     attr_reader :bpm
+
+    def format
+      AudioFormat.new(
+        file_type: @file_ext.delete_prefix('.'),
+        sample_rate: sample_rate,
+        bit_depth: bit_depth
+      )
+    end
 
     def write_bpm(bpm)
       case @file_ext

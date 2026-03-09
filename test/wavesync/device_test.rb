@@ -2,6 +2,7 @@
 
 require 'yaml'
 require_relative 'test_case'
+require_relative '../../lib/wavesync/audio_format'
 require_relative '../../lib/wavesync/device'
 
 module Wavesync
@@ -93,6 +94,24 @@ module Wavesync
       tp7 = Device.find_by(name: 'TP-7')
       assert_nil tp7.target_bit_depth(16)
       assert_nil tp7.target_bit_depth(24)
+    end
+
+    test '.target_format returns all nils when source format is fully supported' do
+      tp7 = Device.find_by(name: 'TP-7')
+      source_format = AudioFormat.new(file_type: 'wav', sample_rate: 44_100, bit_depth: 24)
+      target_format = tp7.target_format(source_format, 'song.wav')
+      assert_nil target_format.file_type
+      assert_nil target_format.sample_rate
+      assert_nil target_format.bit_depth
+    end
+
+    test '.target_format returns converted values when source format is unsupported' do
+      octatrack = Device.find_by(name: 'Octatrack')
+      source_format = AudioFormat.new(file_type: 'mp3', sample_rate: 96_000, bit_depth: 32)
+      target_format = octatrack.target_format(source_format, 'song.mp3')
+      assert_equal 'wav', target_format.file_type
+      assert_equal 44_100, target_format.sample_rate
+      assert_equal 24, target_format.bit_depth
     end
 
     test '.target_bit_depth returns closest supported bit depth' do

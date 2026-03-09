@@ -36,25 +36,22 @@ module Wavesync
       sticky(parts.join(' '), 0)
     end
 
-    def conversion_progress(source_sample_rate, target_sample_rate, source_bit_depth, source_file_type,
-                            target_file_type, target_bit_depth = nil)
-      target_sample_rate = source_sample_rate if target_sample_rate.nil?
-      target_file_type = source_file_type if target_file_type.nil?
-      target_bit_depth = source_bit_depth if target_bit_depth.nil?
+    def conversion_progress(source_format, target_format)
+      effective = source_format.merge(target_format)
 
-      source_info = audio_info(source_sample_rate, source_bit_depth)
-      target_info = audio_info(target_sample_rate, target_bit_depth)
+      source_info = audio_info(source_format.sample_rate, source_format.bit_depth)
+      target_info = audio_info(effective.sample_rate, effective.bit_depth)
 
       formatted_line = in_color(
-        "Converting #{source_file_type} (#{source_info}) ⇢ #{target_file_type} (#{target_info})", :highlight
+        "Converting #{source_format.file_type} (#{source_info}) ⇢ #{effective.file_type} (#{target_info})", :highlight
       )
       sticky(formatted_line, 3)
     end
 
-    def copy(source_sample_rate, source_bit_depth, source_file_type)
-      info = audio_info(source_sample_rate, source_bit_depth)
+    def copy(source_format)
+      info = audio_info(source_format.sample_rate, source_format.bit_depth)
 
-      sticky(in_color("Copying #{source_file_type} (#{info})", :highlight), 3)
+      sticky(in_color("Copying #{source_format.file_type} (#{info})", :highlight), 3)
     end
 
     def skip

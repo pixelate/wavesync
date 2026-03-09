@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'test_case'
+require_relative '../../lib/wavesync/audio_format'
 require_relative '../../lib/wavesync/file_converter'
 require_relative '../../lib/wavesync/path_resolver'
 require_relative '../../lib/wavesync/device'
@@ -27,7 +28,9 @@ module Wavesync
       FileUtils.touch(File.join(@source_dir, 'track.mp3'))
 
       audio = stub(bpm: nil)
-      result = @converter.convert(audio, source_aiff, @path_resolver, 'mp3', 44_100, nil, 16, nil)
+      source_format = AudioFormat.new(file_type: 'aiff', sample_rate: 44_100, bit_depth: 16)
+      target_format = AudioFormat.new(file_type: 'mp3', sample_rate: nil, bit_depth: nil)
+      result = @converter.convert(audio, source_aiff, @path_resolver, source_format, target_format)
 
       assert_equal false, result
     end
@@ -39,7 +42,9 @@ module Wavesync
       audio = stub(bpm: nil)
       audio.stubs(:transcode)
 
-      result = @converter.convert(audio, source_aiff, @path_resolver, 'mp3', 44_100, nil, 16, nil)
+      source_format = AudioFormat.new(file_type: 'aiff', sample_rate: 44_100, bit_depth: 16)
+      target_format = AudioFormat.new(file_type: 'mp3', sample_rate: nil, bit_depth: nil)
+      result = @converter.convert(audio, source_aiff, @path_resolver, source_format, target_format)
 
       assert_equal true, result
     end
@@ -50,7 +55,9 @@ module Wavesync
       FileUtils.touch(File.join(@target_dir, 'track.mp3'))
 
       audio = stub(bpm: nil)
-      result = @converter.convert(audio, source_aiff, @path_resolver, 'mp3', 44_100, nil, 16, nil)
+      source_format = AudioFormat.new(file_type: 'aiff', sample_rate: 44_100, bit_depth: 16)
+      target_format = AudioFormat.new(file_type: 'mp3', sample_rate: nil, bit_depth: nil)
+      result = @converter.convert(audio, source_aiff, @path_resolver, source_format, target_format)
 
       assert_equal false, result
     end

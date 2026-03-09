@@ -24,26 +24,19 @@ module Wavesync
         audio = Audio.new(file)
         @ui.bpm(audio.bpm)
 
-        file_type = device.target_file_type(file)
-        source_sample_rate = audio.sample_rate
-        source_bit_depth = audio.bit_depth
-        target_sample_rate = device.target_sample_rate(source_sample_rate)
-        target_bit_depth = device.target_bit_depth(source_bit_depth)
+        source_format = audio.format
+        target_format = device.target_format(source_format, file)
 
         @ui.file_progress(file)
 
-        if file_type || target_sample_rate || target_bit_depth
-          converted = @converter.convert(audio, file, path_resolver, file_type, source_sample_rate,
-                                         target_sample_rate, source_bit_depth, target_bit_depth) do
-            source_file_type = File.extname(file).delete_prefix('.')
-            @ui.conversion_progress(source_sample_rate, target_sample_rate, source_bit_depth,
-                                    source_file_type, file_type, target_bit_depth)
+        if target_format.file_type || target_format.sample_rate || target_format.bit_depth
+          converted = @converter.convert(audio, file, path_resolver, source_format, target_format) do
+            @ui.conversion_progress(source_format, target_format)
           end
-          target_path = path_resolver.resolve(file, audio, target_file_type: file_type)
+          target_path = path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
         else
           copied = copy_file(audio, file, path_resolver)
-          source_file_type = File.extname(file).delete_prefix('.')
-          @ui.copy(source_sample_rate, source_bit_depth, source_file_type)
+          @ui.copy(source_format)
           target_path = path_resolver.resolve(file, audio)
         end
 
