@@ -32,6 +32,17 @@ module Wavesync
 
     attr_reader :bpm
 
+    def duration
+      @audio.duration
+    end
+
+    def length
+      total_seconds = duration.to_i
+      minutes = total_seconds / 60
+      seconds = total_seconds % 60
+      "#{minutes}:#{seconds.to_s.rjust(2, '0')}"
+    end
+
     def format
       AudioFormat.new(
         file_type: @file_ext.delete_prefix('.'),
