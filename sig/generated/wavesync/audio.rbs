@@ -39,9 +39,6 @@ module Wavesync
 
     private
 
-    # : (Integer? target_sample_rate, Integer? target_bit_depth, ?Numeric? padding_seconds) -> Hash[Symbol, untyped]
-    def build_transcode_options: (Integer? target_sample_rate, Integer? target_bit_depth, ?Numeric? padding_seconds) -> Hash[Symbol, untyped]
-
     # : () -> (String | Integer)?
     def bpm_from_file: () -> (String | Integer)?
 
