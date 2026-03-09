@@ -10,11 +10,11 @@ module Wavesync
     DEFAULT_PATH = File.join(Dir.home, 'wavesync.yml')
 
     SUPPORTED_KEYS = %w[library devices].freeze
-    DEVICE_SUPPORTED_KEYS = %w[name model path].freeze
+    DEVICE_SUPPORTED_KEYS = %w[name model path projects_path].freeze
     DEVICE_REQUIRED_KEYS = %w[name model path].freeze
 
     attr_reader :library #: String
-    attr_reader :device_configs #: Array[{ name: String, model: String, path: String }]
+    attr_reader :device_configs #: Array[{ name: String, model: String, path: String, projects_path: String? }]
 
     #: (?String path) -> Config
     def self.load(path = DEFAULT_PATH)
@@ -35,7 +35,12 @@ module Wavesync
       @library = File.expand_path(data['library'])
       @device_configs = data['devices'].each_with_index.map do |device, i|
         validate_device!(device, i)
-        { name: device['name'], model: device['model'], path: File.expand_path(device['path']) }
+        {
+          name: device['name'],
+          model: device['model'],
+          path: File.expand_path(device['path']),
+          projects_path: device['projects_path'] && File.expand_path(device['projects_path'])
+        }
       end
     end
 
@@ -71,6 +76,10 @@ module Wavesync
       %w[name model path].each do |key|
         raise ConfigError, "Device #{index + 1} '#{key}' must be a string" unless device[key].is_a?(String)
       end
+
+      projects_path = device['projects_path']
+      return unless projects_path
+      raise ConfigError, "Device #{index + 1} 'projects_path' must be a string" unless projects_path.is_a?(String)
     end
   end
 end

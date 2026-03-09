@@ -1,0 +1,42 @@
+# Generated from lib/wavesync/file_sync_throttle.rb with RBS::Inline
+
+module Wavesync
+  class FileSyncThrottle
+    MODES: untyped
+
+    POLL_INTERVAL_SECONDS: ::Integer
+
+    TIMEOUT_SECONDS: ::Integer
+
+    FREE_SPACE_THRESHOLD_BYTES: untyped
+
+    FIXED_DELAY_SECONDS: ::Integer
+
+    attr_reader mode: Symbol
+
+    # : (?mode: Symbol) -> void
+    def initialize: (?mode: Symbol) -> void
+
+    # : (Pathname target_path) -> void
+    def wait_for_sync: (Pathname target_path) -> void
+
+    def wait: (untyped seconds) -> untyped
+
+    private
+
+    # : (Pathname target_path) -> void
+    def wait_for_file_size_stable: (Pathname target_path) -> void
+
+    # : (Pathname target_path) -> void
+    def wait_for_disk_space: (Pathname target_path) -> void
+
+    # : (Pathname target_path) -> void
+    def wait_for_lsof: (Pathname target_path) -> void
+
+    # : (Pathname path) -> Integer
+    def free_space_bytes: (Pathname path) -> Integer
+
+    # : (Pathname path) -> bool
+    def file_open?: (Pathname path) -> bool
+  end
+end

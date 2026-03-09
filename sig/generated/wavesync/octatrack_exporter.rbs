@@ -1,0 +1,95 @@
+# Generated from lib/wavesync/octatrack_exporter.rb with RBS::Inline
+
+module Wavesync
+  class OctatrackExporter
+    PROJECT_FILE: ::String
+
+    CRLF: ::String
+
+    TEMPLATES_DIR: untyped
+
+    # Offsets of the 8 track assignment blocks within each bank file.
+    # Each block is 40 bytes: 8 × [0x8N, slot, slot, 0x00, 0x00]
+    TRACK_ASSIGNMENT_OFFSETS: untyped
+
+    # : (Set set, String library_path, String device_audio_path, String projects_path, ?device: Device?) -> void
+    def initialize: (Set set, String library_path, String device_audio_path, String projects_path, ?device: Device?) -> void
+
+    # : () -> String
+    def project_dir: () -> String
+
+    # : () -> String
+    def export: () -> String
+
+    private
+
+    # : () -> void
+    def write_project_work: () -> void
+
+    # : () -> void
+    def write_bank_files: () -> void
+
+    # : () -> void
+    def write_arr_files: () -> void
+
+    # : () -> void
+    def write_markers_file: () -> void
+
+    # : (String name) -> String
+    def load_template: (String name) -> String
+
+    # : (String bank_data) -> String
+    def apply_track_assignments: (String bank_data) -> String
+
+    # : (String data, Integer offset) -> void
+    def write_track_assignments: (String data, Integer offset) -> void
+
+    # : (String data) -> Integer
+    def bank_checksum: (String data) -> Integer
+
+    # : () -> String
+    def generate_project_work: () -> String
+
+    # : () -> String
+    def divider: () -> String
+
+    # : (String title) -> String
+    def section_header: (String title) -> String
+
+    # : (String tag, Array[String] lines) -> String
+    def block: (String tag, Array[String] lines) -> String
+
+    # : (String tag) -> String
+    def open_tag: (String tag) -> String
+
+    # : (String tag) -> String
+    def close_tag: (String tag) -> String
+
+    # : () -> String
+    def meta_section: () -> String
+
+    # : () -> String
+    def settings_section: () -> String
+
+    # : () -> String
+    def states_section: () -> String
+
+    # : () -> String
+    def flex_sample_sections: () -> String
+
+    # : () -> String
+    def static_sample_sections: () -> String
+
+    # : (Integer slot, String path) -> String
+    def static_sample_block: (Integer slot, String path) -> String
+
+    # : (String track_path) -> String
+    def relative_audio_path: (String track_path) -> String
+
+    # : (String track_path, String relative_to_library) -> String
+    def apply_device_path_rules: (String track_path, String relative_to_library) -> String
+
+    # : (String track_path) -> (String | Integer)?
+    def read_bpm: (String track_path) -> (String | Integer)?
+  end
+end

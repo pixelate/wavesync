@@ -10,6 +10,7 @@ module Wavesync
       self.subcommands = [
         Subcommand.new(usage: 'set create NAME', description: 'Create a new track set'),
         Subcommand.new(usage: 'set edit NAME', description: 'Edit an existing track set'),
+        Subcommand.new(usage: 'set export NAME --device DEVICE', description: 'Export a track set to a device'),
         Subcommand.new(usage: 'set list', description: 'List all track sets')
       ].freeze
 
@@ -17,7 +18,11 @@ module Wavesync
       def run
         subcommand = ARGV.shift
 
-        _options, config = parse_options(banner: 'Usage: wavesync set <subcommand> [options]')
+        options, config = parse_options(banner: 'Usage: wavesync set <subcommand> [options]') do |opts, opts_hash|
+          opts.on('-d', '--device NAME', 'Name of device (used by export)') do |value|
+            opts_hash[:device] = value
+          end
+        end
 
         case subcommand
         when 'create'
@@ -43,9 +48,39 @@ module Wavesync
           else
             sets.each { |set| puts "#{set.name} (#{set.tracks.size} tracks)" }
           end
+        when 'export'
+          name = require_name('export')
+          unless options[:device]
+            puts 'Usage: wavesync set export <name> --device <device>'
+            exit 1
+          end
+          device_config = config.device_configs.find { |device_config| device_config[:name] == options[:device] }
+          unless device_config
+            known = config.device_configs.map { |device_config| device_config[:name] }.join(', ')
+            puts "Unknown device \"#{options[:device]}\". Devices in config: #{known}"
+            exit 1
+          end
+          unless Wavesync::Set.exists?(config.library, name)
+            puts "Set '#{name}' not found. Use 'wavesync set create #{name}' to create it."
+            exit 1
+          end
+          unless device_config[:projects_path]
+            puts "Device \"#{options[:device]}\" has no 'projects_path' configured in wavesync.yml."
+            exit 1
+          end
+          set = Wavesync::Set.load(config.library, name)
+          device = Wavesync::Device.find_by(name: device_config[:model])
+          exporter = Wavesync::OctatrackExporter.new(set, config.library, device_config[:path], device_config[:projects_path], device: device)
+          if Dir.exist?(exporter.project_dir) && !Wavesync::UI.new.confirm("'#{File.basename(exporter.project_dir)}' already exists on device. Overwrite? [y/N] ")
+            puts 'Export cancelled.'
+            exit 0
+          end
+          project_path = exporter.export
+          puts "Exported '#{name}' to #{project_path}"
+          puts "#{set.tracks.size} track(s) assigned to static slots 1-#{set.tracks.size}"
         else
           puts "Unknown subcommand: #{subcommand || '(none)'}"
-          puts 'Available subcommands: create, edit, list'
+          puts 'Available subcommands: create, edit, export, list'
           exit 1
         end
       end

@@ -15,7 +15,7 @@ module Wavesync
 
     attr_reader library: String
 
-    attr_reader device_configs: Array[{ name: String, model: String, path: String }]
+    attr_reader device_configs: Array[{ name: String, model: String, path: String, projects_path: String? }]
 
     # : (?String path) -> Config
     def self.load: (?String path) -> Config

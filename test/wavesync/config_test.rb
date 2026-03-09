@@ -156,6 +156,20 @@ module Wavesync
       assert_equal 'My Device', config.device_configs.first[:name]
       assert_equal 'TP-7', config.device_configs.first[:model]
       assert_equal File.expand_path('/tmp/device'), config.device_configs.first[:path]
+      assert_nil config.device_configs.first[:projects_path]
+    end
+
+    test 'initializes projects_path when provided' do
+      device = { 'name' => 'My Device', 'model' => 'Octatrack', 'path' => '/tmp/audio', 'projects_path' => '/tmp/projects' }
+      config = Config.new(VALID_CONFIG.merge('devices' => [device]))
+      assert_equal File.expand_path('/tmp/projects'), config.device_configs.first[:projects_path]
+    end
+
+    test 'raises ConfigError when projects_path is not a string' do
+      device = { 'name' => 'My Device', 'model' => 'Octatrack', 'path' => '/tmp/audio', 'projects_path' => 123 }
+      data = VALID_CONFIG.merge('devices' => [device])
+      error = assert_raises(ConfigError) { Config.new(data) }
+      assert_match "Device 1 'projects_path' must be a string", error.message
     end
 
     test 'initializes with multiple devices' do

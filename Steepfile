@@ -13,6 +13,7 @@ target :wavesync do
   library 'yaml'
   library 'psych'
   library 'fileutils'
+  library 'zlib'
   library 'pathname'
   library 'shellwords'
   library 'open3'
