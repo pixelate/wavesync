@@ -2,6 +2,7 @@
 
 require 'fileutils'
 require 'streamio-ffmpeg'
+require_relative 'file_converter'
 
 module Wavesync
   class Scanner
@@ -9,6 +10,7 @@ module Wavesync
       @source_library_path = File.expand_path(source_library_path)
       @audio_files = find_audio_files
       @ui = Wavesync::UI.new
+      @converter = FileConverter.new
       FFMPEG.logger = Logger.new(File::NULL)
     end
 
@@ -31,8 +33,12 @@ module Wavesync
         @ui.file_progress(file)
 
         if file_type || target_sample_rate || target_bit_depth
-          converted = convert_file(audio, file, path_resolver, file_type, source_sample_rate,
-                                   target_sample_rate, source_bit_depth, target_bit_depth)
+          converted = @converter.convert(audio, file, path_resolver, file_type, source_sample_rate,
+                                         target_sample_rate, source_bit_depth, target_bit_depth) do
+            source_file_type = File.extname(file).delete_prefix('.')
+            @ui.conversion_progress(source_sample_rate, target_sample_rate, source_bit_depth,
+                                    source_file_type, file_type, target_bit_depth)
+          end
           target_path = path_resolver.resolve(file, audio, target_file_type: file_type)
         else
           copied = copy_file(audio, file, path_resolver)
@@ -83,29 +89,6 @@ module Wavesync
       FileUtils.install(source, target)
     rescue Errno::ENOENT
       puts 'Errno::ENOENT'
-    end
-
-    def convert_file(audio, source_file_path, path_resolver, target_file_type, source_sample_rate,
-                     target_sample_rate, source_bit_depth, target_bit_depth)
-      return false unless target_file_type || target_sample_rate || target_bit_depth
-
-      target_path = path_resolver.resolve(source_file_path, audio, target_file_type: target_file_type)
-
-      files_to_cleanup = path_resolver.find_files_to_cleanup(target_path, audio)
-      files_to_cleanup.each { |file| FileUtils.rm_f(file) }
-
-      return false if target_path.exist?
-
-      target_path.dirname.mkpath
-      source_file_type = File.extname(source_file_path).delete_prefix('.')
-      @ui.conversion_progress(source_sample_rate, target_sample_rate, source_bit_depth, source_file_type,
-                              target_file_type, target_bit_depth)
-
-      audio.transcode(target_path.to_s, target_sample_rate: target_sample_rate,
-                                        target_file_type: target_file_type,
-                                        target_bit_depth: target_bit_depth || source_bit_depth)
-
-      true
     end
   end
 end
