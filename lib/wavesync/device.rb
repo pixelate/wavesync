@@ -3,14 +3,15 @@
 require 'yaml'
 module Wavesync
   class Device
-    attr_reader :name, :sample_rates, :bit_depths, :file_types, :bpm_source
+    attr_reader :name, :sample_rates, :bit_depths, :file_types, :bpm_source, :bar_multiple
 
-    def initialize(name:, sample_rates:, bit_depths:, file_types:, bpm_source: nil)
+    def initialize(name:, sample_rates:, bit_depths:, file_types:, bpm_source: nil, bar_multiple: nil)
       @name = name
       @sample_rates = sample_rates
       @bit_depths = bit_depths
       @file_types = file_types
       @bpm_source = bpm_source
+      @bar_multiple = bar_multiple
     end
 
     def self.config_path
@@ -33,7 +34,8 @@ module Wavesync
           sample_rates: attrs['sample_rates'],
           bit_depths: attrs['bit_depths'],
           file_types: attrs['file_types'],
-          bpm_source: attrs['bpm_source']&.to_sym
+          bpm_source: attrs['bpm_source']&.to_sym,
+          bar_multiple: attrs['bar_multiple']
         )
       end
     end

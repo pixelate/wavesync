@@ -19,7 +19,10 @@ module Wavesync
       @file_path = file_path
       @file_ext = File.extname(@file_path).downcase
       @audio = FFMPEG::Movie.new(file_path)
-      @bpm = bpm_from_file
+    end
+
+    def duration
+      @audio.duration
     end
 
     def sample_rate
@@ -30,7 +33,11 @@ module Wavesync
       @bit_depth ||= calculate_bit_depth
     end
 
-    attr_reader :bpm
+    def bpm
+      return @bpm if defined?(@bpm)
+
+      @bpm = bpm_from_file
+    end
 
     def format
       AudioFormat.new(
@@ -54,8 +61,8 @@ module Wavesync
       @bpm = bpm
     end
 
-    def transcode(target_path, target_sample_rate: nil, target_file_type: nil, target_bit_depth: nil)
-      options = build_transcode_options(target_sample_rate, target_bit_depth)
+    def transcode(target_path, target_sample_rate: nil, target_file_type: nil, target_bit_depth: nil, padding_seconds: nil)
+      options = build_transcode_options(target_sample_rate, target_bit_depth, padding_seconds)
       ext = target_file_type || @file_ext.delete_prefix('.')
       temp_path = File.join(
         Dir.tmpdir,
@@ -89,7 +96,7 @@ module Wavesync
       nil
     end
 
-    def build_transcode_options(target_sample_rate, target_bit_depth)
+    def build_transcode_options(target_sample_rate, target_bit_depth, padding_seconds = nil)
       options = { custom: %w[-loglevel warning -nostats -hide_banner] }
 
       if target_bit_depth == 24
@@ -100,6 +107,12 @@ module Wavesync
 
       options[:audio_codec] = 'pcm_s24le'
       options[:audio_sample_rate] = target_sample_rate if target_sample_rate
+
+      if padding_seconds&.positive?
+        total_duration = @audio.duration + padding_seconds
+        options[:custom] += ['-af', "apad=whole_dur=#{total_duration.round(6)}"]
+      end
+
       options
     end
 

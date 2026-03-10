@@ -58,11 +58,14 @@ module Wavesync
       sticky(in_color('↷ Skipping, already synced', :highlight), 3)
     end
 
-    def bpm(tbpm)
+    def bpm(tbpm, original_bars: nil, target_bars: nil)
       if tbpm.nil?
         sticky('', 4)
+      elsif original_bars && target_bars
+        bar_info = original_bars == target_bars ? "#{original_bars} bars" : "#{original_bars} → #{target_bars} bars"
+        sticky("#{tbpm} bpm · #{bar_info}", 4)
       else
-        sticky("#{tbpm}bpm", 4)
+        sticky("#{tbpm} bpm", 4)
       end
     end
 

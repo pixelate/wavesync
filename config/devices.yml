@@ -24,3 +24,4 @@ devices:
     - aiff
     - aif
   bpm_source: :filename
+  bar_multiple: 64
