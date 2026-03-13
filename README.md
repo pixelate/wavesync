@@ -69,6 +69,10 @@ wavesync sync -c /path/to/wavesync.yml
 # Sync to a specific device only (by name as defined in config)
 wavesync sync -d Octatrack
 
+# Pad each track with silence so its total length aligns to a multiple of 64 bars
+# (Octatrack only — requires BPM metadata on each track)
+wavesync sync -p
+
 # Analyze library files for BPM and write results to file metadata
 # Files that already have BPM set are skipped
 wavesync analyze

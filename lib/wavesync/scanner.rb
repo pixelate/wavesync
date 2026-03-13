@@ -14,7 +14,7 @@ module Wavesync
       FFMPEG.logger = Logger.new(File::NULL)
     end
 
-    def sync(target_library_path, device)
+    def sync(target_library_path, device, pad: false)
       path_resolver = PathResolver.new(@source_library_path, target_library_path, device)
       skipped_count = 0
       conversion_count = 0
@@ -22,15 +22,25 @@ module Wavesync
 
       @audio_files.each_with_index do |file, index|
         audio = Audio.new(file)
-        @ui.bpm(audio.bpm)
 
         source_format = audio.format
         target_format = device.target_format(source_format, file)
 
+        padding_seconds = nil
+        original_bars = nil
+        target_bars = nil
+        if pad && device.bar_multiple
+          padding_seconds = TrackPadding.compute(audio.duration, audio.bpm, device.bar_multiple)
+          original_bars, target_bars = TrackPadding.bar_counts(audio.duration, audio.bpm, device.bar_multiple) unless padding_seconds.zero?
+          padding_seconds = nil if padding_seconds.zero?
+        end
+
+        @ui.bpm(audio.bpm, original_bars: original_bars, target_bars: target_bars)
         @ui.file_progress(file)
 
-        if target_format.file_type || target_format.sample_rate || target_format.bit_depth
-          converted = @converter.convert(audio, file, path_resolver, source_format, target_format) do
+        if target_format.file_type || target_format.sample_rate || target_format.bit_depth || padding_seconds
+          converted = @converter.convert(audio, file, path_resolver, source_format, target_format,
+                                         padding_seconds: padding_seconds) do
             @ui.conversion_progress(source_format, target_format)
           end
           target_path = path_resolver.resolve(file, audio, target_file_type: target_format.file_type)

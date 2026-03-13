@@ -2,8 +2,11 @@
 
 module Wavesync
   class FileConverter
-    def convert(audio, source_file_path, path_resolver, source_format, target_format, &before_transcode)
-      return false unless target_format.file_type || target_format.sample_rate || target_format.bit_depth
+    DURATION_TOLERANCE_SECONDS = 0.5
+
+    def convert(audio, source_file_path, path_resolver, source_format, target_format, padding_seconds: nil, &before_transcode)
+      needs_format_conversion = target_format.file_type || target_format.sample_rate || target_format.bit_depth
+      return false unless needs_format_conversion || padding_seconds&.positive?
 
       target_path = path_resolver.resolve(source_file_path, audio, target_file_type: target_format.file_type)
 
@@ -15,14 +18,21 @@ module Wavesync
         return false if source_converted_path.exist?
       end
 
-      return false if target_path.exist?
+      if target_path.exist?
+        existing_duration = Audio.new(target_path.to_s).duration
+        expected_duration = audio.duration + (padding_seconds || 0)
+        return false if (existing_duration - expected_duration).abs < DURATION_TOLERANCE_SECONDS
+
+        target_path.delete
+      end
 
       target_path.dirname.mkpath
       before_transcode&.call
 
       audio.transcode(target_path.to_s, target_sample_rate: target_format.sample_rate,
                                         target_file_type: target_format.file_type,
-                                        target_bit_depth: target_format.bit_depth || source_format.bit_depth)
+                                        target_bit_depth: target_format.bit_depth || source_format.bit_depth,
+                                        padding_seconds: padding_seconds)
 
       true
     end

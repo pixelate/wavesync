@@ -33,6 +33,10 @@ module Wavesync
         opts.on('-c', '--config PATH', 'Path to wavesync config YAML file') do |value|
           options[:config] = value
         end
+
+        opts.on('-p', '--pad', 'Pad tracks with silence so total length is a multiple of 64 bars (Octatrack only)') do
+          options[:pad] = true
+        end
       end
 
       parser.parse!
@@ -61,7 +65,8 @@ module Wavesync
       scanner = Wavesync::Scanner.new(config.library)
 
       device_configs.each do |device_config|
-        scanner.sync(device_config[:path], Wavesync::Device.find_by(name: device_config[:model]))
+        scanner.sync(device_config[:path], Wavesync::Device.find_by(name: device_config[:model]),
+                     pad: options[:pad] || false)
       end
     end
 
