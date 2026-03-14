@@ -9,9 +9,10 @@ Gem::Specification.new do |spec|
   spec.authors = ['Andreas Zecher']
   spec.homepage = 'https://github.com/pixelate/wavesync'
   spec.metadata['documentation_uri'] = 'https://github.com/pixelate/wavesync?tab=readme-ov-file#wavesync'
-  spec.license  = 'MIT'
+  spec.metadata['rubygems_mfa_required'] = 'true'
+  spec.license = 'MIT'
 
-  spec.required_ruby_version = '>= 3.0'
+  spec.required_ruby_version = '>= 3.1'
 
   spec.files         = Dir['lib/**/*.rb', 'bin/*', 'config/**/*', 'LICENSE', 'README.md']
   spec.bindir        = 'bin'

@@ -39,7 +39,7 @@ module Wavesync
     end
 
     test 'raises ConfigError when YAML root is not a hash' do
-      error = assert_raises(ConfigError) { Config.new(['not', 'a', 'hash']) }
+      error = assert_raises(ConfigError) { Config.new(%w[not a hash]) }
       assert_match 'must contain a YAML mapping', error.message
     end
 
@@ -56,19 +56,19 @@ module Wavesync
     end
 
     test 'raises ConfigError when library key is missing' do
-      data = VALID_CONFIG.reject { |k, _| k == 'library' }
+      data = VALID_CONFIG.except('library')
       error = assert_raises(ConfigError) { Config.new(data) }
       assert_match "Missing required config key: 'library'", error.message
     end
 
     test 'raises ConfigError when devices key is missing' do
-      data = VALID_CONFIG.reject { |k, _| k == 'devices' }
+      data = VALID_CONFIG.except('devices')
       error = assert_raises(ConfigError) { Config.new(data) }
       assert_match "Missing required config key: 'devices'", error.message
     end
 
     test 'raises ConfigError when library is not a string' do
-      data = VALID_CONFIG.merge('library' => ['not', 'a', 'string'])
+      data = VALID_CONFIG.merge('library' => %w[not a string])
       error = assert_raises(ConfigError) { Config.new(data) }
       assert_match "'library' must be a string", error.message
     end
