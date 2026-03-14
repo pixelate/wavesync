@@ -8,6 +8,7 @@ Gem::Specification.new do |spec|
   spec.summary = 'Sync your music library to hardware devices like the teenage engineering TP-7 and Elektron Octatrack'
   spec.authors = ['Andreas Zecher']
   spec.homepage = 'https://github.com/pixelate/wavesync'
+  spec.metadata['documentation_uri'] = 'https://github.com/pixelate/wavesync?tab=readme-ov-file#wavesync'
   spec.license  = 'MIT'
 
   spec.required_ruby_version = '>= 3.0'
