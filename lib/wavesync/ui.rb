@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'tty-cursor'
+require 'tty-prompt'
 require 'rainbow'
 
 module Wavesync
@@ -17,6 +18,7 @@ module Wavesync
     def initialize
       @cursor = TTY::Cursor
       @sticky_lines = []
+      @prompt = TTY::Prompt.new(interrupt: :exit, active_color: :red)
     end
 
     def file_progress(filename)
@@ -90,6 +92,10 @@ module Wavesync
       print in_color(message, :secondary)
       response = $stdin.gets.to_s.strip.downcase
       response == 'y'
+    end
+
+    def select(label, options)
+      @prompt.select(label, options, cycle: true)
     end
 
     def color(text, key)
