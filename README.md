@@ -66,7 +66,8 @@ Wavesync will exit with an error if a device model in the config is not supporte
 ## Usage
 
 ```bash
-# Sync library to all devices (uses default config at ~/wavesync.yml)
+# Sync library (uses default config at ~/wavesync.yml)
+# If multiple devices are configured, you will be prompted to select one
 wavesync sync
 
 # Use a config at a specific path

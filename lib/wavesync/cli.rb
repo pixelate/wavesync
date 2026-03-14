@@ -52,6 +52,10 @@ module Wavesync
           puts "Unknown device \"#{options[:device]}\". Devices in config: #{known}"
           exit 1
         end
+      elsif device_configs.size > 1
+        device_names = device_configs.map { |device_config| device_config[:name] }
+        selected_name = Wavesync::UI.new.select('Select device', device_names)
+        device_configs = device_configs.select { |device_config| device_config[:name] == selected_name }
       end
 
       device_configs.each do |device_config|
