@@ -13,8 +13,6 @@ module Wavesync
       ]
     }.freeze
 
-    # --- Config.load ---
-
     test 'load raises ConfigError when file does not exist' do
       error = assert_raises(ConfigError) { Config.load('/nonexistent/path/wavesync.yml') }
       assert_match 'Config file not found', error.message
@@ -39,8 +37,6 @@ module Wavesync
     ensure
       file.unlink
     end
-
-    # --- Top-level validation ---
 
     test 'raises ConfigError when YAML root is not a hash' do
       error = assert_raises(ConfigError) { Config.new(['not', 'a', 'hash']) }
@@ -88,8 +84,6 @@ module Wavesync
       error = assert_raises(ConfigError) { Config.new(data) }
       assert_match "'devices' must contain at least one device", error.message
     end
-
-    # --- Device-level validation ---
 
     test 'raises ConfigError when a device entry is not a hash' do
       data = VALID_CONFIG.merge('devices' => ['not a hash'])
@@ -154,8 +148,6 @@ module Wavesync
       error = assert_raises(ConfigError) { Config.new(data) }
       assert_match 'device 2', error.message
     end
-
-    # --- Valid config ---
 
     test 'initializes with valid data' do
       config = Config.new(VALID_CONFIG)
