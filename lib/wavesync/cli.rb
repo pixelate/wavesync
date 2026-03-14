@@ -42,7 +42,7 @@ module Wavesync
       parser.parse!
 
       config_path = options[:config] || Wavesync::Config::DEFAULT_PATH
-      config = Wavesync::Config.load(config_path)
+      config = load_config(config_path)
 
       device_configs = config.device_configs
       if options[:device]
@@ -85,7 +85,7 @@ module Wavesync
       parser.parse!
 
       config_path = options[:config] || Wavesync::Config::DEFAULT_PATH
-      config = Wavesync::Config.load(config_path)
+      config = load_config(config_path)
 
       case subcommand
       when 'create'
@@ -118,6 +118,13 @@ module Wavesync
       end
     end
 
+    def self.load_config(path)
+      Wavesync::Config.load(path)
+    rescue Wavesync::ConfigError => e
+      puts "Configuration error: #{e.message}"
+      exit 1
+    end
+
     def self.require_set_name(subcommand)
       name = ARGV.shift
       unless name
@@ -144,7 +151,7 @@ module Wavesync
       parser.parse!
 
       config_path = options[:config] || Wavesync::Config::DEFAULT_PATH
-      config = Wavesync::Config.load(config_path)
+      config = load_config(config_path)
 
       Wavesync::Analyzer.new(config.library).analyze(overwrite: options[:overwrite] || false)
     end
