@@ -86,6 +86,12 @@ module Wavesync
       set_analyze_file_stickies(file, label)
     end
 
+    def confirm(message)
+      print in_color(message, :secondary)
+      response = $stdin.gets.to_s.strip.downcase
+      response == 'y'
+    end
+
     def color(text, key)
       in_color(text, key)
     end
