@@ -28,7 +28,13 @@ brew install taglib    # required for all commands
 brew install bpm-tools # required for analyze command
 ```
 
-2. Install field kit (only required for syncing to TP-7)
+2. Install Wavesync
+
+```bash
+gem install wavesync --pre
+```
+
+3. Install field kit (only required for syncing to TP-7)
 
 https://teenage.engineering/guides/fieldkit
 

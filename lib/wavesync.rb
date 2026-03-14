@@ -3,6 +3,7 @@
 module Wavesync
 end
 
+require 'wavesync/version'
 require 'wavesync/acid_chunk'
 require 'wavesync/audio_format'
 require 'wavesync/audio'
