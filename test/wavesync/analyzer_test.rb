@@ -15,6 +15,7 @@ module Wavesync
       Dir.stubs(:glob).returns(@files)
 
       @ui = stub_everything('ui')
+      @ui.stubs(:confirm).returns(true)
       UI.stubs(:new).returns(@ui)
 
       BpmDetector.stubs(:available?).returns(true)
@@ -55,6 +56,28 @@ module Wavesync
       Audio.stubs(:new).returns(audio)
       BpmDetector.stubs(:detect).returns(nil)
 
+      audio.expects(:write_bpm).never
+
+      Analyzer.new(@library_path).analyze
+    end
+
+    test 'asks for confirmation before processing files' do
+      audio = stub(bpm: nil)
+      Audio.stubs(:new).returns(audio)
+      BpmDetector.stubs(:detect).returns(120)
+      audio.stubs(:write_bpm)
+
+      @ui.expects(:confirm).once.returns(true)
+
+      Analyzer.new(@library_path).analyze
+    end
+
+    test 'stops analyzing when user declines confirmation' do
+      audio = stub(bpm: nil)
+      Audio.stubs(:new).returns(audio)
+
+      @ui.stubs(:confirm).returns(false)
+      BpmDetector.expects(:detect).never
       audio.expects(:write_bpm).never
 
       Analyzer.new(@library_path).analyze

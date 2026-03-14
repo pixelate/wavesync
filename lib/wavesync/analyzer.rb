@@ -2,6 +2,8 @@
 
 module Wavesync
   class Analyzer
+    CONFIRM_MESSAGE = 'wavesync analyze will add bpm meta data to files in library. Continue? [y/N] '
+
     def initialize(library_path)
       @library_path = File.expand_path(library_path)
       @audio_files = find_audio_files
@@ -13,6 +15,8 @@ module Wavesync
         puts 'Error: bpm-tools or ffmpeg is not installed. Install with: brew install bpm-tools ffmpeg'
         exit 1
       end
+
+      return unless @ui.confirm(CONFIRM_MESSAGE)
 
       @audio_files.each_with_index do |file, index|
         audio = Audio.new(file)
