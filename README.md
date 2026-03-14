@@ -63,6 +63,12 @@ devices:
 
 Wavesync will exit with an error if a device model in the config is not supported.
 
+## Help
+
+```bash
+wavesync help
+```
+
 ## Usage
 
 ```bash

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'optparse'
+require 'rainbow'
 
 module Wavesync
   class CLI
@@ -14,9 +15,11 @@ module Wavesync
         start_analyze
       when 'set'
         start_set
+      when 'help'
+        start_help
       else
         puts "Unknown command: #{command}"
-        puts 'Available commands: sync, analyze, set'
+        puts 'Available commands: sync, analyze, set, help'
         exit 1
       end
     end
@@ -136,6 +139,61 @@ module Wavesync
         exit 1
       end
       name
+    end
+
+    def self.start_help
+      subcommand = ARGV.shift
+
+      case subcommand
+      when 'sync'
+        OptionParser.new do |opts|
+          opts.banner = 'Usage: wavesync sync [options]'
+          opts.on('-d', '--device NAME', 'Name of device to sync (as defined in config)')
+          opts.on('-c', '--config PATH', 'Path to wavesync config YAML file')
+          opts.on('-p', '--pad', 'Pad tracks with silence so total length is a multiple of 64 bars (Octatrack only)')
+          puts opts
+        end
+      when 'analyze'
+        OptionParser.new do |opts|
+          opts.banner = 'Usage: wavesync analyze [options]'
+          opts.on('-c', '--config PATH', 'Path to wavesync config YAML file')
+          opts.on('-f', '--force', 'Overwrite existing BPM values')
+          puts opts
+        end
+      when 'set'
+        puts 'Usage: wavesync set <subcommand> [options]'
+        puts ''
+        puts 'Subcommands:'
+        puts '  create NAME  Create a new track set'
+        puts '  edit NAME    Edit an existing track set'
+        puts '  list         List all track sets'
+        puts ''
+        puts 'Options:'
+        puts '  -c, --config PATH  Path to wavesync config YAML file'
+      when nil
+        puts 'Usage: wavesync [command] [options]'
+        puts ''
+        puts 'Commands:'
+        puts '  sync                 Sync music library to a device'
+        puts Rainbow('    -d, --device NAME  Name of device to sync (as defined in config)').darkgray
+        puts Rainbow('    -p, --pad          Pad tracks with silence so total length is a multiple of 64 bars (Octatrack only)').darkgray
+        puts ''
+        puts '  analyze              Detect and write BPM metadata to library tracks'
+        puts Rainbow('    -f, --force        Overwrite existing BPM values').darkgray
+        puts ''
+        puts '  set create NAME      Create a new track set'
+        puts '  set edit NAME        Edit an existing track set'
+        puts '  set list             List all track sets'
+        puts ''
+        puts '  help                 Show this help message'
+        puts ''
+        puts 'Options:'
+        puts Rainbow('  -c, --config PATH    Path to wavesync config YAML file').darkgray
+      else
+        puts "Unknown command: #{subcommand}"
+        puts 'Available commands: sync, analyze, set'
+        exit 1
+      end
     end
 
     def self.start_analyze
