@@ -133,3 +133,9 @@ Example: If a 96kHz file is synced to an Octatrack (which only supports 44.1kHz)
 ```bash
 rake test
 ```
+
+### Running RuboCop
+
+```bash
+bundle exec rubocop
+```
