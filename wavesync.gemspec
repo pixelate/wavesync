@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.metadata['rubygems_mfa_required'] = 'true'
   spec.license = 'MIT'
 
-  spec.required_ruby_version = '>= 3.1'
+  spec.required_ruby_version = '>= 3.3'
 
   spec.files         = Dir['lib/**/*.rb', 'bin/*', 'config/**/*', 'LICENSE', 'README.md']
   spec.bindir        = 'bin'
