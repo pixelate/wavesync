@@ -1,11 +1,10 @@
 # Wavesync
 
-Wavesync is a Ruby-based CLI tool that scans your music library and automatically converts audio files to match the specifications of specific hardware music devices like the teenage engineering TP-7 and Elektron Octatrack, adjusting sample rate, bit depth and file format as needed while preserving your original library structure and only converting files that don't already meet the device requirements. It also reads BPM information from the original file and converts it so that the target device can read it.
+Wavesync is a Ruby-based CLI tool that scans your music library and automatically converts audio files to match the specifications of the [teenage engineering TP-7](https://teenage.engineering/products/tp-7) and the [Elektron Octatrack MKII](https://www.elektron.se/explore/octatrack-mkii), adjusting sample rate, bit depth and file format as needed while preserving your original library structure and only converting files that don't already meet the device requirements.
 
-## Supported devices
+It can also analyse the BPM of the tracks in your library and store the information as metadata in your files, as well as convert the metadata so that the target device can read the BPM. When syncing to the Octatrack, you can choose to add padding to each track, so that it's dead-simple to auto-slice your tracks to a multiple of full bars which allows precise looping, and seamlessly jumping to different parts of a track with Octatrack's sequencer.
 
-- teenage engineering TP-7
-- Elektron Octatrack MKII
+![Wavesync syncing to Octatrack](assets/screenshot.png)
 
 ## Supported file types
 
@@ -23,9 +22,9 @@ Unsupported file types will be ignored when syncing.
 1. Install dependencies
 
 ```bash
-brew install ffmpeg    # required for all commands
-brew install taglib    # required for all commands
-brew install bpm-tools # required for analyze command
+brew install ffmpeg
+brew install taglib
+brew install bpm-tools
 ```
 
 2. Install Wavesync
@@ -61,77 +60,57 @@ devices:
   - `model`: device model (`TP-7` or `Octatrack`)
   - `path`: path to the device's library directory
 
-Wavesync will exit with an error if a device model in the config is not supported.
+## Usage
 
-## Help
+### Help
 
 ```bash
+# List all available commands
 wavesync help
 ```
 
-## Usage
+### Analyze
 
 ```bash
-# Sync library (uses default config at ~/wavesync.yml)
-# If multiple devices are configured, you will be prompted to select one
-wavesync sync
-
-# Use a config at a specific path
-wavesync sync -c /path/to/wavesync.yml
-
-# Sync to a specific device only (by name as defined in config)
-wavesync sync -d Octatrack
-
-# Pad each track with silence so its total length aligns to a multiple of 64 bars
-# (Octatrack only — requires BPM metadata on each track)
-wavesync sync -p
-
 # Analyze library files for BPM and write results to file metadata
 # Files that already have BPM set are skipped
 wavesync analyze
 
 # Overwrite existing BPM values
-wavesync analyze --force
-
-# Analyze with a specific config path
-wavesync analyze -c /path/to/wavesync.yml
+wavesync analyze -f
 ```
 
-## Sets
+### Sync
 
-A set is a named, ordered selection of tracks from your library. Sets are stored as YAML files inside a `.sets` folder within the library directory.
+```bash
+# Sync library
+# If multiple devices are configured, you will be prompted to select one
+wavesync sync
+
+# Sync to a specific device (by name as defined in config)
+wavesync sync -d Octatrack
+
+# Pad each track with silence so its total length aligns to a multiple of 64 bars
+# (Octatrack only — requires BPM metadata on each track)
+wavesync sync -p
+```
+
+When a source file's sample rate isn't supported by the target device, Wavesync selects the closest supported rate. Example: If a 96kHz file is synced to an Octatrack (which only supports 44.1kHz), it will be downsampled to 44.1kHz.
+
+### Sets (experimental)
+
+A set is a named, ordered selection of tracks from your library. Sets are stored as YAML files inside a `.sets` folder within the library directory. Syncing sets to devices is not yet implemented.
 
 ```bash
 # Create a new set and open the interactive editor
-wavesync set create <name>
+wavesync set create NAME
 
 # Edit an existing set
-wavesync set edit <name>
+wavesync set edit NAME
 
 # List all sets
 wavesync set list
 ```
-
-The set editor is a keyboard-driven interactive UI:
-
-| Key | Action |
-|-----|--------|
-| `↑` / `↓` | Navigate tracks |
-| `space` | Play / pause selected track |
-| `a` | Add track after selection |
-| `u` | Move selected track up |
-| `d` | Move selected track down |
-| `r` | Remove selected track |
-| `s` | Save and exit |
-| `c` | Cancel without saving |
-
-The playing track is indicated by `▶` (playing) or `⏸` (paused) before the track number. When a track finishes, the next track plays automatically. Changes are only written to disk when you press `s`.
-
-## Sample Rate Selection
-
-When a source file's sample rate isn't supported by the target device, Wavesync selects the closest supported rate. For files with equal distance to two rates, it chooses the higher rate to minimize quality loss.
-
-Example: If a 96kHz file is synced to an Octatrack (which only supports 44.1kHz), it will be downsampled to 44.1kHz.
 
 ## Development
 
