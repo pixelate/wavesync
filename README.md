@@ -146,3 +146,11 @@ rake test
 ```bash
 bundle exec rubocop
 ```
+
+### Releasing
+
+```bash
+rake release:publish
+```
+
+This tags the current version, pushes the tag to origin, builds the gem, and publishes it to RubyGems.
