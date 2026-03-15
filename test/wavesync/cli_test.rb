@@ -5,6 +5,7 @@ require_relative '../../lib/wavesync/config'
 require_relative '../../lib/wavesync/device'
 require_relative '../../lib/wavesync/ui'
 require_relative '../../lib/wavesync/scanner'
+require_relative '../../lib/wavesync/commands'
 require_relative '../../lib/wavesync/cli'
 
 module Wavesync
@@ -37,20 +38,20 @@ module Wavesync
       @ui.expects(:select).never
       @scanner.expects(:sync).once
 
-      CLI.start_sync
+      Commands::Sync.new.run
     end
 
     test 'syncs single device to its configured path' do
       @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false)
 
-      CLI.start_sync
+      Commands::Sync.new.run
     end
 
     test 'prompts for device selection when multiple devices are configured' do
       @config.stubs(:device_configs).returns([DEVICE_CONFIG_A, DEVICE_CONFIG_B])
       @ui.expects(:select).with('Select device', %w[TP-7 Octatrack]).returns('TP-7')
 
-      CLI.start_sync
+      Commands::Sync.new.run
     end
 
     test 'syncs only the selected device when multiple devices are configured' do
@@ -59,7 +60,7 @@ module Wavesync
 
       @scanner.expects(:sync).with('/tmp/ot', @device, pad: false).once
 
-      CLI.start_sync
+      Commands::Sync.new.run
     end
 
     test 'skips prompt and uses device flag when multiple devices are configured' do
@@ -69,13 +70,13 @@ module Wavesync
       @ui.expects(:select).never
       @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false).once
 
-      CLI.start_sync
+      Commands::Sync.new.run
     end
 
     test 'exits with error for unknown device flag' do
       ARGV.replace(['-d', 'Unknown'])
 
-      assert_raises(SystemExit) { CLI.start_sync }
+      assert_raises(SystemExit) { Commands::Sync.new.run }
     end
 
     test 'prints help when help command is given' do
@@ -90,13 +91,36 @@ module Wavesync
     end
 
     test 'help output includes usage line' do
-      output = capture_io { CLI.start_help }.first
+      output = capture_io { Commands::Help.new.run }.first
 
       assert_includes output, 'Usage: wavesync'
     end
 
     test 'help output includes options section' do
-      output = capture_io { CLI.start_help }.first
+      output = capture_io { Commands::Help.new.run }.first
+
+      assert_includes output, 'Options:'
+    end
+
+    test 'prints help when help command is given' do
+      ARGV.replace(['help'])
+
+      output = capture_io { CLI.start }.first
+
+      assert_includes output, 'sync'
+      assert_includes output, 'analyze'
+      assert_includes output, 'set'
+      assert_includes output, 'help'
+    end
+
+    test 'help output includes usage line' do
+      output = capture_io { Commands::Help.new.run }.first
+
+      assert_includes output, 'Usage: wavesync'
+    end
+
+    test 'help output includes options section' do
+      output = capture_io { Commands::Help.new.run }.first
 
       assert_includes output, 'Options:'
     end
