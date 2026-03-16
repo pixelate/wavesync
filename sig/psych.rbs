@@ -1,0 +1,6 @@
+# Minimal stub for Psych::SyntaxError (not always included in yaml RBS)
+
+module Psych
+  class SyntaxError < StandardError
+  end
+end

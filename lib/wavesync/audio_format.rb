@@ -2,6 +2,7 @@
 
 module Wavesync
   AudioFormat = Data.define(:file_type, :sample_rate, :bit_depth) do
+    #: (AudioFormat other) -> AudioFormat
     def merge(other)
       with(
         file_type: other.file_type || file_type,

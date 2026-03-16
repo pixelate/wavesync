@@ -1,0 +1,18 @@
+# Generated from lib/wavesync/analyzer.rb with RBS::Inline
+
+module Wavesync
+  class Analyzer
+    CONFIRM_MESSAGE: ::String
+
+    # : (String library_path) -> void
+    def initialize: (String library_path) -> void
+
+    # : (?overwrite: bool) -> void
+    def analyze: (?overwrite: bool) -> void
+
+    private
+
+    # : () -> Array[String]
+    def find_audio_files: () -> Array[String]
+  end
+end

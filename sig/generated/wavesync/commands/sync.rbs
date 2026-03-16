@@ -1,0 +1,14 @@
+# Generated from lib/wavesync/commands/sync.rb with RBS::Inline
+
+module Wavesync
+  module Commands
+    class Sync < Command
+      DEVICE_OPTION: untyped
+
+      PAD_OPTION: untyped
+
+      # : () -> void
+      def run: () -> void
+    end
+  end
+end

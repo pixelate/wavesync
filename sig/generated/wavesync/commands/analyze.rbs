@@ -1,0 +1,12 @@
+# Generated from lib/wavesync/commands/analyze.rb with RBS::Inline
+
+module Wavesync
+  module Commands
+    class Analyze < Command
+      FORCE_OPTION: untyped
+
+      # : () -> void
+      def run: () -> void
+    end
+  end
+end

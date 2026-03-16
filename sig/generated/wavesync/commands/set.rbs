@@ -1,0 +1,15 @@
+# Generated from lib/wavesync/commands/set.rb with RBS::Inline
+
+module Wavesync
+  module Commands
+    class Set < Command
+      # : () -> void
+      def run: () -> void
+
+      private
+
+      # : (String subcommand) -> String
+      def require_name: (String subcommand) -> String
+    end
+  end
+end

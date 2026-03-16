@@ -1,0 +1,17 @@
+# Manual stub for AudioFormat (Data.define cannot be annotated inline)
+
+module Wavesync
+  class AudioFormat < Data
+    attr_reader file_type: String?
+
+    attr_reader sample_rate: Integer?
+
+    attr_reader bit_depth: Integer?
+
+    def self.new: (?file_type: String?, ?sample_rate: Integer?, ?bit_depth: Integer?) -> instance
+
+    def with: (?file_type: String?, ?sample_rate: Integer?, ?bit_depth: Integer?) -> AudioFormat
+
+    def merge: (AudioFormat other) -> AudioFormat
+  end
+end

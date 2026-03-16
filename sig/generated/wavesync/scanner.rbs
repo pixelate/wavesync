@@ -1,0 +1,22 @@
+# Generated from lib/wavesync/scanner.rb with RBS::Inline
+
+module Wavesync
+  class Scanner
+    # : (String source_library_path) -> void
+    def initialize: (String source_library_path) -> void
+
+    # : (String target_library_path, Device device, ?pad: bool) -> void
+    def sync: (String target_library_path, Device device, ?pad: bool) -> void
+
+    private
+
+    # : () -> Array[String]
+    def find_audio_files: () -> Array[String]
+
+    # : (Audio audio, String source_file_path, PathResolver path_resolver) -> bool
+    def copy_file: (Audio audio, String source_file_path, PathResolver path_resolver) -> bool
+
+    # : (String source, Pathname target) -> void
+    def safe_copy: (String source, Pathname target) -> void
+  end
+end

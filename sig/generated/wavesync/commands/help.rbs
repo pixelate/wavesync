@@ -1,0 +1,26 @@
+# Generated from lib/wavesync/commands/help.rb with RBS::Inline
+
+module Wavesync
+  module Commands
+    class Help < Command
+      DESCRIPTION_COLUMN: ::Integer
+
+      # : () -> void
+      def run: () -> void
+
+      private
+
+      # : () -> void
+      def show_general_help: () -> void
+
+      # : (untyped command) -> void
+      def show_command_help: (untyped command) -> void
+
+      # : (String name, String description) -> String
+      def format_command_line: (String name, String description) -> String
+
+      # : (untyped option, indent: Integer) -> String
+      def format_option_line: (untyped option, indent: Integer) -> String
+    end
+  end
+end

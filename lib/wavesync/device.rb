@@ -1,10 +1,17 @@
 # frozen_string_literal: true
+# rbs_inline: enabled
 
 require 'yaml'
 module Wavesync
   class Device
-    attr_reader :name, :sample_rates, :bit_depths, :file_types, :bpm_source, :bar_multiple
+    attr_reader :name #: String
+    attr_reader :sample_rates #: Array[Integer]
+    attr_reader :bit_depths #: Array[Integer]
+    attr_reader :file_types #: Array[String]
+    attr_reader :bpm_source #: Symbol?
+    attr_reader :bar_multiple #: Integer?
 
+    #: (name: String, sample_rates: Array[Integer], bit_depths: Array[Integer], file_types: Array[String], ?bpm_source: Symbol?, ?bar_multiple: Integer?) -> void
     def initialize(name:, sample_rates:, bit_depths:, file_types:, bpm_source: nil, bar_multiple: nil)
       @name = name
       @sample_rates = sample_rates
@@ -14,18 +21,22 @@ module Wavesync
       @bar_multiple = bar_multiple
     end
 
+    #: () -> String
     def self.config_path
-      File.expand_path('../../config/devices.yml', __dir__)
+      File.expand_path('../../config/devices.yml', __dir__ || '')
     end
 
+    #: () -> Array[Device]
     def self.all
       @all ||= load_from_yaml
     end
 
+    #: (name: String) -> Device?
     def self.find_by(name:)
       all.find { |device| device.name == name }
     end
 
+    #: () -> Array[Device]
     def self.load_from_yaml
       data = YAML.load_file(config_path)
       data.fetch('devices').map do |attrs|
@@ -40,6 +51,7 @@ module Wavesync
       end
     end
 
+    #: (AudioFormat source_format, String source_file_path) -> AudioFormat
     def target_format(source_format, source_file_path)
       AudioFormat.new(
         file_type: target_file_type(source_file_path),
@@ -48,19 +60,23 @@ module Wavesync
       )
     end
 
+    #: (String source_file_path) -> String?
     def target_file_type(source_file_path)
-      file_extension = File.extname(source_file_path).downcase[1..]
+      file_extension = File.extname(source_file_path).downcase[1..] || ''
       return nil if file_types.include?(file_extension)
 
       file_types.first
     end
 
+    #: (Integer? source_sample_rate) -> Integer?
     def target_sample_rate(source_sample_rate)
+      return nil if source_sample_rate.nil?
       return nil if sample_rates.include?(source_sample_rate)
 
       sample_rates.min_by { |n| [(n - source_sample_rate).abs, -n] }
     end
 
+    #: (Integer? source_bit_depth) -> Integer?
     def target_bit_depth(source_bit_depth)
       return nil if source_bit_depth.nil? || bit_depths.include?(source_bit_depth)
 

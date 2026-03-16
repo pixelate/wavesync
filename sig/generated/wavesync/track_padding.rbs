@@ -1,0 +1,13 @@
+# Generated from lib/wavesync/track_padding.rb with RBS::Inline
+
+module Wavesync
+  class TrackPadding
+    BEATS_PER_BAR: ::Integer
+
+    # : ((Float | Integer)? duration_seconds, (Integer | Float | String)? bpm, (Integer | Float)? bar_multiple) -> (Float | Integer)
+    def self.compute: ((Float | Integer)? duration_seconds, (Integer | Float | String)? bpm, (Integer | Float)? bar_multiple) -> (Float | Integer)
+
+    # : ((Float | Integer)? duration_seconds, (Integer | Float | String)? bpm, (Integer | Float)? bar_multiple) -> [Integer?, Integer?]
+    def self.bar_counts: ((Float | Integer)? duration_seconds, (Integer | Float | String)? bpm, (Integer | Float)? bar_multiple) -> [ Integer?, Integer? ]
+  end
+end

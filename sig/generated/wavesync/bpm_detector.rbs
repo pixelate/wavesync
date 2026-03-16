@@ -1,0 +1,11 @@
+# Generated from lib/wavesync/bpm_detector.rb with RBS::Inline
+
+module Wavesync
+  class BpmDetector
+    # : () -> bool?
+    def self.available?: () -> bool?
+
+    # : (String file_path) -> Integer?
+    def self.detect: (String file_path) -> Integer?
+  end
+end

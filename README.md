@@ -130,6 +130,13 @@ rake test
 bundle exec rubocop
 ```
 
+### Running Type Checks
+
+```bash
+bundle exec rbs-inline --output lib/
+bundle exec steep check
+```
+
 ### Releasing
 
 ```bash

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# rbs_inline: enabled
 
 require 'fileutils'
 require 'streamio-ffmpeg'
@@ -6,14 +7,16 @@ require_relative 'file_converter'
 
 module Wavesync
   class Scanner
+    #: (String source_library_path) -> void
     def initialize(source_library_path)
-      @source_library_path = File.expand_path(source_library_path)
-      @audio_files = find_audio_files
-      @ui = Wavesync::UI.new
-      @converter = FileConverter.new
+      @source_library_path = File.expand_path(source_library_path) #: String
+      @audio_files = find_audio_files #: Array[String]
+      @ui = Wavesync::UI.new #: UI
+      @converter = FileConverter.new #: FileConverter
       FFMPEG.logger = Logger.new(File::NULL)
     end
 
+    #: (String target_library_path, Device device, ?pad: bool) -> void
     def sync(target_library_path, device, pad: false)
       path_resolver = PathResolver.new(@source_library_path, target_library_path, device)
       skipped_count = 0
@@ -26,9 +29,9 @@ module Wavesync
         source_format = audio.format
         target_format = device.target_format(source_format, file)
 
-        padding_seconds = nil
-        original_bars = nil
-        target_bars = nil
+        padding_seconds = nil #: Numeric?
+        original_bars = nil #: Integer?
+        target_bars = nil #: Integer?
         if pad && device.bar_multiple
           padding_seconds = TrackPadding.compute(audio.duration, audio.bpm, device.bar_multiple)
           original_bars, target_bars = TrackPadding.bar_counts(audio.duration, audio.bpm, device.bar_multiple) unless padding_seconds.zero?
@@ -50,9 +53,10 @@ module Wavesync
           target_path = path_resolver.resolve(file, audio)
         end
 
-        if (copied || converted) && device.bpm_source == :acid_chunk && audio.bpm && target_path.extname.downcase == '.wav'
+        bpm = audio.bpm
+        if (copied || converted) && device.bpm_source == :acid_chunk && bpm && target_path.extname.downcase == '.wav'
           temp_path = "#{target_path}.tmp"
-          AcidChunk.write_bpm(target_path.to_s, temp_path, audio.bpm)
+          AcidChunk.write_bpm(target_path.to_s, temp_path, bpm)
           FileUtils.mv(temp_path, target_path.to_s)
         end
 
@@ -70,10 +74,12 @@ module Wavesync
 
     private
 
+    #: () -> Array[String]
     def find_audio_files
       Audio.find_all(@source_library_path)
     end
 
+    #: (Audio audio, String source_file_path, PathResolver path_resolver) -> bool
     def copy_file(audio, source_file_path, path_resolver)
       target_path = path_resolver.resolve(source_file_path, audio)
 
@@ -88,6 +94,7 @@ module Wavesync
       end
     end
 
+    #: (String source, Pathname target) -> void
     def safe_copy(source, target)
       FileUtils.install(source, target)
     rescue Errno::ENOENT

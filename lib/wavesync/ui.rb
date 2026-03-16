@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# rbs_inline: enabled
 
 require 'tty-cursor'
 require 'tty-prompt'
@@ -15,12 +16,14 @@ module Wavesync
       extra: :deepskyblue
     }.freeze
 
+    #: () -> void
     def initialize
-      @cursor = TTY::Cursor
-      @sticky_lines = []
-      @prompt = TTY::Prompt.new(interrupt: :exit, active_color: :red)
+      @cursor = TTY::Cursor #: untyped
+      @sticky_lines = [] #: Array[String]
+      @prompt = TTY::Prompt.new(interrupt: :exit, active_color: :red) #: untyped
     end
 
+    #: (String filename) -> void
     def file_progress(filename)
       path = Pathname.new(filename)
       file_stem = path.basename(path.extname).to_s
@@ -29,6 +32,7 @@ module Wavesync
       sticky(in_color(file_stem, :tertiary), 2)
     end
 
+    #: (Integer index, Integer total_count, Device device) -> void
     def sync_progress(index, total_count, device)
       parts = [
         in_color("wavesync #{device.name}", :primary),
@@ -38,6 +42,7 @@ module Wavesync
       sticky(parts.join(' '), 0)
     end
 
+    #: (AudioFormat source_format, AudioFormat target_format) -> void
     def conversion_progress(source_format, target_format)
       effective = source_format.merge(target_format)
 
@@ -50,16 +55,19 @@ module Wavesync
       sticky(formatted_line, 3)
     end
 
+    #: (AudioFormat source_format) -> void
     def copy(source_format)
       info = audio_info(source_format.sample_rate, source_format.bit_depth)
 
       sticky(in_color("Copying #{source_format.file_type} (#{info})", :highlight), 3)
     end
 
+    #: () -> void
     def skip
       sticky(in_color('↷ Skipping, already synced', :highlight), 3)
     end
 
+    #: ((String | Integer)? tbpm, ?original_bars: Integer?, ?target_bars: Integer?) -> void
     def bpm(tbpm, original_bars: nil, target_bars: nil)
       if tbpm.nil?
         sticky('', 4)
@@ -71,6 +79,7 @@ module Wavesync
       end
     end
 
+    #: (Integer index, Integer total_count) -> void
     def analyze_progress(index, total_count)
       parts = [
         in_color('wavesync analyze', :primary),
@@ -79,29 +88,35 @@ module Wavesync
       sticky(parts.join(' '), 0)
     end
 
+    #: (String file, (String | Integer)? bpm) -> void
     def analyze_skip(file, bpm)
       set_analyze_file_stickies(file, in_color("↷ #{bpm} BPM already set", :highlight))
     end
 
+    #: (String file, Integer? bpm) -> void
     def analyze_result(file, bpm)
       label = bpm ? in_color("#{bpm} BPM", :highlight) : in_color('No BPM detected', :highlight)
       set_analyze_file_stickies(file, label)
     end
 
+    #: (String message) -> bool
     def confirm(message)
       print in_color(message, :secondary)
       response = $stdin.gets.to_s.strip.downcase
       response == 'y'
     end
 
+    #: (String label, Array[String] options) -> String
     def select(label, options)
       @prompt.select(label, options, cycle: true)
     end
 
+    #: (String text, Symbol key) -> String
     def color(text, key)
       in_color(text, key)
     end
 
+    #: () -> void
     def clear
       print @cursor.clear_screen
       print @cursor.move_to(0, 0)
@@ -109,26 +124,31 @@ module Wavesync
 
     private
 
+    #: (Integer? sample_rate, Integer? bit_depth) -> String
     def audio_info(sample_rate, bit_depth)
       [
         sample_rate_to_khz(sample_rate),
-        bit_depth
+        bit_depth&.to_s
       ].compact.join('/')
     end
 
+    #: (String string, Symbol key) -> String
     def in_color(string, key)
       Rainbow(string).color(THEME[key])
     end
 
+    #: (String text, Integer index) -> void
     def sticky(text, index)
       set_sticky(text, index)
       redraw
     end
 
+    #: (String text, Integer index) -> void
     def set_sticky(text, index)
       @sticky_lines[index] = text
     end
 
+    #: (String file, String label) -> void
     def set_analyze_file_stickies(file, label)
       path = Pathname.new(file)
       set_sticky(in_color(path.parent.basename.to_s, :secondary), 1)
@@ -137,13 +157,17 @@ module Wavesync
       redraw
     end
 
+    #: () -> void
     def redraw
       print @cursor.clear_screen
       print @cursor.move_to(0, 0)
       puts @sticky_lines.join("\n")
     end
 
+    #: (Integer? rate) -> String?
     def sample_rate_to_khz(rate)
+      return nil unless rate
+
       khz = rate.to_f / 1000
       (khz % 1).zero? ? khz.to_i.to_s : khz.round(1).to_s
     end

@@ -3,6 +3,9 @@ AllCops:
   SuggestExtensions: false
   TargetRubyVersion: 3.3
 
+Layout/LeadingCommentSpace:
+  AllowRBSInlineAnnotation: true
+
 Style/Documentation:
   Enabled: false
 

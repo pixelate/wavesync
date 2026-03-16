@@ -1,15 +1,18 @@
 # frozen_string_literal: true
+# rbs_inline: enabled
 
 module Wavesync
   class Analyzer
     CONFIRM_MESSAGE = 'wavesync analyze will add bpm meta data to files in library. Continue? [y/N] '
 
+    #: (String library_path) -> void
     def initialize(library_path)
-      @library_path = File.expand_path(library_path)
-      @audio_files = find_audio_files
-      @ui = UI.new
+      @library_path = File.expand_path(library_path) #: String
+      @audio_files = find_audio_files #: Array[String]
+      @ui = UI.new #: UI
     end
 
+    #: (?overwrite: bool) -> void
     def analyze(overwrite: false)
       unless BpmDetector.available?
         puts 'Error: bpm-tools or ffmpeg is not installed. Install with: brew install bpm-tools ffmpeg'
@@ -36,6 +39,7 @@ module Wavesync
 
     private
 
+    #: () -> Array[String]
     def find_audio_files
       Audio.find_all(@library_path).sort
     end

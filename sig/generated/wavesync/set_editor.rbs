@@ -1,0 +1,63 @@
+# Generated from lib/wavesync/set_editor.rb with RBS::Inline
+
+module Wavesync
+  class SetEditor
+    KEY_MAP: untyped
+
+    # : (Set set, String library_path) -> void
+    def initialize: (Set set, String library_path) -> void
+
+    # : () -> void
+    def run: () -> void
+
+    private
+
+    # : () -> String
+    def read_key: () -> String
+
+    # : (String absolute) -> String
+    def relative_path: (String absolute) -> String
+
+    # : (String relative) -> String
+    def display_name: (String relative) -> String
+
+    # : (?String title) -> void
+    def render: (?String title) -> void
+
+    # : (Integer index, String relative, bool selected, bool playing) -> void
+    def render_track: (Integer index, String relative, bool selected, bool playing) -> void
+
+    # : (Symbol action) -> Symbol?
+    def handle_action: (Symbol action) -> Symbol?
+
+    # : () -> void
+    def toggle_playback: () -> void
+
+    # : (String track, ?Numeric offset) -> void
+    def start_player: (String track, ?Numeric offset) -> void
+
+    # : () -> void
+    def kill_player: () -> void
+
+    # : () -> void
+    def stop_playback: () -> void
+
+    # : () -> void
+    def check_player: () -> void
+
+    # : () -> void
+    def advance_and_play: () -> void
+
+    # : () -> Array[String]
+    def audio_files: () -> Array[String]
+
+    # : () -> void
+    def add_track: () -> void
+
+    # : () -> void
+    def remove_track: () -> void
+
+    # : (Symbol direction) -> void
+    def move_track: (Symbol direction) -> void
+  end
+end

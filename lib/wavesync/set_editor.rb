@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# rbs_inline: enabled
 
 require 'tty-prompt'
 require 'io/console'
@@ -17,19 +18,21 @@ module Wavesync
       "\e[B" => :cursor_down
     }.freeze
 
+    #: (Set set, String library_path) -> void
     def initialize(set, library_path)
-      @set = set
-      @library_path = library_path
-      @prompt = TTY::Prompt.new(interrupt: :exit, active_color: :red)
-      @ui = UI.new
-      @selected = @set.tracks.empty? ? nil : 0
-      @player_pid = nil
-      @player_track = nil
-      @player_state = :stopped
-      @player_offset = 0
-      @player_started_at = nil
+      @set = set #: Set
+      @library_path = library_path #: String
+      @prompt = TTY::Prompt.new(interrupt: :exit, active_color: :red) #: untyped
+      @ui = UI.new #: UI
+      @selected = @set.tracks.empty? ? nil : 0 #: Integer?
+      @player_pid = nil #: Integer?
+      @player_track = nil #: String?
+      @player_state = :stopped #: Symbol
+      @player_offset = 0 #: Numeric
+      @player_started_at = nil #: Time?
     end
 
+    #: () -> void
     def run
       loop do
         check_player
@@ -46,9 +49,10 @@ module Wavesync
 
     private
 
+    #: () -> String
     def read_key
       $stdin.raw do |io|
-        char = io.getc
+        char = io.getc || ''
         if char == "\e"
           rest = begin
             io.read_nonblock(3)
@@ -62,14 +66,17 @@ module Wavesync
       end
     end
 
+    #: (String absolute) -> String
     def relative_path(absolute)
       absolute.sub("#{@library_path}/", '')
     end
 
+    #: (String relative) -> String
     def display_name(relative)
       File.basename(relative, '.*').sub(/\A\d+[\s.\-_]+/, '')
     end
 
+    #: (?String title) -> void
     def render(title = "wavesync set #{@set.name}")
       @ui.clear
       puts @ui.color(title, :primary)
@@ -88,6 +95,7 @@ module Wavesync
                      :secondary)
     end
 
+    #: (Integer index, String relative, bool selected, bool playing) -> void
     def render_track(index, relative, selected, playing)
       name = display_name(relative)
       folder = File.dirname(relative)
@@ -100,17 +108,30 @@ module Wavesync
       puts @ui.color("     #{folder}", selected ? :highlight : :tertiary) unless folder == '.'
     end
 
+    #: (Symbol action) -> Symbol?
     def handle_action(action)
       case action
       when :cursor_up
         @selected = [@selected - 1, 0].max unless @set.tracks.empty?
+        nil
       when :cursor_down
         @selected = [@selected + 1, @set.tracks.size - 1].min unless @set.tracks.empty?
-      when :toggle_play  then toggle_playback
-      when :add          then add_track
-      when :remove       then remove_track
-      when :move_up      then move_track(:up)
-      when :move_down    then move_track(:down)
+        nil
+      when :toggle_play
+        toggle_playback
+        nil
+      when :add
+        add_track
+        nil
+      when :remove
+        remove_track
+        nil
+      when :move_up
+        move_track(:up)
+        nil
+      when :move_down
+        move_track(:down)
+        nil
       when :save
         @set.save
         path = Set.set_path(@library_path, @set.name)
@@ -121,6 +142,7 @@ module Wavesync
       end
     end
 
+    #: () -> void
     def toggle_playback
       return if @selected.nil?
 
@@ -141,6 +163,7 @@ module Wavesync
       end
     end
 
+    #: (String track, ?Numeric offset) -> void
     def start_player(track, offset = 0)
       ffplay = FFMPEG.ffmpeg_binary.sub('ffmpeg', 'ffplay')
       args = [ffplay, '-nodisp', '-autoexit', '-loglevel', 'quiet', '-probesize', '32', '-analyzeduration', '0']
@@ -153,6 +176,7 @@ module Wavesync
       @player_state = :playing
     end
 
+    #: () -> void
     def kill_player
       return unless @player_pid
 
@@ -162,6 +186,7 @@ module Wavesync
       @player_pid = nil
     end
 
+    #: () -> void
     def stop_playback
       kill_player
       @player_track = nil
@@ -170,6 +195,7 @@ module Wavesync
       @player_started_at = nil
     end
 
+    #: () -> void
     def check_player
       return unless @player_pid
 
@@ -189,6 +215,7 @@ module Wavesync
       advance_and_play
     end
 
+    #: () -> void
     def advance_and_play
       return if @selected.nil? || @selected >= @set.tracks.size - 1
 
@@ -196,10 +223,12 @@ module Wavesync
       start_player(@set.tracks[@selected])
     end
 
+    #: () -> Array[String]
     def audio_files
       @audio_files ||= Audio.find_all(@library_path)
     end
 
+    #: () -> void
     def add_track
       if audio_files.empty?
         puts @ui.color('No audio files found in library.', :highlight)
@@ -218,6 +247,7 @@ module Wavesync
       @selected = insert_at
     end
 
+    #: () -> void
     def remove_track
       return if @set.tracks.empty? || @selected.nil?
 
@@ -230,6 +260,7 @@ module Wavesync
                   end
     end
 
+    #: (Symbol direction) -> void
     def move_track(direction)
       return if @set.tracks.size < 2 || @selected.nil?
 

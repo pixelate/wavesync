@@ -1,0 +1,5 @@
+# Minimal stub for the rainbow gem
+
+module Kernel
+  def Rainbow: (untyped string) -> untyped
+end

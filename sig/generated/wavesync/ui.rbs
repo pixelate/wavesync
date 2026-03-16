@@ -1,0 +1,72 @@
+# Generated from lib/wavesync/ui.rb with RBS::Inline
+
+module Wavesync
+  class UI
+    THEME: untyped
+
+    # : () -> void
+    def initialize: () -> void
+
+    # : (String filename) -> void
+    def file_progress: (String filename) -> void
+
+    # : (Integer index, Integer total_count, Device device) -> void
+    def sync_progress: (Integer index, Integer total_count, Device device) -> void
+
+    # : (AudioFormat source_format, AudioFormat target_format) -> void
+    def conversion_progress: (AudioFormat source_format, AudioFormat target_format) -> void
+
+    # : (AudioFormat source_format) -> void
+    def copy: (AudioFormat source_format) -> void
+
+    # : () -> void
+    def skip: () -> void
+
+    # : ((String | Integer)? tbpm, ?original_bars: Integer?, ?target_bars: Integer?) -> void
+    def bpm: ((String | Integer)? tbpm, ?original_bars: Integer?, ?target_bars: Integer?) -> void
+
+    # : (Integer index, Integer total_count) -> void
+    def analyze_progress: (Integer index, Integer total_count) -> void
+
+    # : (String file, (String | Integer)? bpm) -> void
+    def analyze_skip: (String file, (String | Integer)? bpm) -> void
+
+    # : (String file, Integer? bpm) -> void
+    def analyze_result: (String file, Integer? bpm) -> void
+
+    # : (String message) -> bool
+    def confirm: (String message) -> bool
+
+    # : (String label, Array[String] options) -> String
+    def select: (String label, Array[String] options) -> String
+
+    # : (String text, Symbol key) -> String
+    def color: (String text, Symbol key) -> String
+
+    # : () -> void
+    def clear: () -> void
+
+    private
+
+    # : (Integer? sample_rate, Integer? bit_depth) -> String
+    def audio_info: (Integer? sample_rate, Integer? bit_depth) -> String
+
+    # : (String string, Symbol key) -> String
+    def in_color: (String string, Symbol key) -> String
+
+    # : (String text, Integer index) -> void
+    def sticky: (String text, Integer index) -> void
+
+    # : (String text, Integer index) -> void
+    def set_sticky: (String text, Integer index) -> void
+
+    # : (String file, String label) -> void
+    def set_analyze_file_stickies: (String file, String label) -> void
+
+    # : () -> void
+    def redraw: () -> void
+
+    # : (Integer? rate) -> String?
+    def sample_rate_to_khz: (Integer? rate) -> String?
+  end
+end

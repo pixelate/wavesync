@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# rbs_inline: enabled
 
 require 'yaml'
 
@@ -12,8 +13,10 @@ module Wavesync
     DEVICE_SUPPORTED_KEYS = %w[name model path].freeze
     DEVICE_REQUIRED_KEYS = %w[name model path].freeze
 
-    attr_reader :library, :device_configs
+    attr_reader :library #: String
+    attr_reader :device_configs #: Array[{ name: String, model: String, path: String }]
 
+    #: (?String path) -> Config
     def self.load(path = DEFAULT_PATH)
       expanded = File.expand_path(path)
       begin
@@ -26,6 +29,7 @@ module Wavesync
       new(data)
     end
 
+    #: (untyped data) -> void
     def initialize(data)
       validate!(data)
       @library = File.expand_path(data['library'])
@@ -37,6 +41,7 @@ module Wavesync
 
     private
 
+    #: (untyped data) -> void
     def validate!(data)
       raise ConfigError, 'Config file must contain a YAML mapping' unless data.is_a?(Hash)
 
@@ -52,6 +57,7 @@ module Wavesync
       raise ConfigError, "'devices' must contain at least one device" if data['devices'].empty?
     end
 
+    #: (untyped device, Integer index) -> void
     def validate_device!(device, index)
       raise ConfigError, "Device #{index + 1} must be a YAML mapping" unless device.is_a?(Hash)
 
