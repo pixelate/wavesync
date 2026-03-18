@@ -19,7 +19,11 @@ Unsupported file types will be ignored when syncing.
 
 ## Installation
 
-1. Install dependencies
+1. Install Ruby
+
+https://www.ruby-lang.org/en/documentation/installation/
+
+2. Install dependencies
 
 ```bash
 brew install ffmpeg
@@ -27,13 +31,13 @@ brew install taglib
 brew install bpm-tools
 ```
 
-2. Install Wavesync
+3. Install Wavesync
 
 ```bash
 gem install wavesync --pre
 ```
 
-3. Install field kit (only required for syncing to TP-7)
+4. Install field kit (only required for syncing to TP-7)
 
 https://teenage.engineering/guides/fieldkit
 
