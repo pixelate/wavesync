@@ -19,11 +19,7 @@ Unsupported file types will be ignored when syncing.
 
 ## Installation
 
-1. Install Ruby package manager
-
-```bash
-brew install ruby
-```
+1. Install Ruby 4.0.0 with a Ruby version manager like [rbenv](https://github.com/rbenv/rbenv/wiki/Comparison-of-version-managers) or [chruby](https://github.com/postmodern/chruby)
 
 2. Install dependencies
 
