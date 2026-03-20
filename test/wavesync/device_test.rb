@@ -30,7 +30,7 @@ module Wavesync
 
     test '#load_from_yaml creates device objects' do
       devices = Device.load_from_yaml
-      assert(devices.all? { |d| d.is_a?(Device) })
+      assert(devices.all?(Device))
     end
 
     test 'TP-7 device attributes are correct' do

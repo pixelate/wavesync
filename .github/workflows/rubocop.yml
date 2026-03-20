@@ -10,8 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install system dependencies
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install taglib
+          echo "PKG_CONFIG_PATH=$(brew --prefix taglib)/lib/pkgconfig" >> $GITHUB_ENV
+          echo "LIBRARY_PATH=$(brew --prefix taglib)/lib" >> $GITHUB_ENV
+          echo "CPATH=$(brew --prefix taglib)/include" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$(brew --prefix taglib)/lib" >> $GITHUB_ENV
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.1"
-      - run: gem install rubocop -v 1.82.1
-      - run: rubocop
+          bundler-cache: true
+      - run: bundle exec rubocop

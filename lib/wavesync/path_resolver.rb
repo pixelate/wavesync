@@ -36,7 +36,7 @@ module Wavesync
 
       pattern = target_path.dirname.join("#{basename}{, * bpm}#{ext}")
       Dir.glob(pattern.to_s).map { |f| Pathname(f) }
-         .reject { |path| path == target_path }
+                            .reject { |path| path == target_path }
     end
 
     private
