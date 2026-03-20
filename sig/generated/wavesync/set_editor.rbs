@@ -10,6 +10,15 @@ module Wavesync
     # : () -> void
     def run: () -> void
 
+    # : (String? path) -> (String | Integer)?
+    def track_bpm: (String? path) -> (String | Integer)?
+
+    # : ((String | Integer)? source_bpm, (String | Integer)? target_bpm) -> Float?
+    def pitch_shift_semitones: ((String | Integer)? source_bpm, (String | Integer)? target_bpm) -> Float?
+
+    # : (Float semitones) -> String
+    def format_pitch_shift: (Float semitones) -> String
+
     private
 
     # : () -> String
@@ -24,8 +33,8 @@ module Wavesync
     # : (?String title) -> void
     def render: (?String title) -> void
 
-    # : (Integer index, String relative, bool selected, bool playing) -> void
-    def render_track: (Integer index, String relative, bool selected, bool playing) -> void
+    # : (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?) -> void
+    def render_track: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?) -> void
 
     # : (Symbol action) -> Symbol?
     def handle_action: (Symbol action) -> Symbol?

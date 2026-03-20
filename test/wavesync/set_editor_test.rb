@@ -8,6 +8,8 @@ require_relative '../../lib/wavesync/set'
 require_relative '../../lib/wavesync/set_editor'
 
 module Wavesync
+  Audio = Class.new unless defined?(Audio)
+
   class SetEditorTest < Wavesync::TestCase
     def setup
       @orig_stdout = $stdout
@@ -261,6 +263,68 @@ module Wavesync
       e = editor
       e.expects(:start_player).never
       e.send(:advance_and_play)
+    end
+
+    test 'pitch_shift_semitones returns nil when source bpm is nil' do
+      assert_nil editor.pitch_shift_semitones(nil, 128)
+    end
+
+    test 'pitch_shift_semitones returns nil when target bpm is nil' do
+      assert_nil editor.pitch_shift_semitones(120, nil)
+    end
+
+    test 'pitch_shift_semitones returns nil when both bpms are nil' do
+      assert_nil editor.pitch_shift_semitones(nil, nil)
+    end
+
+    test 'pitch_shift_semitones returns zero when bpms are equal' do
+      assert_in_delta 0.0, editor.pitch_shift_semitones(120, 120), 0.0001
+    end
+
+    test 'pitch_shift_semitones returns positive value when target is higher' do
+      assert_in_delta 12.0 * Math.log2(128.0 / 120.0), editor.pitch_shift_semitones(120, 128), 0.0001
+    end
+
+    test 'pitch_shift_semitones returns negative value when target is lower' do
+      assert_in_delta 12.0 * Math.log2(120.0 / 128.0), editor.pitch_shift_semitones(128, 120), 0.0001
+    end
+
+    test 'format_pitch_shift includes plus sign for positive values' do
+      assert_equal '+1.5', editor.format_pitch_shift(1.5)
+    end
+
+    test 'format_pitch_shift omits plus sign for negative values' do
+      assert_equal '-1.5', editor.format_pitch_shift(-1.5)
+    end
+
+    test 'format_pitch_shift rounds to two decimal places' do
+      assert_equal '+0.77', editor.format_pitch_shift(0.7654321)
+    end
+
+    test 'format_pitch_shift shows plus zero for zero' do
+      assert_equal '+0.0', editor.format_pitch_shift(0.0)
+    end
+
+    test 'track_bpm returns nil for nil path' do
+      assert_nil editor.track_bpm(nil)
+    end
+
+    test 'track_bpm returns nil when audio raises an error' do
+      Audio.stubs(:new).raises(StandardError)
+      assert_nil editor.track_bpm('/nonexistent/track.wav')
+    end
+
+    test 'track_bpm caches results' do
+      mock_audio = stub(bpm: 120)
+      Audio.expects(:new).once.returns(mock_audio)
+      e = editor
+      e.track_bpm('/some/track.wav')
+      e.track_bpm('/some/track.wav')
+    end
+
+    test 'track_bpm returns bpm from audio file' do
+      Audio.stubs(:new).returns(stub(bpm: 140))
+      assert_equal 140, editor.track_bpm('/some/track.wav')
     end
   end
 end
