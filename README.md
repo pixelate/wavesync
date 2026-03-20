@@ -118,24 +118,13 @@ wavesync set list
 
 ## Development
 
-### Running Tests
+### Running Tests, RuboCop, and Type Checks
 
 ```bash
-rake test
+rake
 ```
 
-### Running RuboCop
-
-```bash
-bundle exec rubocop
-```
-
-### Running Type Checks
-
-```bash
-bundle exec rbs-inline --output lib/
-bundle exec steep check
-```
+This runs RuboCop (with auto-fix), Steep type checks, and the test suite in sequence.
 
 ### Releasing
 

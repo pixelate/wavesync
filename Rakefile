@@ -9,7 +9,16 @@ Rake::TestTask.new do |t|
   t.verbose = false
 end
 
-task default: :test
+desc 'Run rubocop, steep check, and tests'
+task default: %i[rubocop steep test]
+
+task :rubocop do
+  sh 'rubocop -A'
+end
+
+task :steep do
+  sh 'steep check'
+end
 
 namespace :release do
   desc 'Tag, push, build, and publish the gem for the current version'
