@@ -6,7 +6,7 @@ gem 'streamio-ffmpeg', '~> 3.0'
 
 gem 'logger'
 
-gem 'rubocop', '~> 1.82', require: false
+gem 'rubocop', '~> 1.85', require: false
 
 gem 'tty-cursor', '~> 0.7.1'
 
