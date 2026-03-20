@@ -1,26 +1,33 @@
 # frozen_string_literal: true
+# rbs_inline: enabled
+
+require 'pathname'
 
 module Wavesync
   class PathResolver
     BPM_PATTERN = / \d+ bpm/
 
+    #: (String source_library_path, String target_library_path, Device device) -> void
     def initialize(source_library_path, target_library_path, device)
-      @source_library_path = Pathname(File.expand_path(source_library_path))
-      @target_library_path = Pathname(File.expand_path(target_library_path))
-      @device = device
+      @source_library_path = Pathname(File.expand_path(source_library_path)) #: Pathname
+      @target_library_path = Pathname(File.expand_path(target_library_path)) #: Pathname
+      @device = device #: Device
     end
 
+    #: (String source_file_path, Audio audio, ?target_file_type: String?) -> Pathname
     def resolve(source_file_path, audio, target_file_type: nil)
       relative_path = Pathname(source_file_path).relative_path_from(@source_library_path)
       target_path = @target_library_path.join(relative_path)
 
       target_path = target_path.sub_ext(".#{target_file_type}") if target_file_type
 
-      target_path = add_bpm_to_filename(target_path, audio.bpm) if @device.bpm_source == :filename && audio.bpm
+      bpm = audio.bpm
+      target_path = add_bpm_to_filename(target_path, bpm) if @device.bpm_source == :filename && bpm
 
       target_path
     end
 
+    #: (Pathname target_path, Audio audio) -> Array[Pathname]
     def find_files_to_cleanup(target_path, audio)
       return [] unless @device.bpm_source == :filename && audio.bpm
 
@@ -34,6 +41,7 @@ module Wavesync
 
     private
 
+    #: (Pathname path, String | Integer bpm) -> Pathname
     def add_bpm_to_filename(path, bpm)
       ext = path.extname
       basename = path.basename(ext).to_s
@@ -44,6 +52,7 @@ module Wavesync
       path.dirname.join(new_basename)
     end
 
+    #: (Pathname path) -> Pathname
     def remove_bpm_from_filename(path)
       ext = path.extname
       basename = path.basename(ext).to_s

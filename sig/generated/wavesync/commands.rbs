@@ -1,0 +1,38 @@
+# Generated from lib/wavesync/commands.rb with RBS::Inline
+
+module Wavesync
+  module Commands
+    class Option < Struct[untyped]
+      attr_accessor short(): untyped
+
+      attr_accessor long(): untyped
+
+      attr_accessor description(): untyped
+
+      def self.new: (?short: untyped, ?long: untyped, ?description: untyped) -> instance
+                  | ({ ?short: untyped, ?long: untyped, ?description: untyped }) -> instance
+    end
+
+    class Subcommand < Struct[untyped]
+      attr_accessor usage(): untyped
+
+      attr_accessor description(): untyped
+
+      def self.new: (?usage: untyped, ?description: untyped) -> instance
+                  | ({ ?usage: untyped, ?description: untyped }) -> instance
+    end
+
+    CONFIG_OPTION: untyped
+
+    GLOBAL_OPTIONS: untyped
+
+    # : (String path) -> Config
+    def self.load_config: (String path) -> Config
+  end
+end
+
+module Wavesync
+  module Commands
+    ALL: untyped
+  end
+end

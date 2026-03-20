@@ -1,0 +1,25 @@
+# Manual stub for Command (class << self attr_accessor not supported by rbs-inline)
+
+module Wavesync
+  module Commands
+    class Command
+      def self.name: () -> String?
+
+      def self.name=: (String? name) -> String?
+
+      def self.description: () -> String?
+
+      def self.description=: (String? description) -> String?
+
+      def self.options: () -> Array[untyped]
+
+      def self.options=: (Array[untyped] options) -> Array[untyped]
+
+      def self.subcommands: () -> Array[untyped]
+
+      def self.subcommands=: (Array[untyped] subcommands) -> Array[untyped]
+
+      def parse_options: (banner: String) ?{ (OptionParser, Hash[Symbol, untyped]) -> void } -> [ Hash[Symbol, untyped], Config ]
+    end
+  end
+end

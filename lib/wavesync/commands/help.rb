@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# rbs_inline: enabled
 
 require 'optparse'
 require 'rainbow'
@@ -11,6 +12,7 @@ module Wavesync
 
       DESCRIPTION_COLUMN = 23
 
+      #: () -> void
       def run
         subcommand_name = ARGV.shift
 
@@ -30,6 +32,7 @@ module Wavesync
 
       private
 
+      #: () -> void
       def show_general_help
         puts 'Usage: wavesync [command] [options]'
         puts ''
@@ -47,6 +50,7 @@ module Wavesync
         GLOBAL_OPTIONS.each { |option| puts format_option_line(option, indent: 2) }
       end
 
+      #: (untyped command) -> void
       def show_command_help(command)
         if command.subcommands.any?
           puts "Usage: wavesync #{command.name} <subcommand> [options]"
@@ -68,10 +72,12 @@ module Wavesync
         end
       end
 
+      #: (String name, String description) -> String
       def format_command_line(name, description)
         "  #{name.ljust(DESCRIPTION_COLUMN - 2)}#{description}"
       end
 
+      #: (untyped option, indent: Integer) -> String
       def format_option_line(option, indent:)
         key = "#{option.short}, #{option.long}"
         Rainbow("#{' ' * indent}#{key.ljust(DESCRIPTION_COLUMN - indent)}#{option.description}").darkgray

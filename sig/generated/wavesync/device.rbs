@@ -1,0 +1,44 @@
+# Generated from lib/wavesync/device.rb with RBS::Inline
+
+module Wavesync
+  class Device
+    attr_reader name: String
+
+    attr_reader sample_rates: Array[Integer]
+
+    attr_reader bit_depths: Array[Integer]
+
+    attr_reader file_types: Array[String]
+
+    attr_reader bpm_source: Symbol?
+
+    attr_reader bar_multiple: Integer?
+
+    # : (name: String, sample_rates: Array[Integer], bit_depths: Array[Integer], file_types: Array[String], ?bpm_source: Symbol?, ?bar_multiple: Integer?) -> void
+    def initialize: (name: String, sample_rates: Array[Integer], bit_depths: Array[Integer], file_types: Array[String], ?bpm_source: Symbol?, ?bar_multiple: Integer?) -> void
+
+    # : () -> String
+    def self.config_path: () -> String
+
+    # : () -> Array[Device]
+    def self.all: () -> Array[Device]
+
+    # : (name: String) -> Device?
+    def self.find_by: (name: String) -> Device?
+
+    # : () -> Array[Device]
+    def self.load_from_yaml: () -> Array[Device]
+
+    # : (AudioFormat source_format, String source_file_path) -> AudioFormat
+    def target_format: (AudioFormat source_format, String source_file_path) -> AudioFormat
+
+    # : (String source_file_path) -> String?
+    def target_file_type: (String source_file_path) -> String?
+
+    # : (Integer? source_sample_rate) -> Integer?
+    def target_sample_rate: (Integer? source_sample_rate) -> Integer?
+
+    # : (Integer? source_bit_depth) -> Integer?
+    def target_bit_depth: (Integer? source_bit_depth) -> Integer?
+  end
+end

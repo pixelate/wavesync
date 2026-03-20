@@ -1,0 +1,24 @@
+# Generated from lib/wavesync/path_resolver.rb with RBS::Inline
+
+module Wavesync
+  class PathResolver
+    BPM_PATTERN: ::Regexp
+
+    # : (String source_library_path, String target_library_path, Device device) -> void
+    def initialize: (String source_library_path, String target_library_path, Device device) -> void
+
+    # : (String source_file_path, Audio audio, ?target_file_type: String?) -> Pathname
+    def resolve: (String source_file_path, Audio audio, ?target_file_type: String?) -> Pathname
+
+    # : (Pathname target_path, Audio audio) -> Array[Pathname]
+    def find_files_to_cleanup: (Pathname target_path, Audio audio) -> Array[Pathname]
+
+    private
+
+    # : (Pathname path, String | Integer bpm) -> Pathname
+    def add_bpm_to_filename: (Pathname path, String | Integer bpm) -> Pathname
+
+    # : (Pathname path) -> Pathname
+    def remove_bpm_from_filename: (Pathname path) -> Pathname
+  end
+end

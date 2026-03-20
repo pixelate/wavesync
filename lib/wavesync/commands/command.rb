@@ -13,8 +13,9 @@ module Wavesync
         def subcommands = @subcommands || []
       end
 
+      #: (banner: String) ?{ (OptionParser, Hash[Symbol, untyped]) -> void } -> [Hash[Symbol, untyped], Config]
       def parse_options(banner:)
-        options = {}
+        options = {} #: Hash[Symbol, untyped]
         OptionParser.new do |opts|
           opts.banner = banner
           opts.on(*CONFIG_OPTION.to_a) { |value| options[:config] = value }

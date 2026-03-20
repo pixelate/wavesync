@@ -1,0 +1,54 @@
+# Generated from lib/wavesync/set.rb with RBS::Inline
+
+module Wavesync
+  class Set
+    SETS_FOLDER: ::String
+
+    attr_reader name: String
+
+    attr_reader tracks: Array[String]
+
+    attr_reader library_path: String
+
+    # : (String library_path) -> String
+    def self.sets_path: (String library_path) -> String
+
+    # : (String library_path, String name) -> String
+    def self.set_path: (String library_path, String name) -> String
+
+    # : (String library_path, String name) -> Set
+    def self.load: (String library_path, String name) -> Set
+
+    # : (String library_path) -> Array[Set]
+    def self.all: (String library_path) -> Array[Set]
+
+    # : (String library_path, String name) -> bool
+    def self.exists?: (String library_path, String name) -> bool
+
+    # : (String library_path, String name, ?Array[String] tracks) -> void
+    def initialize: (String library_path, String name, ?Array[String] tracks) -> void
+
+    # : (String path) -> void
+    def add_track: (String path) -> void
+
+    # : (Integer index) -> String?
+    def remove_track: (Integer index) -> String?
+
+    # : (Integer index) -> void
+    def move_up: (Integer index) -> void
+
+    # : (Integer index) -> void
+    def move_down: (Integer index) -> void
+
+    # : () -> void
+    def save: () -> void
+
+    private
+
+    # : (String library_path, Array[String]? tracks) -> Array[String]
+    def self.expand_tracks: (String library_path, Array[String]? tracks) -> Array[String]
+
+    # : () -> String
+    def to_yaml: () -> String
+  end
+end

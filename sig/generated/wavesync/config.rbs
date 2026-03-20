@@ -1,0 +1,34 @@
+# Generated from lib/wavesync/config.rb with RBS::Inline
+
+module Wavesync
+  class ConfigError < StandardError
+  end
+
+  class Config
+    DEFAULT_PATH: untyped
+
+    SUPPORTED_KEYS: untyped
+
+    DEVICE_SUPPORTED_KEYS: untyped
+
+    DEVICE_REQUIRED_KEYS: untyped
+
+    attr_reader library: String
+
+    attr_reader device_configs: Array[{ name: String, model: String, path: String }]
+
+    # : (?String path) -> Config
+    def self.load: (?String path) -> Config
+
+    # : (untyped data) -> void
+    def initialize: (untyped data) -> void
+
+    private
+
+    # : (untyped data) -> void
+    def validate!: (untyped data) -> void
+
+    # : (untyped device, Integer index) -> void
+    def validate_device!: (untyped device, Integer index) -> void
+  end
+end

@@ -1,0 +1,81 @@
+# Generated from lib/wavesync/audio.rb with RBS::Inline
+
+module Wavesync
+  class Audio
+    SUPPORTED_FORMATS: untyped
+
+    # : (String library_path) -> Array[String]
+    def self.find_all: (String library_path) -> Array[String]
+
+    # : (String file_path) -> void
+    def initialize: (String file_path) -> void
+
+    # : () -> Float
+    def duration: () -> Float
+
+    # : () -> Integer?
+    def sample_rate: () -> Integer?
+
+    # : () -> Integer?
+    def bit_depth: () -> Integer?
+
+    # : () -> (String | Integer)?
+    def bpm: () -> (String | Integer)?
+
+    # : () -> AudioFormat
+    def format: () -> AudioFormat
+
+    # : (String | Integer | Float bpm) -> void
+    def write_bpm: (String | Integer | Float bpm) -> void
+
+    # : (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?) -> bool
+    def transcode: (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?) -> bool
+
+    private
+
+    # : () -> Integer?
+    def calculate_bit_depth: () -> Integer?
+
+    # : (Integer? target_sample_rate, Integer? target_bit_depth, ?Numeric? padding_seconds) -> Hash[Symbol, untyped]
+    def build_transcode_options: (Integer? target_sample_rate, Integer? target_bit_depth, ?Numeric? padding_seconds) -> Hash[Symbol, untyped]
+
+    # : () -> (String | Integer)?
+    def bpm_from_file: () -> (String | Integer)?
+
+    # : () -> Integer?
+    def bpm_from_m4a: () -> Integer?
+
+    # : () -> String?
+    def bpm_from_mp3: () -> String?
+
+    # : () -> (String | Integer)?
+    def bpm_from_wav: () -> (String | Integer)?
+
+    # : () -> String?
+    def bpm_from_aiff: () -> String?
+
+    # : (untyped tag) -> Integer?
+    def bpm_from_item_map: (untyped tag) -> Integer?
+
+    # : (untyped tag) -> String?
+    def bpm_from_frame_list: (untyped tag) -> String?
+
+    # : () -> Integer?
+    def bpm_from_acid_chunk: () -> Integer?
+
+    # : (String | Integer | Float bpm) -> void
+    def write_bpm_to_wav: (String | Integer | Float bpm) -> void
+
+    # : (String | Integer | Float bpm) -> void
+    def write_bpm_to_mp3: (String | Integer | Float bpm) -> void
+
+    # : (String | Integer | Float bpm) -> void
+    def write_bpm_to_m4a: (String | Integer | Float bpm) -> void
+
+    # : (String | Integer | Float bpm) -> void
+    def write_bpm_to_aiff: (String | Integer | Float bpm) -> void
+
+    # : (untyped tag, String | Integer | Float bpm) -> void
+    def write_id3v2_bpm: (untyped tag, String | Integer | Float bpm) -> void
+  end
+end

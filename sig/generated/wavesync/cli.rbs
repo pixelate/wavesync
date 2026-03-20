@@ -1,0 +1,8 @@
+# Generated from lib/wavesync/cli.rb with RBS::Inline
+
+module Wavesync
+  class CLI
+    # : () -> void
+    def self.start: () -> void
+  end
+end

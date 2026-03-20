@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# rbs_inline: enabled
 
 require 'optparse'
 
@@ -12,6 +13,7 @@ module Wavesync
       self.description = 'Sync music library to a device'
       self.options = [DEVICE_OPTION, PAD_OPTION].freeze
 
+      #: () -> void
       def run
         options, config = parse_options(banner: 'Usage: wavesync sync [options]') do |opts, opts_hash|
           opts.on(*DEVICE_OPTION.to_a) { |value| opts_hash[:device] = value }
@@ -40,11 +42,13 @@ module Wavesync
             exit 1
           end
           [device_config, device]
-        end
+        end #: Array[untyped]
 
         scanner = Wavesync::Scanner.new(config.library)
 
-        device_pairs.each do |device_config, device|
+        device_pairs.each do |pair|
+          device_config = pair[0] #: { name: String, model: String, path: String }
+          device = pair[1] #: Wavesync::Device
           scanner.sync(device_config[:path], device, pad: options[:pad] || false)
         end
       end

@@ -21,3 +21,7 @@ gem 'rake'
 gem 'minitest', '~> 6.0'
 
 gem 'mocha', '~> 3.0'
+
+gem 'steep', require: false
+
+gem 'rbs-inline', require: false

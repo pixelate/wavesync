@@ -1,0 +1,49 @@
+# Generated from lib/wavesync/acid_chunk.rb with RBS::Inline
+
+module Wavesync
+  class AcidChunk
+    RIFF_HEADER_SIZE: ::Integer
+
+    CHUNK_ID_SIZE: ::Integer
+
+    CHUNK_SIZE_FIELD_SIZE: ::Integer
+
+    ACID_CHUNK_ID: ::String
+
+    ACID_CHUNK_DATA_SIZE: ::Integer
+
+    ACID_TYPE_FLAGS_SIZE: ::Integer
+
+    ACID_ROOT_NOTE_SIZE: ::Integer
+
+    ACID_UNKNOWN1_SIZE: ::Integer
+
+    ACID_UNKNOWN2_SIZE: ::Integer
+
+    ACID_NUM_BEATS_SIZE: ::Integer
+
+    ACID_METER_DENOM_SIZE: ::Integer
+
+    ACID_METER_NUMER_SIZE: ::Integer
+
+    ACID_TEMPO_SIZE: ::Integer
+
+    ACID_TEMPO_OFFSET: untyped
+
+    UINT32_LITTLE_ENDIAN: ::String
+
+    FLOAT32_LITTLE_ENDIAN: ::String
+
+    # : (String filepath) -> Float?
+    def self.read_bpm: (String filepath) -> Float?
+
+    # : (String source_filepath, String output_filepath, Integer | Float | String new_bpm) -> void
+    def self.write_bpm: (String source_filepath, String output_filepath, Integer | Float | String new_bpm) -> void
+
+    # : (untyped output, Float bpm) -> void
+    def self.create_acid_chunk: (untyped output, Float bpm) -> void
+
+    # : (String filepath) -> void
+    def self.update_riff_size: (String filepath) -> void
+  end
+end

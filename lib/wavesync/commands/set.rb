@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# rbs_inline: enabled
 
 require 'optparse'
 
@@ -12,6 +13,7 @@ module Wavesync
         Subcommand.new(usage: 'set list', description: 'List all track sets')
       ].freeze
 
+      #: () -> void
       def run
         subcommand = ARGV.shift
 
@@ -50,6 +52,7 @@ module Wavesync
 
       private
 
+      #: (String subcommand) -> String
       def require_name(subcommand)
         name = ARGV.shift
         unless name

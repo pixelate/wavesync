@@ -1,0 +1,10 @@
+# Generated from lib/wavesync/file_converter.rb with RBS::Inline
+
+module Wavesync
+  class FileConverter
+    DURATION_TOLERANCE_SECONDS: ::Float
+
+    # : (Audio audio, String source_file_path, PathResolver path_resolver, AudioFormat source_format, AudioFormat target_format, ?padding_seconds: Numeric?) ?{ () -> void } -> bool
+    def convert: (Audio audio, String source_file_path, PathResolver path_resolver, AudioFormat source_format, AudioFormat target_format, ?padding_seconds: Numeric?) ?{ () -> void } -> bool
+  end
+end

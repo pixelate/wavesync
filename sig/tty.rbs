@@ -1,0 +1,13 @@
+# Minimal stub for tty-cursor and tty-prompt
+
+module TTY
+  module Cursor
+    def self.clear_screen: () -> String
+    def self.move_to: (Integer x, Integer y) -> String
+  end
+
+  class Prompt
+    def initialize: (**untyped options) -> void
+    def select: (String question, untyped choices, **untyped options) -> untyped
+  end
+end

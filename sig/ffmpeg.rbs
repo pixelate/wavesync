@@ -1,0 +1,14 @@
+# Minimal stub for streamio-ffmpeg
+
+module FFMPEG
+  class Movie
+    def initialize: (String path) -> void
+    def duration: () -> Float
+    def audio_sample_rate: () -> Integer?
+    def metadata: () -> untyped
+    def transcode: (String path, untyped options) -> untyped
+  end
+
+  def self.logger=: (untyped logger) -> void
+  def self.ffmpeg_binary: () -> String
+end
