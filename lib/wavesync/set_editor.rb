@@ -47,6 +47,37 @@ module Wavesync
       stop_playback
     end
 
+    #: (String? path) -> (String | Integer)?
+    def track_bpm(path)
+      return nil if path.nil?
+
+      @track_bpms ||= {} #: Hash[String, (String | Integer)?]
+      return @track_bpms[path] if @track_bpms.key?(path)
+
+      @track_bpms[path] = begin
+        Audio.new(path).bpm
+      rescue StandardError
+        nil
+      end
+    end
+
+    #: ((String | Integer)? source_bpm, (String | Integer)? target_bpm) -> Float?
+    def pitch_shift_semitones(source_bpm, target_bpm)
+      return nil unless source_bpm && target_bpm
+
+      source = source_bpm.to_f
+      target = target_bpm.to_f
+      return nil if source.zero?
+
+      12.0 * Math.log2(target / source)
+    end
+
+    #: (Float semitones) -> String
+    def format_pitch_shift(semitones)
+      sign = semitones >= 0 ? '+' : ''
+      "#{sign}#{semitones.round(2)}"
+    end
+
     private
 
     #: () -> String
@@ -86,7 +117,9 @@ module Wavesync
         puts @ui.color('  (no tracks)', :secondary)
       else
         @set.tracks.each_with_index do |track, i|
-          render_track(i, relative_path(track), i == @selected, track == @player_track)
+          current_bpm = track_bpm(track)
+          pitch_shift = pitch_shift_semitones(current_bpm, track_bpm(@set.tracks[i + 1]))
+          render_track(i, relative_path(track), i == @selected, track == @player_track, bpm: current_bpm, pitch_shift: pitch_shift)
         end
       end
 
@@ -95,8 +128,8 @@ module Wavesync
                      :secondary)
     end
 
-    #: (Integer index, String relative, bool selected, bool playing) -> void
-    def render_track(index, relative, selected, playing)
+    #: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?) -> void
+    def render_track(index, relative, selected, playing, bpm: nil, pitch_shift: nil)
       name = display_name(relative)
       folder = File.dirname(relative)
       icon = if playing
@@ -104,8 +137,11 @@ module Wavesync
              else
                ' '
              end
-      puts "#{@ui.color(icon, :surface)} #{@ui.color("#{index + 1}.", selected ? :highlight : :extra)} #{@ui.color(name, selected ? :highlight : :primary)}"
+      bpm_color = selected ? :highlight : :secondary
+      bpm_label = bpm ? " · #{@ui.color("#{bpm} bpm", bpm_color)}" : ''
+      puts "#{@ui.color(icon, :surface)} #{@ui.color("#{index + 1}.", selected ? :highlight : :extra)} #{@ui.color(name, selected ? :highlight : :primary)}#{bpm_label}"
       puts @ui.color("     #{folder}", selected ? :highlight : :tertiary) unless folder == '.'
+      puts "     #{@ui.color(format_pitch_shift(pitch_shift), :secondary)}" if pitch_shift
     end
 
     #: (Symbol action) -> Symbol?
