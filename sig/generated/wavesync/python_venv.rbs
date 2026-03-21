@@ -1,0 +1,16 @@
+# Generated from lib/wavesync/python_venv.rb with RBS::Inline
+
+module Wavesync
+  module PythonVenv
+    PYTHON_PATH: ::String
+
+    # : () -> bool
+    def self.available?: () -> bool
+
+    # : () -> bool?
+    def self.essentia_available?: () -> bool?
+
+    # : (String script, String file_path) -> String
+    def self.run_script: (String script, String file_path) -> String
+  end
+end

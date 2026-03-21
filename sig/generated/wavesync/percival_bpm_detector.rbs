@@ -1,8 +1,8 @@
-# Generated from lib/wavesync/bpm_detector.rb with RBS::Inline
+# Generated from lib/wavesync/percival_bpm_detector.rb with RBS::Inline
 
 module Wavesync
-  class BpmDetector
-    CONFIDENCE_THRESHOLD: ::Float
+  class PercivalBpmDetector
+    PYTHON_SCRIPT: ::String
 
     # : () -> bool?
     def self.available?: () -> bool?

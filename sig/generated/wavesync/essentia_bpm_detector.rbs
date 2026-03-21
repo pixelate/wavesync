@@ -1,0 +1,13 @@
+# Generated from lib/wavesync/essentia_bpm_detector.rb with RBS::Inline
+
+module Wavesync
+  class EssentiaBpmDetector
+    PYTHON_SCRIPT: ::String
+
+    # : () -> bool?
+    def self.available?: () -> bool?
+
+    # : (String file_path) -> {bpm: Integer, confidence: Float}?
+    def self.detect: (String file_path) -> { bpm: Integer, confidence: Float }?
+  end
+end

@@ -1,22 +1,26 @@
 # frozen_string_literal: true
 # rbs_inline: enabled
 
-require 'shellwords'
+require_relative 'essentia_bpm_detector'
+require_relative 'percival_bpm_detector'
 
 module Wavesync
   class BpmDetector
+    CONFIDENCE_THRESHOLD = 2.0
+
     #: () -> bool?
     def self.available?
-      system('which bpm > /dev/null 2>&1') && system('which ffmpeg > /dev/null 2>&1')
+      EssentiaBpmDetector.available? || PercivalBpmDetector.available?
     end
 
     #: (String file_path) -> Integer?
     def self.detect(file_path)
-      output = `ffmpeg -i #{Shellwords.escape(file_path)} -ac 1 -ar 44100 -f f32le - 2>/dev/null | bpm`
-      bpm = output.strip.to_f
-      bpm.positive? ? bpm.round : nil
-    rescue StandardError
-      nil
+      if EssentiaBpmDetector.available?
+        essentia_result = EssentiaBpmDetector.detect(file_path)
+        return essentia_result[:bpm] if essentia_result && essentia_result[:confidence] > CONFIDENCE_THRESHOLD
+      end
+
+      PercivalBpmDetector.detect(file_path) if PercivalBpmDetector.available?
     end
   end
 end
