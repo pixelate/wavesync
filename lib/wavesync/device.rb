@@ -10,15 +10,17 @@ module Wavesync
     attr_reader :file_types #: Array[String]
     attr_reader :bpm_source #: Symbol?
     attr_reader :bar_multiple #: Integer?
+    attr_reader :sync_throttle #: bool
 
-    #: (name: String, sample_rates: Array[Integer], bit_depths: Array[Integer], file_types: Array[String], ?bpm_source: Symbol?, ?bar_multiple: Integer?) -> void
-    def initialize(name:, sample_rates:, bit_depths:, file_types:, bpm_source: nil, bar_multiple: nil)
+    #: (name: String, sample_rates: Array[Integer], bit_depths: Array[Integer], file_types: Array[String], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?sync_throttle: bool) -> void
+    def initialize(name:, sample_rates:, bit_depths:, file_types:, bpm_source: nil, bar_multiple: nil, sync_throttle: false)
       @name = name
       @sample_rates = sample_rates
       @bit_depths = bit_depths
       @file_types = file_types
       @bpm_source = bpm_source
       @bar_multiple = bar_multiple
+      @sync_throttle = sync_throttle
     end
 
     #: () -> String
@@ -46,7 +48,8 @@ module Wavesync
           bit_depths: attrs['bit_depths'],
           file_types: attrs['file_types'],
           bpm_source: attrs['bpm_source']&.to_sym,
-          bar_multiple: attrs['bar_multiple']
+          bar_multiple: attrs['bar_multiple'],
+          sync_throttle: attrs['sync_throttle'] || false
         )
       end
     end

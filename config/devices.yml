@@ -12,6 +12,7 @@ devices:
     - wav
     - mp3
   bpm_source: :acid_chunk
+  sync_throttle: true
 
 - name: Octatrack
   sample_rates:
