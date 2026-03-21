@@ -16,13 +16,25 @@ module Wavesync
     # : ((String | Integer)? source_bpm, (String | Integer)? target_bpm) -> Float?
     def pitch_shift_semitones: ((String | Integer)? source_bpm, (String | Integer)? target_bpm) -> Float?
 
+    # : (String? path) -> Float?
+    def track_duration: (String? path) -> Float?
+
     # : (Float semitones) -> String
     def format_pitch_shift: (Float semitones) -> String
 
     private
 
-    # : () -> String
-    def read_key: () -> String
+    # : () -> void
+    def enter_fullscreen: () -> void
+
+    # : () -> void
+    def exit_fullscreen: () -> void
+
+    # : (StringIO buffer) -> void
+    def flush_render: (StringIO buffer) -> void
+
+    # : () -> String?
+    def read_key: () -> String?
 
     # : (String absolute) -> String
     def relative_path: (String absolute) -> String
@@ -33,8 +45,26 @@ module Wavesync
     # : (?String title) -> void
     def render: (?String title) -> void
 
-    # : (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?) -> void
-    def render_track: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?) -> void
+    # : (Float? seconds) -> String?
+    def format_duration: (Float? seconds) -> String?
+
+    # : () -> Float
+    def playback_elapsed: () -> Float
+
+    # : () -> Integer
+    def terminal_width: () -> Integer
+
+    # : (String? string) -> Integer
+    def visible_length: (String? string) -> Integer
+
+    # : (Float elapsed, Float total_duration, Integer bar_width) -> String
+    def playback_bar: (Float elapsed, Float total_duration, Integer bar_width) -> String
+
+    # : (Float elapsed, Float total_duration) -> String
+    def remaining_display: (Float elapsed, Float total_duration) -> String
+
+    # : (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer) -> void
+    def render_track: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer) -> void
 
     # : (Symbol action) -> Symbol?
     def handle_action: (Symbol action) -> Symbol?

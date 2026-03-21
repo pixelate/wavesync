@@ -3,6 +3,7 @@
 
 require 'tty-prompt'
 require 'io/console'
+require 'stringio'
 
 module Wavesync
   class SetEditor
@@ -11,8 +12,7 @@ module Wavesync
       'u' => :move_up,
       'd' => :move_down,
       'r' => :remove,
-      's' => :save,
-      'c' => :quit,
+      'q' => :quit,
       ' ' => :toggle_play,
       "\e[A" => :cursor_up,
       "\e[B" => :cursor_down
@@ -27,6 +27,7 @@ module Wavesync
       @selected = @set.tracks.empty? ? nil : 0 #: Integer?
       @player_pid = nil #: Integer?
       @player_track = nil #: String?
+      @player_index = nil #: Integer?
       @player_state = :stopped #: Symbol
       @player_offset = 0 #: Numeric
       @player_started_at = nil #: Time?
@@ -34,6 +35,7 @@ module Wavesync
 
     #: () -> void
     def run
+      enter_fullscreen
       loop do
         check_player
         render
@@ -44,6 +46,7 @@ module Wavesync
         break if result == :quit
       end
     ensure
+      exit_fullscreen
       stop_playback
     end
 
@@ -56,6 +59,20 @@ module Wavesync
 
       @track_bpms[path] = begin
         Audio.new(path).bpm
+      rescue StandardError
+        nil
+      end
+    end
+
+    #: (String? path) -> Float?
+    def track_duration(path)
+      return nil if path.nil?
+
+      @track_durations ||= {} #: Hash[String, Float?]
+      return @track_durations[path] if @track_durations.key?(path)
+
+      @track_durations[path] = begin
+        Audio.new(path).duration
       rescue StandardError
         nil
       end
@@ -80,9 +97,35 @@ module Wavesync
 
     private
 
-    #: () -> String
+    #: () -> void
+    def enter_fullscreen
+      print "\e[?1049h" # enter alternate screen buffer
+      print "\e[?25l"   # hide cursor
+    end
+
+    #: () -> void
+    def exit_fullscreen
+      print "\e[?25h"   # show cursor
+      print "\e[?1049l" # exit alternate screen buffer
+    end
+
+    #: (StringIO buffer) -> void
+    def flush_render(buffer)
+      $stdout.print "\e[H"
+      lines = buffer.string.lines
+      lines.each_with_index do |line, i|
+        terminator = i < lines.size - 1 ? "\n" : ''
+        $stdout.print "\e[K#{line.chomp}#{terminator}"
+      end
+      $stdout.print "\e[J"
+    end
+
+    #: () -> String?
     def read_key
       $stdin.raw do |io|
+        ready = io.wait_readable(0.5)
+        return nil unless ready
+
         char = io.getc || ''
         if char == "\e"
           rest = begin
@@ -102,6 +145,56 @@ module Wavesync
       absolute.sub("#{@library_path}/", '')
     end
 
+    #: (Float? seconds) -> String?
+    def format_duration(seconds)
+      return nil unless seconds
+
+      total_seconds = seconds.to_i
+      mins = total_seconds / 60
+      secs = total_seconds % 60
+      "#{mins}:#{secs.to_s.rjust(2, '0')}"
+    end
+
+    #: () -> Float
+    def playback_elapsed
+      case @player_state
+      when :playing
+        (@player_offset + (Time.now - @player_started_at)).to_f
+      when :paused
+        @player_offset.to_f
+      else
+        0.0
+      end
+    end
+
+    #: () -> Integer
+    def terminal_width
+      IO.console&.winsize&.last || 80
+    rescue StandardError
+      80
+    end
+
+    #: (String? string) -> Integer
+    def visible_length(string)
+      return 0 unless string
+
+      string.gsub(/\e\[[0-9;]*[A-Za-z]/, '').length
+    end
+
+    #: (Float elapsed, Float total_duration, Integer bar_width) -> String
+    def playback_bar(elapsed, total_duration, bar_width)
+      ratio = total_duration.positive? ? [elapsed / total_duration, 1.0].min : 0.0
+      filled = (ratio * bar_width).round
+      empty = bar_width - filled
+      @ui.color("#{'█' * filled}#{'░' * empty}", :surface)
+    end
+
+    #: (Float elapsed, Float total_duration) -> String
+    def remaining_display(elapsed, total_duration)
+      remaining = [total_duration - elapsed, 0.0].max
+      "-#{format_duration(remaining) || '0:00'}"
+    end
+
     #: (String relative) -> String
     def display_name(relative)
       File.basename(relative, '.*').sub(/\A\d+[\s.\-_]+/, '')
@@ -109,8 +202,29 @@ module Wavesync
 
     #: (?String title) -> void
     def render(title = "wavesync set #{@set.name}")
-      @ui.clear
-      puts @ui.color(title, :primary)
+      buffer = StringIO.new
+      $stdout = buffer
+
+      header = @ui.color(title, :primary)
+      total_duration = @set.tracks.sum { |track_path| track_duration(track_path) || 0.0 }
+
+      duration_widths = @set.tracks.map { |track_path| format_duration(track_duration(track_path))&.length || 0 }
+      duration_widths << (format_duration(total_duration)&.length || 0)
+      player_duration = @player_index ? track_duration(@set.tracks[@player_index]) : nil
+      duration_widths << remaining_display(0.0, player_duration).length if player_duration
+      duration_col_width = duration_widths.max || 0
+
+      if @set.tracks.any? && total_duration.positive?
+        track_label = @set.tracks.size == 1 ? 'track' : 'tracks'
+        track_count_part = @ui.color("#{@set.tracks.size} #{track_label}", :secondary)
+        duration_part = @ui.color(format_duration(total_duration).to_s.rjust(duration_col_width), :secondary)
+        summary = "#{track_count_part}   #{duration_part}"
+        gap = [terminal_width - visible_length(header) - visible_length(summary), 2].max
+        puts "#{header}#{' ' * gap}#{summary}"
+      else
+        puts header
+      end
+
       puts
 
       if @set.tracks.empty?
@@ -118,18 +232,24 @@ module Wavesync
       else
         @set.tracks.each_with_index do |track, i|
           current_bpm = track_bpm(track)
+          current_duration = track_duration(track)
           pitch_shift = pitch_shift_semitones(current_bpm, track_bpm(@set.tracks[i + 1]))
-          render_track(i, relative_path(track), i == @selected, track == @player_track, bpm: current_bpm, pitch_shift: pitch_shift)
+          render_track(i, relative_path(track), i == @selected, i == @player_index,
+                       bpm: current_bpm, pitch_shift: pitch_shift, duration: current_duration,
+                       duration_col_width: duration_col_width)
         end
       end
 
       puts
-      puts @ui.color('[↑↓] navigate  [space] play/pause  [a] add  [u] up  [d] down  [r] remove  [s] save  [c] cancel',
+      puts @ui.color('[↑↓] navigate [space] play/pause [a] add [u] up [d] down [r] remove [q] quit',
                      :secondary)
+    ensure
+      $stdout = STDOUT
+      flush_render(buffer)
     end
 
-    #: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?) -> void
-    def render_track(index, relative, selected, playing, bpm: nil, pitch_shift: nil)
+    #: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer) -> void
+    def render_track(index, relative, selected, playing, bpm: nil, pitch_shift: nil, duration: nil, duration_col_width: 0)
       name = display_name(relative)
       folder = File.dirname(relative)
       icon = if playing
@@ -137,11 +257,52 @@ module Wavesync
              else
                ' '
              end
+      name_color = selected ? :highlight : :primary
+      index_color = selected ? :highlight : :extra
       bpm_color = selected ? :highlight : :secondary
+      meta_color = selected ? :highlight : :tertiary
+
+      colored_icon = @ui.color(icon, :surface)
+      colored_index = @ui.color("#{index + 1}.", index_color)
+      colored_name = @ui.color(name, name_color)
       bpm_label = bpm ? " · #{@ui.color("#{bpm} bpm", bpm_color)}" : ''
-      puts "#{@ui.color(icon, :surface)} #{@ui.color("#{index + 1}.", selected ? :highlight : :extra)} #{@ui.color(name, selected ? :highlight : :primary)}#{bpm_label}"
-      puts @ui.color("     #{folder}", selected ? :highlight : :tertiary) unless folder == '.'
-      puts "     #{@ui.color(format_pitch_shift(pitch_shift), :secondary)}" if pitch_shift
+      left_line = "#{colored_icon} #{colored_index} #{colored_name}#{bpm_label}"
+
+      folder_part = folder == '.' ? nil : @ui.color(folder, meta_color)
+      elapsed = playing && duration ? playback_elapsed : nil
+      duration_str = if elapsed && duration
+                       @ui.color(remaining_display(elapsed, duration).rjust(duration_col_width), meta_color)
+                     elsif !playing
+                       format_duration(duration)&.then { @ui.color(_1.rjust(duration_col_width), meta_color) }
+                     end
+      right_line = [folder_part, duration_str].compact.join('   ')
+
+      if right_line.empty?
+        puts left_line
+      else
+        gap = terminal_width - visible_length(left_line) - visible_length(right_line)
+        if gap >= 2
+          puts "#{left_line}#{' ' * gap}#{right_line}"
+        else
+          puts left_line
+          indent = '     '
+          if folder_part && duration_str
+            second_gap = [terminal_width - indent.length - visible_length(folder_part) - visible_length(duration_str), 2].max
+            puts "#{indent}#{folder_part}#{' ' * second_gap}#{duration_str}"
+          else
+            puts "#{indent}#{folder_part || duration_str}"
+          end
+        end
+      end
+
+      if playing && @player_state != :stopped && duration
+        bar_width = [terminal_width - 5, 20].max
+        puts "     #{playback_bar(playback_elapsed, duration, bar_width)}"
+      end
+
+      return unless pitch_shift
+
+      puts "     #{@ui.color("↓ #{format_pitch_shift(pitch_shift)} st", :secondary)}"
     end
 
     #: (Symbol action) -> Symbol?
@@ -168,12 +329,8 @@ module Wavesync
       when :move_down
         move_track(:down)
         nil
-      when :save
-        @set.save
-        path = Set.set_path(@library_path, @set.name)
-        puts @ui.color("Saved '#{@set.name}' to #{path}.", :primary)
-        :quit
       when :quit
+        @set.save
         :quit
       end
     end
@@ -207,6 +364,7 @@ module Wavesync
       args << track
       @player_pid = spawn(*args, out: File::NULL, err: File::NULL)
       @player_track = track
+      @player_index = @selected
       @player_offset = offset
       @player_started_at = Time.now
       @player_state = :playing
@@ -226,6 +384,7 @@ module Wavesync
     def stop_playback
       kill_player
       @player_track = nil
+      @player_index = nil
       @player_state = :stopped
       @player_offset = 0
       @player_started_at = nil
@@ -240,12 +399,14 @@ module Wavesync
 
       @player_pid = nil
       @player_track = nil
+      @player_index = nil
       @player_state = :stopped
       @player_offset = 0
       advance_and_play
     rescue Errno::ECHILD
       @player_pid = nil
       @player_track = nil
+      @player_index = nil
       @player_state = :stopped
       @player_offset = 0
       advance_and_play
