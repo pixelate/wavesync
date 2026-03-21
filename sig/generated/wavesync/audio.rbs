@@ -25,6 +25,12 @@ module Wavesync
     # : () -> AudioFormat
     def format: () -> AudioFormat
 
+    # : () -> Array[{identifier: Integer, sample_offset: Integer, label: String?}]
+    def cue_points: () -> Array[{ identifier: Integer, sample_offset: Integer, label: String? }]
+
+    # : (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void
+    def write_cue_points: (Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points) -> void
+
     # : (String | Integer | Float bpm) -> void
     def write_bpm: (String | Integer | Float bpm) -> void
 

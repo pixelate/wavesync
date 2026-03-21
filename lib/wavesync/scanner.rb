@@ -41,6 +41,17 @@ module Wavesync
         @ui.bpm(audio.bpm, original_bars: original_bars, target_bars: target_bars)
         @ui.file_progress(file)
 
+        if source_format.file_type == 'wav'
+          prospective_target_path = path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
+          if prospective_target_path.extname.downcase == '.wav' && prospective_target_path.exist?
+            target_cue_points = CueChunk.read(prospective_target_path.to_s)
+            if target_cue_points.any?
+              source_cue_points = audio.cue_points
+              audio.write_cue_points(target_cue_points) unless same_cue_points?(source_cue_points, target_cue_points)
+            end
+          end
+        end
+
         if target_format.file_type || target_format.sample_rate || target_format.bit_depth || padding_seconds
           converted = @converter.convert(audio, file, path_resolver, source_format, target_format,
                                          padding_seconds: padding_seconds) do
@@ -58,6 +69,16 @@ module Wavesync
           temp_path = "#{target_path}.tmp"
           AcidChunk.write_bpm(target_path.to_s, temp_path, bpm)
           FileUtils.mv(temp_path, target_path.to_s)
+        end
+
+        if converted && source_format.file_type == 'wav' && target_path.extname.downcase == '.wav'
+          source_cue_points = audio.cue_points
+          if source_cue_points.any?
+            rescaled_cue_points = rescale_cue_points(source_cue_points, audio.sample_rate, target_format.sample_rate || audio.sample_rate)
+            temp_path = "#{target_path}.tmp"
+            CueChunk.write(target_path.to_s, temp_path, rescaled_cue_points)
+            FileUtils.mv(temp_path, target_path.to_s)
+          end
         end
 
         if !copied && !converted
@@ -91,6 +112,26 @@ module Wavesync
       else
         safe_copy(source_file_path, target_path)
         true
+      end
+    end
+
+    #: (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_a, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_b) -> bool
+    def same_cue_points?(cue_points_a, cue_points_b)
+      comparable_cue_points(cue_points_a) == comparable_cue_points(cue_points_b)
+    end
+
+    #: (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> Array[{sample_offset: Integer, label: String?}]
+    def comparable_cue_points(cue_points)
+      mapped = cue_points.map { |cp| { sample_offset: cp[:sample_offset], label: cp[:label] } } #: Array[{sample_offset: Integer, label: String?}]
+      mapped.sort_by { |cp| cp[:sample_offset] }
+    end
+
+    #: (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points, Integer? source_sample_rate, Integer? target_sample_rate) -> Array[{identifier: Integer, sample_offset: Integer, label: String?}]
+    def rescale_cue_points(cue_points, source_sample_rate, target_sample_rate)
+      return cue_points if source_sample_rate == target_sample_rate || source_sample_rate.nil? || target_sample_rate.nil?
+
+      cue_points.map do |cue_point|
+        cue_point.merge(sample_offset: (cue_point[:sample_offset] * target_sample_rate / source_sample_rate.to_f).round) #: {identifier: Integer, sample_offset: Integer, label: String?}
       end
     end
 

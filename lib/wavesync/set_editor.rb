@@ -14,9 +14,13 @@ module Wavesync
       'r' => :remove,
       'q' => :quit,
       ' ' => :toggle_play,
+      'j' => :jump_to_next_cue,
       "\e[A" => :cursor_up,
       "\e[B" => :cursor_down
     }.freeze
+
+    attr_accessor :player_state #: Symbol
+    attr_writer :player_track, :player_index, :player_offset, :player_started_at
 
     #: (Set set, String library_path) -> void
     def initialize(set, library_path)
@@ -75,6 +79,27 @@ module Wavesync
         Audio.new(path).duration
       rescue StandardError
         nil
+      end
+    end
+
+    #: (String? path) -> Array[Float]
+    def track_cue_fractions(path)
+      return [] if path.nil?
+
+      @track_cue_fractions ||= {} #: Hash[String, Array[Float]]
+      return @track_cue_fractions[path] if @track_cue_fractions.key?(path)
+
+      @track_cue_fractions[path] = begin
+        audio = Audio.new(path)
+        sample_rate = audio.sample_rate
+        duration = audio.duration
+        if sample_rate && duration&.positive?
+          audio.cue_points.map { |cue_point| cue_point[:sample_offset].to_f / sample_rate / duration }
+        else
+          [] #: Array[Float]
+        end
+      rescue StandardError
+        [] #: Array[Float]
       end
     end
 
@@ -181,12 +206,34 @@ module Wavesync
       string.gsub(/\e\[[0-9;]*[A-Za-z]/, '').length
     end
 
-    #: (Float elapsed, Float total_duration, Integer bar_width) -> String
-    def playback_bar(elapsed, total_duration, bar_width)
+    #: (Float elapsed, Float total_duration, Integer bar_width, ?cue_fractions: Array[Float]) -> String
+    def playback_bar(elapsed, total_duration, bar_width, cue_fractions: [])
       ratio = total_duration.positive? ? [elapsed / total_duration, 1.0].min : 0.0
       filled = (ratio * bar_width).round
-      empty = bar_width - filled
-      @ui.color("#{'█' * filled}#{'░' * empty}", :surface)
+
+      bar = Array.new(bar_width) { |i| i < filled ? '█' : '░' }
+
+      cue_position_colors = {} #: Hash[Integer, Symbol]
+      cue_fractions.each do |fraction|
+        position = (fraction * (bar_width - 1)).round.clamp(0, bar_width - 1)
+        cue_position_colors[position] = position == filled ? :highlight : :surface
+      end
+      cue_position_colors.each_key { |position| bar[position] = '◆' }
+
+      result = +''
+      run_start = 0
+      while run_start < bar_width
+        if cue_position_colors.key?(run_start)
+          result << @ui.color(bar[run_start], cue_position_colors[run_start])
+          run_start += 1
+        else
+          run_end = run_start
+          run_end += 1 while run_end < bar_width && !cue_position_colors.key?(run_end)
+          result << @ui.color((bar[run_start...run_end] || []).join, :surface)
+          run_start = run_end
+        end
+      end
+      result
     end
 
     #: (Float elapsed, Float total_duration) -> String
@@ -236,20 +283,20 @@ module Wavesync
           pitch_shift = pitch_shift_semitones(current_bpm, track_bpm(@set.tracks[i + 1]))
           render_track(i, relative_path(track), i == @selected, i == @player_index,
                        bpm: current_bpm, pitch_shift: pitch_shift, duration: current_duration,
-                       duration_col_width: duration_col_width)
+                       duration_col_width: duration_col_width, cue_fractions: track_cue_fractions(track))
         end
       end
 
       puts
-      puts @ui.color('[↑↓] navigate [space] play/pause [a] add [u] up [d] down [r] remove [q] quit',
+      puts @ui.color('[↑↓] navigate [space] play/pause [j] next cue [a] add [u] up [d] down [r] remove [q] quit',
                      :secondary)
     ensure
       $stdout = STDOUT
       flush_render(buffer)
     end
 
-    #: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer) -> void
-    def render_track(index, relative, selected, playing, bpm: nil, pitch_shift: nil, duration: nil, duration_col_width: 0)
+    #: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer, ?cue_fractions: Array[Float]) -> void
+    def render_track(index, relative, selected, playing, bpm: nil, pitch_shift: nil, duration: nil, duration_col_width: 0, cue_fractions: [])
       name = display_name(relative)
       folder = File.dirname(relative)
       icon = if playing
@@ -297,7 +344,7 @@ module Wavesync
 
       if playing && @player_state != :stopped && duration
         bar_width = [terminal_width - 5, 20].max
-        puts "     #{playback_bar(playback_elapsed, duration, bar_width)}"
+        puts "     #{playback_bar(playback_elapsed, duration, bar_width, cue_fractions: cue_fractions)}"
       end
 
       return unless pitch_shift
@@ -329,6 +376,9 @@ module Wavesync
       when :move_down
         move_track(:down)
         nil
+      when :jump_to_next_cue
+        jump_to_next_cue
+        nil
       when :quit
         @set.save
         :quit
@@ -356,18 +406,37 @@ module Wavesync
       end
     end
 
-    #: (String track, ?Numeric offset) -> void
-    def start_player(track, offset = 0)
+    #: (String track, ?Numeric offset, ?player_index: Integer?) -> void
+    def start_player(track, offset = 0, player_index: @selected)
       ffplay = FFMPEG.ffmpeg_binary.sub('ffmpeg', 'ffplay')
       args = [ffplay, '-nodisp', '-autoexit', '-loglevel', 'quiet', '-probesize', '32', '-analyzeduration', '0']
       args += ['-ss', offset.to_s] if offset.positive?
       args << track
       @player_pid = spawn(*args, out: File::NULL, err: File::NULL)
       @player_track = track
-      @player_index = @selected
+      @player_index = player_index
       @player_offset = offset
       @player_started_at = Time.now
       @player_state = :playing
+    end
+
+    #: () -> void
+    def jump_to_next_cue
+      return unless @player_track
+
+      duration = track_duration(@player_track)
+      return unless duration&.positive?
+
+      fractions = track_cue_fractions(@player_track)
+      return if fractions.empty?
+
+      elapsed = playback_elapsed
+      sorted_fractions = fractions.sort
+      next_fraction = sorted_fractions.find { |fraction| fraction * duration > elapsed + 0.05 }
+      next_fraction ||= sorted_fractions.first
+
+      kill_player
+      start_player(@player_track, next_fraction * duration, player_index: @player_index)
     end
 
     #: () -> void
@@ -469,5 +538,8 @@ module Wavesync
         @selected = [@selected + 1, @set.tracks.size - 1].min
       end
     end
+
+    public :handle_action, :advance_and_play, :display_name, :relative_path,
+           :format_duration, :playback_elapsed, :visible_length, :playback_bar
   end
 end

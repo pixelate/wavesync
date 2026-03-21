@@ -19,6 +19,9 @@ module Wavesync
     # : (String? path) -> Float?
     def track_duration: (String? path) -> Float?
 
+    # : (String? path) -> Array[Float]
+    def track_cue_fractions: (String? path) -> Array[Float]
+
     # : (Float semitones) -> String
     def format_pitch_shift: (Float semitones) -> String
 
@@ -57,14 +60,14 @@ module Wavesync
     # : (String? string) -> Integer
     def visible_length: (String? string) -> Integer
 
-    # : (Float elapsed, Float total_duration, Integer bar_width) -> String
-    def playback_bar: (Float elapsed, Float total_duration, Integer bar_width) -> String
+    # : (Float elapsed, Float total_duration, Integer bar_width, ?cue_fractions: Array[Float]) -> String
+    def playback_bar: (Float elapsed, Float total_duration, Integer bar_width, ?cue_fractions: Array[Float]) -> String
 
     # : (Float elapsed, Float total_duration) -> String
     def remaining_display: (Float elapsed, Float total_duration) -> String
 
-    # : (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer) -> void
-    def render_track: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer) -> void
+    # : (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer, ?cue_fractions: Array[Float]) -> void
+    def render_track: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer, ?cue_fractions: Array[Float]) -> void
 
     # : (Symbol action) -> Symbol?
     def handle_action: (Symbol action) -> Symbol?
@@ -72,8 +75,11 @@ module Wavesync
     # : () -> void
     def toggle_playback: () -> void
 
-    # : (String track, ?Numeric offset) -> void
-    def start_player: (String track, ?Numeric offset) -> void
+    # : (String track, ?Numeric offset, ?player_index: Integer?) -> void
+    def start_player: (String track, ?Numeric offset, ?player_index: Integer?) -> void
+
+    # : () -> void
+    def jump_to_next_cue: () -> void
 
     # : () -> void
     def kill_player: () -> void
