@@ -1,0 +1,58 @@
+# Mockup 02 — Set Editor: Playback Timeline + Richer Track Info
+#
+# Current state: tracks are listed with BPM and pitch-shift between consecutive
+# tracks. Selected track is highlighted. Playing track shows ▶/⏸ icon.
+#
+# This mockup adds:
+#   1. A playback position bar beneath the currently playing track
+#   2. Duration display per track
+#   3. Folder shown inline (suffix, dimmed) instead of on a separate line
+#      when it fits — reducing vertical space for shallow libraries
+#   4. Total set duration in the header
+#
+# Color key: same as 01-sync-progress.txt
+# ─────────────────────────────────────────────────────────────────────────────
+
+# CURRENT:
+#
+#   wavesync set summer-mix
+#
+#     1. Track One                    [extra index, primary name]
+#        deep-house/2024              [tertiary folder]
+#     ▶  2. Another Banger  · 128 bpm [surface icon, highlight selected]
+#        deep-house/2024              [highlight selected folder]
+#        +0.5                         [secondary pitch shift]
+#        3. Closing Track  · 134 bpm  [extra, primary]
+#
+#   [↑↓] navigate  [space] play/pause  [a] add  [u] up  [d] down  [r] remove  [s] save  [c] cancel
+#                                                                               [secondary]
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+# PROPOSED:
+#
+#   wavesync set  summer-mix                            3 tracks · 18:42 total
+#   ─────────────────────────────────────────────────────────────────────────   [tertiary rule]
+#
+#     1.  Track One                       5:21   deep-house/2024
+#
+#   ▶ 2.  Another Banger  · 128 bpm       6:04   deep-house/2024
+#         ██████████░░░░░░░░░░░░░░░░░░░░░  2:11 / 6:04              [surface/secondary bar]
+#         ↓ +0.5 st
+#
+#     3.  Closing Track   · 134 bpm       7:17   deep-house/2024
+#
+#   ─────────────────────────────────────────────────────────────────────────   [tertiary rule]
+#   [↑↓] navigate   [space] play/pause   [a] add   [u/d] reorder   [r] remove   [s] save   [c] cancel
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# Notes:
+#   - Playback bar shows elapsed/total, only rendered for the playing track
+#   - Duration comes from ffprobe (already a dependency via FFMPEG gem)
+#   - "↓ +0.5 st" between tracks shows pitch shift direction more clearly
+#     (arrow pointing down = the next track shifts down relative to current)
+#   - Folder rendered right-aligned on the same line; falls back to second
+#     line when the combined width exceeds terminal width
+#   - Header shows aggregate duration, handy for DJ set planning
+#   - Horizontal rules give the header and footer visual separation without
+#     using full box-drawing frames

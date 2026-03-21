@@ -1,0 +1,48 @@
+# Mockup 04 — Analyze Command: Per-file Result Log
+#
+# Current state: `wavesync analyze` uses the same sticky-line approach as sync,
+# meaning each file overwrites the previous display. Once done there is no
+# record of what BPMs were detected.
+#
+# This mockup switches the analyze view to a scrolling log style: each
+# completed file appends a result line, so the user ends up with a visible
+# history of the full run.
+#
+# Color key: same as 01-sync-progress.txt
+# ─────────────────────────────────────────────────────────────────────────────
+
+# CURRENT (sticky — only shows current file, previous results are lost):
+#
+#   wavesync analyze  47/312
+#   Deep House 2024
+#   Innervisions - Kai Alce Remix
+#   128 BPM
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+# PROPOSED (scrolling log — results accumulate):
+#
+#   wavesync analyze  ·  Octatrack MKII                       47 / 312
+#   ─────────────────────────────────────────────────────────────────────────
+#
+#   deep-house/2023/Track One.wav              ↷  already 128 bpm  [secondary]
+#   deep-house/2023/Bassline Groove.wav          128 bpm           [extra]
+#   deep-house/2023/Late Night Drive.mp3         120 bpm           [extra]
+#   deep-house/2024/Innervisions.m4a             —  not detected   [tertiary]
+#   deep-house/2024/Another Banger.wav           134 bpm           [extra]
+#   ...
+#   techno/Warehouse Set.wav                   ↷  already 145 bpm  [secondary]
+#
+#   ▸  deep-house/2024/Closing Track.wav  (analyzing...)           [primary]
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# Notes:
+#   - Each line is printed once and never redrawn (no cursor repositioning)
+#   - The "analyzing..." spinner line is the only sticky/updated line;
+#     it clears and reprints in place (single-line sticky, not 5-line)
+#   - ↷ prefix for already-set BPMs so skips are easy to spot
+#   - "— not detected" for nil BPM result, dimmed so it doesn't alarm
+#   - After completion, the spinner line is replaced by the summary line:
+#       ✓  312 files analyzed  ·  289 written  ·  21 skipped  ·  2 not detected
+#   - This approach works well for analyze (informational) but not sync
+#     (sync has multi-line state per file); kept separate intentionally

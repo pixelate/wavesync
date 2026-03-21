@@ -1,0 +1,43 @@
+# Mockup 01 — Sync Progress: Visual Progress Bar
+#
+# Current state: sync progress is shown as plain text lines (5 sticky lines).
+# This mockup adds a visual progress bar and better visual hierarchy.
+#
+# Color key (using current theme):
+#   [primary]   = lightgray
+#   [secondary] = darkgray
+#   [tertiary]  = dimgray
+#   [highlight] = orangered
+#   [surface]   = hotpink
+#   [extra]     = deepskyblue
+# ─────────────────────────────────────────────────────────────────────────────
+
+# CURRENT (5 plain lines):
+#
+#   wavesync Octatrack MKII  47/312             [primary] + [extra]
+#   Deep House 2024                             [secondary]
+#   Innervisions - Kai Alce Remix               [tertiary]
+#   Converting MP3 (44.1/16) ⇢ WAV (44.1/24)  [highlight]
+#   128 bpm · 64 bars                           (plain)
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+# PROPOSED:
+#
+#   wavesync  ·  Octatrack MKII                         47 / 312   [primary] · [extra]
+#   ████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  15%        [surface] fill, [secondary] empty
+#
+#   Deep House 2024                                                 [secondary]
+#   Innervisions - Kai Alce Remix                                   [tertiary]
+#
+#   MP3 (44.1/16)  ⇢  WAV (44.1/24)                               [highlight]
+#   128 bpm  ·  64 bars                                             [secondary]
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# Notes:
+#   - Progress bar width adapts to terminal width (use IO::console.winsize)
+#   - Separator blank lines improve scannability at a glance
+#   - "15%" lets users immediately gauge how far along they are
+#   - Format change: "MP3 ⇢ WAV" is shorter than "Converting MP3 ... ⇢ WAV ..."
+#     when paths are already shown above; reduces cognitive load
+#   - Skip still shows as: ↷  already synced                       [highlight]

@@ -1,0 +1,48 @@
+# Mockup 03 — Post-sync Summary Screen
+#
+# Current state: sync just stops after the last file; the final sticky lines
+# remain on screen showing the last processed file. There is no summary.
+#
+# This mockup adds a summary screen shown after sync completes, giving the
+# user a clear confirmation and useful stats before the process exits.
+#
+# Color key: same as 01-sync-progress.txt
+# ─────────────────────────────────────────────────────────────────────────────
+
+# CURRENT (after sync finishes — screen is left showing last-file stickies):
+#
+#   wavesync Octatrack MKII  312/312
+#   Deep House 2024
+#   Closing Track
+#   Copying WAV (44.1/24)
+#   134 bpm · 64 bars
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+# PROPOSED:
+#
+#   wavesync  ·  Octatrack MKII                                    done  ✓
+#   ─────────────────────────────────────────────────────────────────────────
+#
+#   Synced 312 files in 4m 23s
+#
+#   ✓  converted       47                                          [extra]
+#   →  copied         198                                          [primary]
+#   ↷  skipped         67                                          [secondary]
+#
+#   No errors.                                                     [secondary]
+#                                         — or if errors occurred —
+#   2 errors                                                       [highlight]
+#     ! Corrupt File.mp3  — ffmpeg exited with code 1             [highlight]
+#     ! Missing Track.m4a — file not found                        [highlight]
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# Notes:
+#   - Counts come naturally from the scanner loop (already tracked implicitly
+#     via the index/total passed to sync_progress); just need to accumulate
+#     separate converted/copied/skipped counters in Scanner
+#   - Elapsed time: record Time.now at sync start, diff at end
+#   - Errors: Scanner could collect {file, reason} pairs and pass to UI
+#   - "done ✓" in header replaces the file count once complete — clear signal
+#     that the process finished successfully
+#   - Screen is held until user presses any key (or just exits — TBD)
