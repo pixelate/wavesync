@@ -4,6 +4,7 @@
 module Wavesync
   class Analyzer
     CONFIRM_MESSAGE = 'wavesync analyze will add bpm meta data to files in library. Continue? [y/N] '
+    SETUP_INSTRUCTIONS = 'brew install python@3.11 && python3.11 -m venv ~/.wavesync-venv && ~/.wavesync-venv/bin/pip install essentia'
 
     #: (String library_path) -> void
     def initialize(library_path)
@@ -15,7 +16,7 @@ module Wavesync
     #: (?overwrite: bool) -> void
     def analyze(overwrite: false)
       unless BpmDetector.available?
-        puts 'Error: bpm-tools or ffmpeg is not installed. Install with: brew install bpm-tools ffmpeg'
+        puts "Error: essentia is not installed. Set up the Python venv with:\n  #{SETUP_INSTRUCTIONS}"
         exit 1
       end
 

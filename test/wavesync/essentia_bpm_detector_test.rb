@@ -1,0 +1,31 @@
+# frozen_string_literal: true
+
+require_relative 'test_case'
+require_relative '../../lib/wavesync/essentia_bpm_detector'
+
+module Wavesync
+  class EssentiaBpmDetectorTest < Wavesync::TestCase
+    test 'detect returns rounded BPM and confidence from essentia output' do
+      PythonVenv.stubs(:run_script).returns('{"bpm": 120, "confidence": 0.87}')
+      result = EssentiaBpmDetector.detect('/fake/file.wav')
+      assert_equal 120, result[:bpm]
+      assert_equal 0.87, result[:confidence]
+    end
+
+    test 'detect rounds BPM up correctly' do
+      PythonVenv.stubs(:run_script).returns('{"bpm": 121, "confidence": 0.75}')
+      result = EssentiaBpmDetector.detect('/fake/file.wav')
+      assert_equal 121, result[:bpm]
+    end
+
+    test 'detect returns nil when output is empty' do
+      PythonVenv.stubs(:run_script).returns('')
+      assert_nil EssentiaBpmDetector.detect('/fake/file.wav')
+    end
+
+    test 'detect returns nil when BPM is zero' do
+      PythonVenv.stubs(:run_script).returns('{"bpm": 0, "confidence": 0.0}')
+      assert_nil EssentiaBpmDetector.detect('/fake/file.wav')
+    end
+  end
+end

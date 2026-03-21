@@ -28,7 +28,6 @@ Unsupported file types will be ignored when syncing.
 ```bash
 brew install ffmpeg
 brew install taglib
-brew install bpm-tools
 ```
 
 3. Install Wavesync
@@ -37,7 +36,15 @@ brew install bpm-tools
 gem install wavesync --pre
 ```
 
-4. Install field kit (only required for syncing to TP-7)
+4. Set up the Python environment for BPM analysis
+
+```bash
+brew install python@3.11
+python3.11 -m venv ~/.wavesync-venv
+~/.wavesync-venv/bin/pip install essentia
+```
+
+5. Install field kit (only required for syncing to TP-7)
 
 https://teenage.engineering/guides/fieldkit
 

@@ -4,6 +4,8 @@ module Wavesync
   class Analyzer
     CONFIRM_MESSAGE: ::String
 
+    SETUP_INSTRUCTIONS: ::String
+
     # : (String library_path) -> void
     def initialize: (String library_path) -> void
 
