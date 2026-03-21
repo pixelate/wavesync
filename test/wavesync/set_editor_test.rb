@@ -326,5 +326,77 @@ module Wavesync
       Audio.stubs(:new).returns(stub(bpm: 140))
       assert_equal 140, editor.track_bpm('/some/track.wav')
     end
+
+    test 'track_duration returns nil for nil path' do
+      assert_nil editor.track_duration(nil)
+    end
+
+    test 'track_duration returns nil when audio raises an error' do
+      Audio.stubs(:new).raises(StandardError)
+      assert_nil editor.track_duration('/nonexistent/track.wav')
+    end
+
+    test 'track_duration caches results' do
+      mock_audio = stub(duration: 180.0)
+      Audio.expects(:new).once.returns(mock_audio)
+      e = editor
+      e.track_duration('/some/track.wav')
+      e.track_duration('/some/track.wav')
+    end
+
+    test 'track_duration returns duration from audio file' do
+      Audio.stubs(:new).returns(stub(duration: 240.5))
+      assert_in_delta 240.5, editor.track_duration('/some/track.wav'), 0.001
+    end
+
+    test 'format_duration formats whole minutes and seconds' do
+      assert_equal '4:00', editor.send(:format_duration, 240.0)
+    end
+
+    test 'format_duration pads seconds with leading zero' do
+      assert_equal '1:05', editor.send(:format_duration, 65.0)
+    end
+
+    test 'format_duration truncates fractional seconds' do
+      assert_equal '3:20', editor.send(:format_duration, 200.9)
+    end
+
+    test 'format_duration returns nil for nil input' do
+      assert_nil editor.send(:format_duration, nil)
+    end
+
+    test 'format_duration handles zero' do
+      assert_equal '0:00', editor.send(:format_duration, 0.0)
+    end
+
+    test 'playback_elapsed returns zero when stopped' do
+      e = editor
+      e.instance_variable_set(:@player_state, :stopped)
+      assert_in_delta 0.0, e.send(:playback_elapsed), 0.001
+    end
+
+    test 'playback_elapsed returns offset when paused' do
+      e = editor
+      e.instance_variable_set(:@player_state, :paused)
+      e.instance_variable_set(:@player_offset, 42.5)
+      assert_in_delta 42.5, e.send(:playback_elapsed), 0.001
+    end
+
+    test 'playback_elapsed sums offset and elapsed time when playing' do
+      e = editor
+      e.instance_variable_set(:@player_state, :playing)
+      e.instance_variable_set(:@player_offset, 10.0)
+      e.instance_variable_set(:@player_started_at, Time.now - 5)
+      assert_in_delta 15.0, e.send(:playback_elapsed), 0.1
+    end
+
+    test 'visible_length returns character count ignoring ANSI codes' do
+      colored = "\e[31mhello\e[0m"
+      assert_equal 5, editor.send(:visible_length, colored)
+    end
+
+    test 'visible_length returns full length for plain strings' do
+      assert_equal 5, editor.send(:visible_length, 'hello')
+    end
   end
 end
