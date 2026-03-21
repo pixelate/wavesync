@@ -64,45 +64,45 @@ module Wavesync
 
     test 'cursor starts at 0 when tracks are present' do
       e = editor(track('a.wav'), track('b.wav'))
-      assert_equal 0, e.instance_variable_get(:@selected)
+      assert_equal 0, e.selected
     end
 
     test 'cursor starts as nil when set is empty' do
       e = editor
-      assert_nil e.instance_variable_get(:@selected)
+      assert_nil e.selected
     end
 
     test 'cursor_down advances selection' do
       e = editor(track('a.wav'), track('b.wav'), track('c.wav'))
       e.handle_action(:cursor_down)
-      assert_equal 1, e.instance_variable_get(:@selected)
+      assert_equal 1, e.selected
     end
 
     test 'cursor_down stops at last track' do
       e = editor(track('a.wav'), track('b.wav'))
       e.handle_action(:cursor_down)
       e.handle_action(:cursor_down)
-      assert_equal 1, e.instance_variable_get(:@selected)
+      assert_equal 1, e.selected
     end
 
     test 'cursor_up moves selection back' do
       e = editor(track('a.wav'), track('b.wav'))
       e.handle_action(:cursor_down)
       e.handle_action(:cursor_up)
-      assert_equal 0, e.instance_variable_get(:@selected)
+      assert_equal 0, e.selected
     end
 
     test 'cursor_up stops at first track' do
       e = editor(track('a.wav'), track('b.wav'))
       e.handle_action(:cursor_up)
-      assert_equal 0, e.instance_variable_get(:@selected)
+      assert_equal 0, e.selected
     end
 
     test 'cursor navigation is a no-op on empty set' do
       e = editor
       e.handle_action(:cursor_down)
       e.handle_action(:cursor_up)
-      assert_nil e.instance_variable_get(:@selected)
+      assert_nil e.selected
     end
 
     test 'remove_track removes the selected track' do
@@ -112,20 +112,20 @@ module Wavesync
       e = editor(a, b, c)
       e.handle_action(:cursor_down)
       e.handle_action(:remove)
-      assert_equal [a, c], e.instance_variable_get(:@set).tracks
+      assert_equal [a, c], e.set.tracks
     end
 
     test 'remove_track keeps selection in bounds when removing last track' do
       e = editor(track('a.wav'), track('b.wav'))
       e.handle_action(:cursor_down)
       e.handle_action(:remove)
-      assert_equal 0, e.instance_variable_get(:@selected)
+      assert_equal 0, e.selected
     end
 
     test 'remove_track sets selected to nil when set becomes empty' do
       e = editor(track('a.wav'))
       e.handle_action(:remove)
-      assert_nil e.instance_variable_get(:@selected)
+      assert_nil e.selected
     end
 
     test 'remove_track stops playback when removing the playing track' do
@@ -154,8 +154,8 @@ module Wavesync
       e = editor(a, b, c)
       e.handle_action(:cursor_down)
       e.handle_action(:move_up)
-      assert_equal [b, a, c], e.instance_variable_get(:@set).tracks
-      assert_equal 0, e.instance_variable_get(:@selected)
+      assert_equal [b, a, c], e.set.tracks
+      assert_equal 0, e.selected
     end
 
     test 'move_down moves selected track down and follows it' do
@@ -164,8 +164,8 @@ module Wavesync
       c = track('c.wav')
       e = editor(a, b, c)
       e.handle_action(:move_down)
-      assert_equal [b, a, c], e.instance_variable_get(:@set).tracks
-      assert_equal 1, e.instance_variable_get(:@selected)
+      assert_equal [b, a, c], e.set.tracks
+      assert_equal 1, e.selected
     end
 
     test 'move_up is a no-op at the first track' do
@@ -173,8 +173,8 @@ module Wavesync
       b = track('b.wav')
       e = editor(a, b)
       e.handle_action(:move_up)
-      assert_equal [a, b], e.instance_variable_get(:@set).tracks
-      assert_equal 0, e.instance_variable_get(:@selected)
+      assert_equal [a, b], e.set.tracks
+      assert_equal 0, e.selected
     end
 
     test 'move_down is a no-op at the last track' do
@@ -183,15 +183,15 @@ module Wavesync
       e = editor(a, b)
       e.handle_action(:cursor_down)
       e.handle_action(:move_down)
-      assert_equal [a, b], e.instance_variable_get(:@set).tracks
-      assert_equal 1, e.instance_variable_get(:@selected)
+      assert_equal [a, b], e.set.tracks
+      assert_equal 1, e.selected
     end
 
     test 'move_track is a no-op with fewer than 2 tracks' do
       e = editor(track('a.wav'))
       e.handle_action(:move_up)
       e.handle_action(:move_down)
-      assert_equal 0, e.instance_variable_get(:@selected)
+      assert_equal 0, e.selected
     end
 
     test 'toggle_playback starts player on selected track' do
@@ -247,7 +247,7 @@ module Wavesync
       e = editor(a, b)
       e.expects(:start_player).with(b)
       e.advance_and_play
-      assert_equal 1, e.instance_variable_get(:@selected)
+      assert_equal 1, e.selected
     end
 
     test 'advance_and_play does nothing at last track' do
@@ -514,28 +514,28 @@ module Wavesync
 
     test 'playback_bar places cue point marker at correct position' do
       e = editor
-      e.instance_variable_get(:@ui).expects(:color).with('░░░░░', :surface).twice.returns('')
-      e.instance_variable_get(:@ui).expects(:color).with('◆', :surface).once.returns('')
+      e.ui.expects(:color).with('░░░░░', :surface).twice.returns('')
+      e.ui.expects(:color).with('◆', :surface).once.returns('')
       e.playback_bar(0.0, 100.0, 11, cue_fractions: [0.5])
     end
 
     test 'playback_bar does not place cue markers when none given' do
       e = editor
-      e.instance_variable_get(:@ui).expects(:color).with('░░░░░░░░░░', :surface).once.returns('')
+      e.ui.expects(:color).with('░░░░░░░░░░', :surface).once.returns('')
       e.playback_bar(0.0, 100.0, 10)
     end
 
     test 'playback_bar colors cue at playhead with highlight' do
       e = editor
-      e.instance_variable_get(:@ui).stubs(:color).returns('')
-      e.instance_variable_get(:@ui).expects(:color).with('◆', :highlight).returns('').once
+      e.ui.stubs(:color).returns('')
+      e.ui.expects(:color).with('◆', :highlight).returns('').once
       e.playback_bar(50.0, 100.0, 10, cue_fractions: [0.5])
     end
 
     test 'playback_bar colors cue not at playhead with surface color' do
       e = editor
-      e.instance_variable_get(:@ui).stubs(:color).returns('')
-      e.instance_variable_get(:@ui).expects(:color).with('◆', :surface).returns('').once
+      e.ui.stubs(:color).returns('')
+      e.ui.expects(:color).with('◆', :surface).returns('').once
       e.playback_bar(0.0, 100.0, 10, cue_fractions: [0.5])
     end
   end

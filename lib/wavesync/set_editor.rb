@@ -20,6 +20,7 @@ module Wavesync
     }.freeze
 
     attr_accessor :player_state #: Symbol
+    attr_reader :selected, :set, :ui #: untyped
     attr_writer :player_track, :player_index, :player_offset, :player_started_at
 
     #: (Set set, String library_path) -> void
@@ -540,6 +541,7 @@ module Wavesync
     end
 
     public :handle_action, :advance_and_play, :display_name, :relative_path,
-           :format_duration, :playback_elapsed, :visible_length, :playback_bar
+           :format_duration, :playback_elapsed, :visible_length, :playback_bar,
+           :selected, :set, :ui
   end
 end
