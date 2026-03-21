@@ -1,0 +1,45 @@
+# Generated from lib/wavesync/cue_chunk.rb with RBS::Inline
+
+module Wavesync
+  class CueChunk
+    RIFF_HEADER_SIZE: ::Integer
+
+    CHUNK_ID_SIZE: ::Integer
+
+    CHUNK_SIZE_FIELD_SIZE: ::Integer
+
+    CUE_CHUNK_ID: ::String
+
+    LIST_CHUNK_ID: ::String
+
+    ADTL_LIST_TYPE: ::String
+
+    LABL_CHUNK_ID: ::String
+
+    DATA_CHUNK_ID: ::String
+
+    CUE_HEADER_SIZE: ::Integer
+
+    BYTES_PER_CUE_POINT: ::Integer
+
+    UINT32_LE: ::String
+
+    # : (String filepath) -> Array[{identifier: Integer, sample_offset: Integer, label: String?}]
+    def self.read: (String filepath) -> Array[{ identifier: Integer, sample_offset: Integer, label: String? }]
+
+    # : (String source_filepath, String output_filepath, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void
+    def self.write: (String source_filepath, String output_filepath, Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points) -> void
+
+    # : (untyped output, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void
+    def self.write_cue_chunk: (untyped output, Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points) -> void
+
+    # : (untyped output, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void
+    def self.write_adtl_chunk: (untyped output, Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points) -> void
+
+    # : (untyped file, Integer list_end, Hash[Integer, String] labels) -> void
+    def self.read_adtl_labels: (untyped file, Integer list_end, Hash[Integer, String] labels) -> void
+
+    # : (String filepath) -> void
+    def self.update_riff_size: (String filepath) -> void
+  end
+end

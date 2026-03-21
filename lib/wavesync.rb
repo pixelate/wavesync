@@ -5,6 +5,7 @@ end
 
 require 'wavesync/version'
 require 'wavesync/acid_chunk'
+require 'wavesync/cue_chunk'
 require 'wavesync/audio_format'
 require 'wavesync/audio'
 require 'wavesync/track_padding'

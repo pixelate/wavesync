@@ -16,6 +16,15 @@ module Wavesync
     # : (Audio audio, String source_file_path, PathResolver path_resolver) -> bool
     def copy_file: (Audio audio, String source_file_path, PathResolver path_resolver) -> bool
 
+    # : (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_a, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_b) -> bool
+    def same_cue_points?: (Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points_a, Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points_b) -> bool
+
+    # : (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> Array[{sample_offset: Integer, label: String?}]
+    def comparable_cue_points: (Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points) -> Array[{ sample_offset: Integer, label: String? }]
+
+    # : (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points, Integer? source_sample_rate, Integer? target_sample_rate) -> Array[{identifier: Integer, sample_offset: Integer, label: String?}]
+    def rescale_cue_points: (Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points, Integer? source_sample_rate, Integer? target_sample_rate) -> Array[{ identifier: Integer, sample_offset: Integer, label: String? }]
+
     # : (String source, Pathname target) -> void
     def safe_copy: (String source, Pathname target) -> void
   end
