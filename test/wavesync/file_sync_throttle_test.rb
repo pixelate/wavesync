@@ -15,26 +15,9 @@ module Wavesync
       FileUtils.rm_rf(@tmpdir)
     end
 
-    test 'wait_for_sync returns immediately when file size is stable on first poll' do
+    test 'wait_for_sync waits for the configured delay' do
       target_path = Pathname.new(File.join(@tmpdir, 'track.wav'))
-      target_path.write('audio data')
-
-      @throttle.wait_for_sync(target_path)
-    end
-
-    test 'wait_for_sync polls until size is stable' do
-      target_path = Pathname.new(File.join(@tmpdir, 'track.wav'))
-      target_path.write('audio')
-
-      sizes = [5, 10, 10]
-      File.stubs(:size).with(target_path.to_s).returns(*sizes)
-      @throttle.stubs(:wait)
-
-      @throttle.wait_for_sync(target_path)
-    end
-
-    test 'wait_for_sync returns immediately when file does not exist' do
-      target_path = Pathname.new(File.join(@tmpdir, 'missing.wav'))
+      @throttle.expects(:wait).with(FileSyncThrottle::DELAY_SECONDS).once
 
       @throttle.wait_for_sync(target_path)
     end
