@@ -15,26 +15,22 @@ module Wavesync
       FileUtils.rm_rf(@tmpdir)
     end
 
-    test 'wait_for_sync returns immediately when file size is stable on first poll' do
+    test 'wait_for_sync returns immediately when free space exceeds threshold' do
       target_path = Pathname.new(File.join(@tmpdir, 'track.wav'))
-      target_path.write('audio data')
+      @throttle.stubs(:free_space_bytes).returns(FileSyncThrottle::FREE_SPACE_THRESHOLD_BYTES + 1)
 
       @throttle.wait_for_sync(target_path)
     end
 
-    test 'wait_for_sync polls until size is stable' do
+    test 'wait_for_sync polls until free space recovers above threshold' do
       target_path = Pathname.new(File.join(@tmpdir, 'track.wav'))
-      target_path.write('audio')
-
-      sizes = [5, 10, 10]
-      File.stubs(:size).with(target_path.to_s).returns(*sizes)
+      free_space_sequence = [
+        FileSyncThrottle::FREE_SPACE_THRESHOLD_BYTES - 1,
+        FileSyncThrottle::FREE_SPACE_THRESHOLD_BYTES - 1,
+        FileSyncThrottle::FREE_SPACE_THRESHOLD_BYTES + 1
+      ]
+      @throttle.stubs(:free_space_bytes).returns(*free_space_sequence)
       @throttle.stubs(:wait)
-
-      @throttle.wait_for_sync(target_path)
-    end
-
-    test 'wait_for_sync returns immediately when file does not exist' do
-      target_path = Pathname.new(File.join(@tmpdir, 'missing.wav'))
 
       @throttle.wait_for_sync(target_path)
     end
