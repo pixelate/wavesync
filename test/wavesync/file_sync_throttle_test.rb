@@ -15,26 +15,22 @@ module Wavesync
       FileUtils.rm_rf(@tmpdir)
     end
 
-    test 'wait_for_sync returns immediately when file size is stable on first poll' do
+    test 'wait_for_sync waits for file to be opened then closed' do
       target_path = Pathname.new(File.join(@tmpdir, 'track.wav'))
-      target_path.write('audio data')
-
-      @throttle.wait_for_sync(target_path)
-    end
-
-    test 'wait_for_sync polls until size is stable' do
-      target_path = Pathname.new(File.join(@tmpdir, 'track.wav'))
-      target_path.write('audio')
-
-      sizes = [5, 10, 10]
-      File.stubs(:size).with(target_path.to_s).returns(*sizes)
+      open_sequence = [false, false, true, true, false]
+      @throttle.stubs(:file_open?).with(target_path).returns(*open_sequence)
       @throttle.stubs(:wait)
 
       @throttle.wait_for_sync(target_path)
     end
 
-    test 'wait_for_sync returns immediately when file does not exist' do
-      target_path = Pathname.new(File.join(@tmpdir, 'missing.wav'))
+    test 'wait_for_sync returns when deadline is reached before file is opened' do
+      target_path = Pathname.new(File.join(@tmpdir, 'track.wav'))
+      @throttle.stubs(:file_open?).returns(false)
+      @throttle.stubs(:wait)
+
+      now = Time.now
+      Time.stubs(:now).returns(now, now + FileSyncThrottle::TIMEOUT_SECONDS + 1)
 
       @throttle.wait_for_sync(target_path)
     end
