@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.0.0.alpha3 - 2026-03-23
+
+- Flush filesystem buffers after sync completion ([#34](https://github.com/pixelate/wavesync/pull/34))
+- Update audio test fixtures with rake generation task ([#33](https://github.com/pixelate/wavesync/pull/33))
+- Replace bpm-tools with Essentia + Percival BPM detection ([#32](https://github.com/pixelate/wavesync/pull/32))
+- Replace instance_variable_get with public accessors in set editor tests ([#31](https://github.com/pixelate/wavesync/pull/31))
+- Enhance set editor with duration display, playback bar, and inline folder layout ([#30](https://github.com/pixelate/wavesync/pull/30))
+- Add support for TP-7 cue points ([#29](https://github.com/pixelate/wavesync/pull/29))
+- Update Rubocop to 1.85 ([#28](https://github.com/pixelate/wavesync/pull/28))
+- Run rubocop, steep check, and tests with rake ([#27](https://github.com/pixelate/wavesync/pull/27))
+- Add Ruby installation step to README ([#26](https://github.com/pixelate/wavesync/pull/26))
+- Add typechecking with rbs-inline and Steep ([#25](https://github.com/pixelate/wavesync/pull/25))
+- Display BPM and pitch shift semitones when editing sets ([#24](https://github.com/pixelate/wavesync/pull/24))
+- Update README with improved docs ([#23](https://github.com/pixelate/wavesync/pull/23))
+
 ## 1.0.0.alpha2 - 2026-03-15
 
 - Add `rake release:publish` task ([#21](https://github.com/pixelate/wavesync/pull/21))
