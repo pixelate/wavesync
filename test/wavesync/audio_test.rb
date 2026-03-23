@@ -25,6 +25,14 @@ module Wavesync
       assert_equal 96_000, audio('96000_24.wav').sample_rate
     end
 
+    test 'sample_rate returns 22050 for 22050hz fixture' do
+      assert_equal 22_050, audio('22050_16.wav').sample_rate
+    end
+
+    test 'bit_depth returns 8 for 8-bit wav' do
+      assert_equal 8, audio('44100_8.wav').bit_depth
+    end
+
     test 'bit_depth returns 16 for 16-bit wav' do
       assert_equal 16, audio('44100_16.wav').bit_depth
     end
@@ -38,11 +46,11 @@ module Wavesync
     end
 
     test 'bpm returns nil for clean mp3' do
-      assert_nil audio('44100_16.mp3').bpm
+      assert_nil audio('44100.mp3').bpm
     end
 
     test 'bpm returns nil for clean m4a' do
-      assert_nil audio('44100_16.m4a').bpm
+      assert_nil audio('44100.m4a').bpm
     end
 
     test 'bpm returns nil for clean aif' do
@@ -61,14 +69,14 @@ module Wavesync
     end
 
     test 'write_bpm round-trips for mp3 via id3v2' do
-      with_temp_copy('44100_16.mp3') do |path|
+      with_temp_copy('44100.mp3') do |path|
         Audio.new(path).write_bpm(140)
         assert_equal '140', Audio.new(path).bpm
       end
     end
 
     test 'write_bpm round-trips for m4a via tmpo tag' do
-      with_temp_copy('44100_16.m4a') do |path|
+      with_temp_copy('44100.m4a') do |path|
         Audio.new(path).write_bpm(120)
         assert_equal 120, Audio.new(path).bpm
       end

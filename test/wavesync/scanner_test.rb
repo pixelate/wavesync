@@ -55,10 +55,10 @@ module Wavesync
 
     test 'sync does not write cue points to source when source is not a wav' do
       source_mp3 = File.join(@source_dir, 'track.mp3')
-      FileUtils.cp(fixture('44100_16.mp3'), source_mp3)
+      FileUtils.cp(fixture('44100.mp3'), source_mp3)
 
       target_mp3 = File.join(@target_dir, 'track.mp3')
-      FileUtils.cp(fixture('44100_16.mp3'), target_mp3)
+      FileUtils.cp(fixture('44100.mp3'), target_mp3)
 
       Audio.any_instance.expects(:write_cue_points).never
       Scanner.new(@source_dir).sync(@target_dir, @device)
