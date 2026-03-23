@@ -36,7 +36,7 @@ module Wavesync
     test 'TP-7 device attributes are correct' do
       tp7 = Device.find_by(name: 'TP-7')
       refute_nil tp7
-      assert_equal [44_100, 48_000, 88_200, 96_000], tp7.sample_rates
+      assert_equal [22_050, 44_100, 48_000, 88_200, 96_000], tp7.sample_rates
       assert_equal %w[wav mp3], tp7.file_types
     end
 
@@ -92,6 +92,7 @@ module Wavesync
 
     test '.target_bit_depth returns nil when source bit depth is supported' do
       tp7 = Device.find_by(name: 'TP-7')
+      assert_nil tp7.target_bit_depth(8)
       assert_nil tp7.target_bit_depth(16)
       assert_nil tp7.target_bit_depth(24)
     end
@@ -116,7 +117,6 @@ module Wavesync
 
     test '.target_bit_depth returns closest supported bit depth' do
       tp7 = Device.find_by(name: 'TP-7')
-      assert_equal 16, tp7.target_bit_depth(8)
       assert_equal 16, tp7.target_bit_depth(12)
       assert_equal 24, tp7.target_bit_depth(20)
       assert_equal 24, tp7.target_bit_depth(32)

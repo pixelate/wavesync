@@ -1,11 +1,13 @@
 devices:
 - name: TP-7
   sample_rates:
+    - 22050
     - 44100
     - 48000
     - 88200
     - 96000
   bit_depths:
+    - 8
     - 16
     - 24
   file_types:
@@ -17,6 +19,7 @@ devices:
   sample_rates:
     - 44100
   bit_depths:
+    - 8
     - 16
     - 24
   file_types:
