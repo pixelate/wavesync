@@ -21,6 +21,11 @@ module Wavesync
       FileUtils.rm_rf(@target_dir)
     end
 
+    test 'sync calls system sync to flush filesystem buffers after completing' do
+      Scanner.any_instance.expects(:system).with('sync')
+      Scanner.new(@source_dir).sync(@target_dir, @device)
+    end
+
     test 'sync writes cue points from target wav to source wav when source has none' do
       source_wav = File.join(@source_dir, 'track.wav')
       FileUtils.cp(fixture('44100_16.wav'), source_wav)

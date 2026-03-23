@@ -91,6 +91,7 @@ module Wavesync
       end
 
       puts
+      system('sync')
     end
 
     private
