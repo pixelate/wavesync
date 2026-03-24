@@ -70,6 +70,8 @@ module Wavesync
           Tempfile.create(['wavesync', '.wav']) do |local_temp_file|
             local_temp_file.close
             AcidChunk.write_bpm(target_path.to_s, local_temp_file.path, bpm)
+            target_path.delete if target_path.exist?
+            target_path.dirname.mkpath
             FileUtils.install(local_temp_file.path, target_path.to_s)
           end
         end
@@ -81,6 +83,8 @@ module Wavesync
             Tempfile.create(['wavesync', '.wav']) do |local_temp_file|
               local_temp_file.close
               CueChunk.write(target_path.to_s, local_temp_file.path, rescaled_cue_points)
+              target_path.delete if target_path.exist?
+              target_path.dirname.mkpath
               FileUtils.install(local_temp_file.path, target_path.to_s)
             end
           end
