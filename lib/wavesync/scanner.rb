@@ -26,6 +26,7 @@ module Wavesync
 
       @audio_files.each_with_index do |file, index|
         audio = Audio.new(file)
+        bpm = audio.bpm
 
         source_format = audio.format
         target_format = device.target_format(source_format, file)
@@ -34,12 +35,12 @@ module Wavesync
         original_bars = nil #: Integer?
         target_bars = nil #: Integer?
         if pad && device.bar_multiple
-          padding_seconds = TrackPadding.compute(audio.duration, audio.bpm, device.bar_multiple)
-          original_bars, target_bars = TrackPadding.bar_counts(audio.duration, audio.bpm, device.bar_multiple) unless padding_seconds.zero?
+          padding_seconds = TrackPadding.compute(audio.duration, bpm, device.bar_multiple)
+          original_bars, target_bars = TrackPadding.bar_counts(audio.duration, bpm, device.bar_multiple) unless padding_seconds.zero?
           padding_seconds = nil if padding_seconds.zero?
         end
 
-        @ui.bpm(audio.bpm, original_bars: original_bars, target_bars: target_bars)
+        @ui.bpm(bpm, original_bars: original_bars, target_bars: target_bars)
         @ui.file_progress(file)
 
         if source_format.file_type == 'wav'
@@ -55,39 +56,29 @@ module Wavesync
 
         if target_format.file_type || target_format.sample_rate || target_format.bit_depth || padding_seconds
           converted = @converter.convert(audio, file, path_resolver, source_format, target_format,
-                                         padding_seconds: padding_seconds) do
-            @ui.conversion_progress(source_format, target_format)
+                                         padding_seconds: padding_seconds,
+                                         before_transcode: -> { @ui.conversion_progress(source_format, target_format) }) do |local_temp_path|
+            inject_acid_bpm(local_temp_path, bpm, device)
+            inject_cue_points(local_temp_path, audio, source_format, target_format)
           end
-          target_path = path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
+          path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
         else
-          copied = copy_file(audio, file, path_resolver)
-          @ui.copy(source_format)
-          target_path = path_resolver.resolve(file, audio)
-        end
-
-        bpm = audio.bpm
-        if (copied || converted) && device.bpm_source == :acid_chunk && bpm && target_path.extname.downcase == '.wav'
-          Tempfile.create(['wavesync', '.wav']) do |local_temp_file|
-            local_temp_file.close
-            AcidChunk.write_bpm(target_path.to_s, local_temp_file.path, bpm)
-            target_path.delete if target_path.exist?
-            target_path.dirname.mkpath
-            FileUtils.install(local_temp_file.path, target_path.to_s)
-          end
-        end
-
-        if converted && source_format.file_type == 'wav' && target_path.extname.downcase == '.wav'
-          source_cue_points = audio.cue_points
-          if source_cue_points.any?
-            rescaled_cue_points = rescale_cue_points(source_cue_points, audio.sample_rate, target_format.sample_rate || audio.sample_rate)
-            Tempfile.create(['wavesync', '.wav']) do |local_temp_file|
-              local_temp_file.close
-              CueChunk.write(target_path.to_s, local_temp_file.path, rescaled_cue_points)
-              target_path.delete if target_path.exist?
+          if device.bpm_source == :acid_chunk && bpm && File.extname(file).downcase == '.wav'
+            target_path = path_resolver.resolve(file, audio)
+            files_to_cleanup = path_resolver.find_files_to_cleanup(target_path, audio)
+            files_to_cleanup.each { |cleanup_file| FileUtils.rm_f(cleanup_file) }
+            if target_path.exist?
+              copied = false
+            else
               target_path.dirname.mkpath
-              FileUtils.install(local_temp_file.path, target_path.to_s)
+              AcidChunk.write_bpm(file, target_path.to_s, bpm)
+              copied = true
             end
+          else
+            copied = copy_file(audio, file, path_resolver)
+            path_resolver.resolve(file, audio)
           end
+          @ui.copy(source_format)
         end
 
         if !copied && !converted
@@ -123,6 +114,32 @@ module Wavesync
         safe_copy(source_file_path, target_path)
         true
       end
+    end
+
+    #: (String local_temp_path, (Integer | Float | String)? bpm, Device device) -> void
+    def inject_acid_bpm(local_temp_path, bpm, device)
+      return unless device.bpm_source == :acid_chunk && bpm && File.extname(local_temp_path).downcase == '.wav'
+
+      bpm_temp_path = "#{local_temp_path}.bpm.tmp"
+      AcidChunk.write_bpm(local_temp_path, bpm_temp_path, bpm)
+      FileUtils.mv(bpm_temp_path, local_temp_path)
+    ensure
+      FileUtils.rm_f(bpm_temp_path) if bpm_temp_path
+    end
+
+    #: (String local_temp_path, Audio audio, AudioFormat source_format, AudioFormat target_format) -> void
+    def inject_cue_points(local_temp_path, audio, source_format, target_format)
+      return unless source_format.file_type == 'wav' && File.extname(local_temp_path).downcase == '.wav'
+
+      source_cue_points = audio.cue_points
+      return unless source_cue_points.any?
+
+      rescaled_cue_points = rescale_cue_points(source_cue_points, audio.sample_rate, target_format.sample_rate || audio.sample_rate)
+      cue_temp_path = "#{local_temp_path}.cue.tmp"
+      CueChunk.write(local_temp_path, cue_temp_path, rescaled_cue_points)
+      FileUtils.mv(cue_temp_path, local_temp_path)
+    ensure
+      FileUtils.rm_f(cue_temp_path) if cue_temp_path
     end
 
     #: (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_a, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_b) -> bool

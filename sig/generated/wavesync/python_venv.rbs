@@ -2,7 +2,7 @@
 
 module Wavesync
   module PythonVenv
-    PYTHON_PATH: ::String
+    PYTHON_PATH: untyped
 
     # : () -> bool
     def self.available?: () -> bool

@@ -16,6 +16,12 @@ module Wavesync
     # : (Audio audio, String source_file_path, PathResolver path_resolver) -> bool
     def copy_file: (Audio audio, String source_file_path, PathResolver path_resolver) -> bool
 
+    # : (String local_temp_path, (Integer | Float | String)? bpm, Device device) -> void
+    def inject_acid_bpm: (String local_temp_path, (Integer | Float | String)? bpm, Device device) -> void
+
+    # : (String local_temp_path, Audio audio, AudioFormat source_format, AudioFormat target_format) -> void
+    def inject_cue_points: (String local_temp_path, Audio audio, AudioFormat source_format, AudioFormat target_format) -> void
+
     # : (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_a, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_b) -> bool
     def same_cue_points?: (Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points_a, Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points_b) -> bool
 
