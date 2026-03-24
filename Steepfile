@@ -17,6 +17,7 @@ target :wavesync do
   library 'shellwords'
   library 'securerandom'
   library 'tmpdir'
+  library 'tempfile'
   library 'io-console'
   library 'optparse'
 end

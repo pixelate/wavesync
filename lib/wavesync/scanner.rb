@@ -2,6 +2,7 @@
 # rbs_inline: enabled
 
 require 'fileutils'
+require 'tempfile'
 require 'streamio-ffmpeg'
 require_relative 'file_converter'
 
@@ -66,18 +67,22 @@ module Wavesync
 
         bpm = audio.bpm
         if (copied || converted) && device.bpm_source == :acid_chunk && bpm && target_path.extname.downcase == '.wav'
-          temp_path = "#{target_path}.tmp"
-          AcidChunk.write_bpm(target_path.to_s, temp_path, bpm)
-          FileUtils.mv(temp_path, target_path.to_s)
+          Tempfile.create(['wavesync', '.wav']) do |local_temp_file|
+            local_temp_file.close
+            AcidChunk.write_bpm(target_path.to_s, local_temp_file.path, bpm)
+            FileUtils.install(local_temp_file.path, target_path.to_s)
+          end
         end
 
         if converted && source_format.file_type == 'wav' && target_path.extname.downcase == '.wav'
           source_cue_points = audio.cue_points
           if source_cue_points.any?
             rescaled_cue_points = rescale_cue_points(source_cue_points, audio.sample_rate, target_format.sample_rate || audio.sample_rate)
-            temp_path = "#{target_path}.tmp"
-            CueChunk.write(target_path.to_s, temp_path, rescaled_cue_points)
-            FileUtils.mv(temp_path, target_path.to_s)
+            Tempfile.create(['wavesync', '.wav']) do |local_temp_file|
+              local_temp_file.close
+              CueChunk.write(target_path.to_s, local_temp_file.path, rescaled_cue_points)
+              FileUtils.install(local_temp_file.path, target_path.to_s)
+            end
           end
         end
 
