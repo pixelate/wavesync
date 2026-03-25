@@ -55,6 +55,19 @@ module Wavesync
       cue_points.map { |cue_point| { identifier: cue_point[:identifier], sample_offset: cue_point[:sample_offset], label: labels[cue_point[:identifier]] } }
     end
 
+    #: (String filepath, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void
+    def self.append_to_file(filepath, cue_points)
+      return if cue_points.empty?
+
+      File.open(filepath, 'ab') do |file|
+        write_cue_chunk(file, cue_points)
+        labeled_cue_points = cue_points.select { |cue_point| cue_point[:label] }
+        write_adtl_chunk(file, labeled_cue_points) if labeled_cue_points.any?
+      end
+
+      update_riff_size(filepath)
+    end
+
     #: (String source_filepath, String output_filepath, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void
     def self.write(source_filepath, output_filepath, cue_points)
       File.open(source_filepath, 'rb') do |input|

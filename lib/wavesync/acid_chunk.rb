@@ -49,6 +49,42 @@ module Wavesync
       nil
     end
 
+    #: (String filepath, Integer | Float | String new_bpm) -> void
+    def self.write_bpm_in_place(filepath, new_bpm)
+      bpm_bytes = [new_bpm.to_f].pack(FLOAT32_LITTLE_ENDIAN)
+
+      File.open(filepath, 'r+b') do |file|
+        file.seek(RIFF_HEADER_SIZE)
+
+        acid_chunk_found = false
+
+        until file.eof?
+          chunk_id = file.read(CHUNK_ID_SIZE)
+          break if chunk_id.nil? || chunk_id.length < CHUNK_ID_SIZE
+
+          chunk_size_bytes = file.read(CHUNK_SIZE_FIELD_SIZE) || ''
+          chunk_size = (chunk_size_bytes.unpack1(UINT32_LITTLE_ENDIAN) || 0).to_i
+
+          if chunk_id == ACID_CHUNK_ID
+            file.seek(ACID_TEMPO_OFFSET, IO::SEEK_CUR)
+            file.write(bpm_bytes)
+            acid_chunk_found = true
+            break
+          else
+            padding = chunk_size.odd? ? 1 : 0
+            file.seek(chunk_size + padding, IO::SEEK_CUR)
+          end
+        end
+
+        unless acid_chunk_found
+          file.seek(0, IO::SEEK_END)
+          create_acid_chunk(file, new_bpm.to_f)
+        end
+      end
+
+      update_riff_size(filepath)
+    end
+
     #: (String source_filepath, String output_filepath, Integer | Float | String new_bpm) -> void
     def self.write_bpm(source_filepath, output_filepath, new_bpm)
       bpm_bytes = [new_bpm.to_f].pack(FLOAT32_LITTLE_ENDIAN)

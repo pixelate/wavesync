@@ -27,6 +27,21 @@ module Wavesync
       end
     end
 
+    test 'write_bpm_in_place appends acid chunk when none present and round-trips correctly' do
+      with_temp_copy('44100_16.wav') do |path|
+        AcidChunk.write_bpm_in_place(path, 128)
+        assert_equal 128, AcidChunk.read_bpm(path).to_i
+      end
+    end
+
+    test 'write_bpm_in_place overwrites existing bpm when acid chunk already present' do
+      with_temp_copy('44100_16.wav') do |path|
+        AcidChunk.write_bpm_in_place(path, 120)
+        AcidChunk.write_bpm_in_place(path, 140)
+        assert_equal 140, AcidChunk.read_bpm(path).to_i
+      end
+    end
+
     private
 
     def fixture(name)

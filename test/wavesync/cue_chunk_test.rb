@@ -83,6 +83,38 @@ module Wavesync
       end
     end
 
+    test 'append_to_file adds cue points to file without existing cue chunk' do
+      with_temp_copy('44100_16.wav') do |path|
+        cue_points = [{ identifier: 1, sample_offset: 44_100, label: nil }]
+        CueChunk.append_to_file(path, cue_points)
+        result = CueChunk.read(path)
+        assert_equal 1, result.size
+        assert_equal 44_100, result[0][:sample_offset]
+      end
+    end
+
+    test 'append_to_file adds multiple cue points with labels' do
+      with_temp_copy('44100_16.wav') do |path|
+        cue_points = [
+          { identifier: 1, sample_offset: 44_100, label: 'Verse' },
+          { identifier: 2, sample_offset: 88_200, label: 'Chorus' }
+        ]
+        CueChunk.append_to_file(path, cue_points)
+        result = CueChunk.read(path)
+        assert_equal 2, result.size
+        assert_equal 'Verse', result[0][:label]
+        assert_equal 'Chorus', result[1][:label]
+      end
+    end
+
+    test 'append_to_file does nothing when given empty array' do
+      with_temp_copy('44100_16.wav') do |path|
+        original_size = File.size(path)
+        CueChunk.append_to_file(path, [])
+        assert_equal original_size, File.size(path)
+      end
+    end
+
     private
 
     def fixture(name)
