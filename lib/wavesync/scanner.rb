@@ -120,11 +120,7 @@ module Wavesync
     def inject_acid_bpm(local_temp_path, bpm, device)
       return unless device.bpm_source == :acid_chunk && bpm && File.extname(local_temp_path).downcase == '.wav'
 
-      bpm_temp_path = "#{local_temp_path}.bpm.tmp"
-      AcidChunk.write_bpm(local_temp_path, bpm_temp_path, bpm)
-      FileUtils.mv(bpm_temp_path, local_temp_path)
-    ensure
-      FileUtils.rm_f(bpm_temp_path) if bpm_temp_path
+      AcidChunk.write_bpm_in_place(local_temp_path, bpm)
     end
 
     #: (String local_temp_path, Audio audio, AudioFormat source_format, AudioFormat target_format) -> void
@@ -135,11 +131,7 @@ module Wavesync
       return unless source_cue_points.any?
 
       rescaled_cue_points = rescale_cue_points(source_cue_points, audio.sample_rate, target_format.sample_rate || audio.sample_rate)
-      cue_temp_path = "#{local_temp_path}.cue.tmp"
-      CueChunk.write(local_temp_path, cue_temp_path, rescaled_cue_points)
-      FileUtils.mv(cue_temp_path, local_temp_path)
-    ensure
-      FileUtils.rm_f(cue_temp_path) if cue_temp_path
+      CueChunk.append_to_file(local_temp_path, rescaled_cue_points)
     end
 
     #: (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_a, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_b) -> bool

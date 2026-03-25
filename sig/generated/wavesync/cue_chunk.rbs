@@ -27,6 +27,9 @@ module Wavesync
     # : (String filepath) -> Array[{identifier: Integer, sample_offset: Integer, label: String?}]
     def self.read: (String filepath) -> Array[{ identifier: Integer, sample_offset: Integer, label: String? }]
 
+    # : (String filepath, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void
+    def self.append_to_file: (String filepath, Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points) -> void
+
     # : (String source_filepath, String output_filepath, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void
     def self.write: (String source_filepath, String output_filepath, Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points) -> void
 

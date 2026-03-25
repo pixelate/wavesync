@@ -37,6 +37,9 @@ module Wavesync
     # : (String filepath) -> Float?
     def self.read_bpm: (String filepath) -> Float?
 
+    # : (String filepath, Integer | Float | String new_bpm) -> void
+    def self.write_bpm_in_place: (String filepath, Integer | Float | String new_bpm) -> void
+
     # : (String source_filepath, String output_filepath, Integer | Float | String new_bpm) -> void
     def self.write_bpm: (String source_filepath, String output_filepath, Integer | Float | String new_bpm) -> void
 
