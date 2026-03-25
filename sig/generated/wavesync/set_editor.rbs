@@ -4,6 +4,22 @@ module Wavesync
   class SetEditor
     KEY_MAP: untyped
 
+    attr_accessor player_state: Symbol
+
+    attr_reader selected: untyped
+
+    attr_reader set: untyped
+
+    attr_reader ui: untyped
+
+    attr_writer player_track: untyped
+
+    attr_writer player_index: untyped
+
+    attr_writer player_offset: untyped
+
+    attr_writer player_started_at: untyped
+
     # : (Set set, String library_path) -> void
     def initialize: (Set set, String library_path) -> void
 
@@ -13,14 +29,14 @@ module Wavesync
     # : (String? path) -> (String | Integer)?
     def track_bpm: (String? path) -> (String | Integer)?
 
-    # : ((String | Integer)? source_bpm, (String | Integer)? target_bpm) -> Float?
-    def pitch_shift_semitones: ((String | Integer)? source_bpm, (String | Integer)? target_bpm) -> Float?
-
     # : (String? path) -> Float?
     def track_duration: (String? path) -> Float?
 
     # : (String? path) -> Array[Float]
     def track_cue_fractions: (String? path) -> Array[Float]
+
+    # : ((String | Integer)? source_bpm, (String | Integer)? target_bpm) -> Float?
+    def pitch_shift_semitones: ((String | Integer)? source_bpm, (String | Integer)? target_bpm) -> Float?
 
     # : (Float semitones) -> String
     def format_pitch_shift: (Float semitones) -> String
@@ -42,12 +58,6 @@ module Wavesync
     # : (String absolute) -> String
     def relative_path: (String absolute) -> String
 
-    # : (String relative) -> String
-    def display_name: (String relative) -> String
-
-    # : (?String title) -> void
-    def render: (?String title) -> void
-
     # : (Float? seconds) -> String?
     def format_duration: (Float? seconds) -> String?
 
@@ -65,6 +75,12 @@ module Wavesync
 
     # : (Float elapsed, Float total_duration) -> String
     def remaining_display: (Float elapsed, Float total_duration) -> String
+
+    # : (String relative) -> String
+    def display_name: (String relative) -> String
+
+    # : (?String title) -> void
+    def render: (?String title) -> void
 
     # : (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer, ?cue_fractions: Array[Float]) -> void
     def render_track: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer, ?cue_fractions: Array[Float]) -> void

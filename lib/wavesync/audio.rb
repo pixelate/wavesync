@@ -84,7 +84,7 @@ module Wavesync
       @bpm = bpm
     end
 
-    #: (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?) -> bool
+    #: (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?) ?{ (String) -> void } -> bool
     def transcode(target_path, target_sample_rate: nil, target_file_type: nil, target_bit_depth: nil, padding_seconds: nil)
       options = build_transcode_options(target_sample_rate, target_bit_depth, padding_seconds)
       ext = target_file_type || @file_ext.delete_prefix('.')
@@ -95,6 +95,7 @@ module Wavesync
 
       begin
         @audio.transcode(temp_path, options)
+        yield temp_path if block_given?
         FileUtils.install(temp_path, target_path)
         true
       rescue Errno::ENOENT
