@@ -28,3 +28,13 @@ devices:
     - aif
   bpm_source: :filename
   bar_multiple: 64
+
+- name: Digitakt
+  sample_rates:
+    - 44100
+    - 48000
+  bit_depths:
+    - 16
+    - 24
+  file_types:
+    - wav

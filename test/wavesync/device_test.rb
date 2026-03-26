@@ -22,10 +22,11 @@ module Wavesync
 
     test '#all loads devices from YAML' do
       devices = Device.all
-      assert_equal 2, devices.size
+      assert_equal 3, devices.size
       names = devices.map(&:name)
       assert_includes names, 'TP-7'
       assert_includes names, 'Octatrack'
+      assert_includes names, 'Digitakt'
     end
 
     test '#load_from_yaml creates device objects' do
@@ -45,6 +46,16 @@ module Wavesync
       refute_nil octatrack
       assert_equal [44_100], octatrack.sample_rates
       assert_equal %w[wav aiff aif], octatrack.file_types
+    end
+
+    test 'Digitakt device attributes are correct' do
+      digitakt = Device.find_by(name: 'Digitakt')
+      refute_nil digitakt
+      assert_equal [44_100, 48_000], digitakt.sample_rates
+      assert_equal [16, 24], digitakt.bit_depths
+      assert_equal %w[wav], digitakt.file_types
+      assert_nil digitakt.bpm_source
+      assert_nil digitakt.bar_multiple
     end
 
     test '#find_by returns nil for unknown device' do
