@@ -6,17 +6,14 @@ require_relative '../../lib/wavesync'
 module Wavesync
   class ScannerTest < Wavesync::TestCase
     def setup
+      silence_output
       @source_dir = Dir.mktmpdir
       @target_dir = Dir.mktmpdir
       @device = Device.find_by(name: 'TP-7')
-      @original_stdout = $stdout
-      @null_out = File.open(File::NULL, 'w') # rubocop:disable Style/FileOpen
-      $stdout = @null_out
     end
 
     def teardown
-      $stdout = @original_stdout
-      @null_out.close
+      restore_output
       FileUtils.rm_rf(@source_dir)
       FileUtils.rm_rf(@target_dir)
     end

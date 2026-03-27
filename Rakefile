@@ -3,10 +3,19 @@
 require 'rake/testtask'
 require_relative 'lib/wavesync/version'
 
-Rake::TestTask.new do |t|
+Rake::TestTask.new(:test) do |t|
   t.libs << 'test'
-  t.pattern = 'test/**/*_test.rb'
+  t.pattern = 'test/wavesync/**/*_test.rb'
   t.verbose = false
+end
+
+namespace :test do
+  desc 'Run integration tests against connected devices'
+  Rake::TestTask.new(:integration) do |t|
+    t.libs << 'test'
+    t.pattern = 'test/integration/**/*_test.rb'
+    t.verbose = false
+  end
 end
 
 desc 'Run rubocop, steep check, and tests'
