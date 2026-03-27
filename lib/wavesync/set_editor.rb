@@ -409,7 +409,7 @@ module Wavesync
 
     #: (String track, ?Numeric offset, ?player_index: Integer?) -> void
     def start_player(track, offset = 0, player_index: @selected)
-      ffplay = FFMPEG.ffmpeg_binary.sub('ffmpeg', 'ffplay')
+      ffplay = Wavesync::FFMPEG.ffplay_binary
       args = [ffplay, '-nodisp', '-autoexit', '-loglevel', 'quiet', '-probesize', '32', '-analyzeduration', '0']
       args += ['-ss', offset.to_s] if offset.positive?
       args << track

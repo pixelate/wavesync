@@ -1,0 +1,5 @@
+# Minimal stub for Open3.capture3 (not included in stdlib RBS)
+
+module Open3
+  def self.capture3: (*String) -> [String, String, Process::Status]
+end

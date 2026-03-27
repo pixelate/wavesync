@@ -1,0 +1,46 @@
+# Generated from lib/wavesync/ffmpeg.rb with RBS::Inline
+
+module Wavesync
+  class FFMPEG
+    class Error < StandardError
+    end
+
+    # : () -> String
+    def self.binary: () -> String
+
+    # : () -> String
+    def self.ffplay_binary: () -> String
+
+    # : () -> void
+    def initialize: () -> void
+
+    # : (String source, ?format: String?) -> self
+    def input: (String source, ?format: String?) -> self
+
+    # : (String codec) -> self
+    def audio_codec: (String codec) -> self
+
+    # : (Integer rate) -> self
+    def sample_rate: (Integer rate) -> self
+
+    # : (String filter) -> self
+    def audio_filter: (String filter) -> self
+
+    # : (String graph) -> self
+    def filter_complex: (String graph) -> self
+
+    # : (String format) -> self
+    def output_format: (String format) -> self
+
+    # : (Numeric seconds) -> self
+    def duration: (Numeric seconds) -> self
+
+    # : (String output_path) -> void
+    def run: (String output_path) -> void
+
+    private
+
+    # : (String binary_name) -> String
+    def self.locate_binary: (String binary_name) -> String
+  end
+end

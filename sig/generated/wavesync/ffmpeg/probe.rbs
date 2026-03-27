@@ -1,0 +1,33 @@
+# Generated from lib/wavesync/ffmpeg/probe.rb with RBS::Inline
+
+module Wavesync
+  class FFMPEG
+    class Probe
+      # : (String file_path) -> void
+      def initialize: (String file_path) -> void
+
+      # : () -> Float
+      def duration: () -> Float
+
+      # : () -> Integer?
+      def sample_rate: () -> Integer?
+
+      # : () -> Integer?
+      def bit_depth: () -> Integer?
+
+      private
+
+      # : () -> Hash[String, untyped]
+      def probe_data: () -> Hash[String, untyped]
+
+      # : () -> Hash[String, untyped]
+      def run_probe: () -> Hash[String, untyped]
+
+      # : () -> Hash[String, untyped]
+      def format_data: () -> Hash[String, untyped]
+
+      # : () -> Hash[String, untyped]?
+      def audio_stream: () -> Hash[String, untyped]?
+    end
+  end
+end

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 # rbs_inline: enabled
 
-require 'streamio-ffmpeg'
 require 'securerandom'
 require 'tmpdir'
 require 'fileutils'
@@ -21,7 +20,7 @@ module Wavesync
     def initialize(file_path)
       @file_path = file_path #: String
       @file_ext = File.extname(@file_path).downcase #: String
-      @audio = FFMPEG::Movie.new(file_path) #: untyped
+      @audio = Wavesync::FFMPEG::Probe.new(file_path) #: Wavesync::FFMPEG::Probe
     end
 
     #: () -> Float
@@ -31,12 +30,12 @@ module Wavesync
 
     #: () -> Integer?
     def sample_rate
-      @sample_rate ||= @audio.audio_sample_rate
+      @sample_rate ||= @audio.sample_rate
     end
 
     #: () -> Integer?
     def bit_depth
-      @bit_depth ||= calculate_bit_depth
+      @bit_depth ||= @audio.bit_depth
     end
 
     #: () -> (String | Integer)?
@@ -86,15 +85,18 @@ module Wavesync
 
     #: (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?) ?{ (String) -> void } -> bool
     def transcode(target_path, target_sample_rate: nil, target_file_type: nil, target_bit_depth: nil, padding_seconds: nil)
-      options = build_transcode_options(target_sample_rate, target_bit_depth, padding_seconds)
       ext = target_file_type || @file_ext.delete_prefix('.')
-      temp_path = File.join(
-        Dir.tmpdir,
-        "wavesync_transcode_#{SecureRandom.hex}.#{ext}"
-      )
+      temp_path = File.join(Dir.tmpdir, "wavesync_transcode_#{SecureRandom.hex}.#{ext}")
 
       begin
-        @audio.transcode(temp_path, options)
+        audio_codec = target_bit_depth == 16 ? 'pcm_s16le' : 'pcm_s24le'
+        command = Wavesync::FFMPEG.new.input(@file_path).audio_codec(audio_codec)
+        command.sample_rate(target_sample_rate) if target_sample_rate
+        if padding_seconds&.positive?
+          total_duration = @audio.duration + padding_seconds
+          command.audio_filter("apad=whole_dur=#{total_duration.round(6)}")
+        end
+        command.run(temp_path)
         yield temp_path if block_given?
         FileUtils.install(temp_path, target_path)
         true
@@ -107,41 +109,6 @@ module Wavesync
     end
 
     private
-
-    #: () -> Integer?
-    def calculate_bit_depth
-      data = @audio.metadata
-      return nil unless data && data[:streams]
-
-      audio_stream = data[:streams].find { |s| s[:codec_type] == 'audio' }
-      return nil unless audio_stream
-
-      bits_per_sample = audio_stream[:bits_per_sample]
-      return bits_per_sample if bits_per_sample&.positive?
-
-      nil
-    end
-
-    #: (Integer? target_sample_rate, Integer? target_bit_depth, ?Numeric? padding_seconds) -> Hash[Symbol, untyped]
-    def build_transcode_options(target_sample_rate, target_bit_depth, padding_seconds = nil)
-      options = { custom: %w[-loglevel warning -nostats -hide_banner] } #: Hash[Symbol, untyped]
-
-      if target_bit_depth == 24
-        options[:audio_codec] = 'pcm_s24le'
-      elsif target_bit_depth == 16
-        options[:audio_codec] = 'pcm_s16le'
-      end
-
-      options[:audio_codec] = 'pcm_s24le'
-      options[:audio_sample_rate] = target_sample_rate if target_sample_rate
-
-      if padding_seconds&.positive?
-        total_duration = @audio.duration + padding_seconds
-        options[:custom] += ['-af', "apad=whole_dur=#{total_duration.round(6)}"]
-      end
-
-      options
-    end
 
     #: () -> (String | Integer)?
     def bpm_from_file

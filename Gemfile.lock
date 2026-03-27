@@ -45,7 +45,6 @@ GEM
       prism (~> 1.5)
     mocha (3.0.1)
       ruby2_keywords (>= 0.0.5)
-    multi_json (1.19.1)
     mutex_m (0.3.0)
     parallel (1.27.0)
     parser (3.3.10.0)
@@ -103,8 +102,6 @@ GEM
       strscan (>= 1.0.0)
       terminal-table (>= 2, < 5)
       uri (>= 0.12.0)
-    streamio-ffmpeg (3.0.2)
-      multi_json (~> 1.8)
     strscan (3.1.7)
     taglib-ruby (2.0.0)
     terminal-table (4.0.0)
@@ -141,7 +138,6 @@ DEPENDENCIES
   rbs-inline
   rubocop (~> 1.85)
   steep
-  streamio-ffmpeg (~> 3.0)
   taglib-ruby (~> 2.0)
   tty-cursor (~> 0.7.1)
   tty-prompt (~> 0.23)
@@ -169,7 +165,6 @@ CHECKSUMS
   mcp (0.9.0) sha256=a0a3737b0ac9df0772f4ef7e2b013c260ddbcf217a5d50a66bff0baeddf03e47
   minitest (6.0.1) sha256=7854c74f48e2e975969062833adc4013f249a4b212f5e7b9d5c040bf838d54bb
   mocha (3.0.1) sha256=74f82c5959e3df6cfa2757d60aa420dcb151ac7c5eb61dcebf1cd4e368ed7469
-  multi_json (1.19.1) sha256=7aefeff8f2c854bf739931a238e4aea64592845e0c0395c8a7d2eea7fdd631b7
   mutex_m (0.3.0) sha256=cfcb04ac16b69c4813777022fdceda24e9f798e48092a2b817eb4c0a782b0751
   parallel (1.27.0) sha256=4ac151e1806b755fb4e2dc2332cbf0e54f2e24ba821ff2d3dcf86bf6dc4ae130
   parser (3.3.10.0) sha256=ce3587fa5cc55a88c4ba5b2b37621b3329aadf5728f9eafa36bbd121462aabd6
@@ -190,7 +185,6 @@ CHECKSUMS
   ruby2_keywords (0.0.5) sha256=ffd13740c573b7301cf7a2e61fc857b2a8e3d3aff32545d6f8300d8bae10e3ef
   securerandom (0.4.1) sha256=cc5193d414a4341b6e225f0cb4446aceca8e50d5e1888743fac16987638ea0b1
   steep (1.10.0) sha256=1b295b55f9aaff1b8d3ee42453ee55bc2a1078fda0268f288edb2dc014f4d7d1
-  streamio-ffmpeg (3.0.2) sha256=9f2434d4bf010b8b8d4da47c876ff35f4b775690123f3301e43b9c01d88fddda
   strscan (3.1.7) sha256=5f76462b94a3ea50b44973225b7d75b2cb96d4e1bee9ef1319b99ca117b72c8c
   taglib-ruby (2.0.0) sha256=51b90f23ab2d775921a097690fcc772b5009f60b1f913ee4f40b3a9afeccb1ae
   terminal-table (4.0.0) sha256=f504793203f8251b2ea7c7068333053f0beeea26093ec9962e62ea79f94301d2

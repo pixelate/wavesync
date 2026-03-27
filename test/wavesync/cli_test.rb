@@ -101,28 +101,5 @@ module Wavesync
 
       assert_includes output, 'Options:'
     end
-
-    test 'prints help when help command is given' do
-      ARGV.replace(['help'])
-
-      output = capture_io { CLI.start }.first
-
-      assert_includes output, 'sync'
-      assert_includes output, 'analyze'
-      assert_includes output, 'set'
-      assert_includes output, 'help'
-    end
-
-    test 'help output includes usage line' do
-      output = capture_io { Commands::Help.new.run }.first
-
-      assert_includes output, 'Usage: wavesync'
-    end
-
-    test 'help output includes options section' do
-      output = capture_io { Commands::Help.new.run }.first
-
-      assert_includes output, 'Options:'
-    end
   end
 end

@@ -2,8 +2,6 @@
 
 source 'https://rubygems.org'
 
-gem 'streamio-ffmpeg', '~> 3.0'
-
 gem 'logger'
 
 gem 'rubocop', '~> 1.85', require: false

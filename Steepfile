@@ -15,6 +15,7 @@ target :wavesync do
   library 'fileutils'
   library 'pathname'
   library 'shellwords'
+  library 'open3'
   library 'securerandom'
   library 'tmpdir'
   library 'tempfile'
