@@ -133,6 +133,22 @@ rake
 
 This runs RuboCop (with auto-fix), Steep type checks, and the test suite in sequence.
 
+### Running Integration Tests
+
+Integration tests sync against real connected devices and are not run as part of the default `rake` task.
+
+```bash
+rake test:integration
+```
+
+### Regenerating Test Fixtures
+
+Test fixtures are pre-generated audio files committed to the repository. To regenerate them:
+
+```bash
+rake fixtures:generate
+```
+
 ### Releasing
 
 ```bash

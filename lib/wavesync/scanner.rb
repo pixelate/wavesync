@@ -3,7 +3,6 @@
 
 require 'fileutils'
 require 'tempfile'
-require 'streamio-ffmpeg'
 require_relative 'file_converter'
 
 module Wavesync
@@ -14,7 +13,6 @@ module Wavesync
       @audio_files = find_audio_files #: Array[String]
       @ui = Wavesync::UI.new #: UI
       @converter = FileConverter.new #: FileConverter
-      FFMPEG.logger = Logger.new(File::NULL)
     end
 
     #: (String target_library_path, Device device, ?pad: bool) -> void

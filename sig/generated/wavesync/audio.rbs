@@ -39,9 +39,6 @@ module Wavesync
 
     private
 
-    # : () -> Integer?
-    def calculate_bit_depth: () -> Integer?
-
     # : (Integer? target_sample_rate, Integer? target_bit_depth, ?Numeric? padding_seconds) -> Hash[Symbol, untyped]
     def build_transcode_options: (Integer? target_sample_rate, Integer? target_bit_depth, ?Numeric? padding_seconds) -> Hash[Symbol, untyped]
 

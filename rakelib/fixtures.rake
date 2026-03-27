@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../lib/wavesync/ffmpeg'
+
 FIXTURES_PATH = 'test/fixtures'
 FREQUENCY = 440
 DURATION = 1
@@ -15,38 +17,34 @@ namespace :fixtures do
   task :generate do
     SAMPLE_RATES.each do |sample_rate|
       BIT_DEPTHS.each do |bit_depth|
-        sh 'ffmpeg', '-y',
-           '-f', 'lavfi',
-           '-i', "sine=frequency=#{FREQUENCY}:sample_rate=#{sample_rate}:duration=#{DURATION}",
-           '-af', "volume=#{AMPLITUDE}",
-           '-acodec', WAV_CODECS[bit_depth],
-           "#{FIXTURES_PATH}/#{sample_rate}_#{bit_depth}.wav"
+        Wavesync::FFMPEG.new
+                        .input("sine=frequency=#{FREQUENCY}:sample_rate=#{sample_rate}:duration=#{DURATION}", format: 'lavfi')
+                        .audio_filter("volume=#{AMPLITUDE}")
+                        .audio_codec(WAV_CODECS[bit_depth])
+                        .run("#{FIXTURES_PATH}/#{sample_rate}_#{bit_depth}.wav")
       end
 
-      sh 'ffmpeg', '-y',
-         '-f', 'lavfi',
-         '-i', "sine=frequency=#{FREQUENCY}:sample_rate=#{sample_rate}:duration=#{DURATION}",
-         '-af', "volume=#{AMPLITUDE}",
-         "#{FIXTURES_PATH}/#{sample_rate}.m4a"
+      Wavesync::FFMPEG.new
+                      .input("sine=frequency=#{FREQUENCY}:sample_rate=#{sample_rate}:duration=#{DURATION}", format: 'lavfi')
+                      .audio_filter("volume=#{AMPLITUDE}")
+                      .run("#{FIXTURES_PATH}/#{sample_rate}.m4a")
 
       next unless MP3_SAMPLE_RATES.include?(sample_rate)
 
-      sh 'ffmpeg', '-y',
-         '-f', 'lavfi',
-         '-i', "sine=frequency=#{FREQUENCY}:sample_rate=#{sample_rate}:duration=#{DURATION}",
-         '-af', "volume=#{AMPLITUDE}",
-         "#{FIXTURES_PATH}/#{sample_rate}.mp3"
+      Wavesync::FFMPEG.new
+                      .input("sine=frequency=#{FREQUENCY}:sample_rate=#{sample_rate}:duration=#{DURATION}", format: 'lavfi')
+                      .audio_filter("volume=#{AMPLITUDE}")
+                      .run("#{FIXTURES_PATH}/#{sample_rate}.mp3")
     end
 
     BIT_DEPTHS.each do |bit_depth|
       %w[aif aiff].each do |ext|
-        sh 'ffmpeg', '-y',
-           '-f', 'lavfi',
-           '-i', "sine=frequency=#{FREQUENCY}:sample_rate=44100:duration=#{DURATION}",
-           '-af', "volume=#{AMPLITUDE}",
-           '-acodec', AIFF_CODECS[bit_depth],
-           '-f', 'aiff',
-           "#{FIXTURES_PATH}/44100_#{bit_depth}.#{ext}"
+        Wavesync::FFMPEG.new
+                        .input("sine=frequency=#{FREQUENCY}:sample_rate=44100:duration=#{DURATION}", format: 'lavfi')
+                        .audio_filter("volume=#{AMPLITUDE}")
+                        .audio_codec(AIFF_CODECS[bit_depth])
+                        .output_format('aiff')
+                        .run("#{FIXTURES_PATH}/44100_#{bit_depth}.#{ext}")
       end
     end
 
@@ -96,14 +94,14 @@ namespace :fixtures do
 
     filter_parts << "#{output_labels.join}amix=inputs=#{total_beats}:normalize=0,volume=0.5"
 
-    sh 'ffmpeg', '-y',
-       '-f', 'lavfi', '-i', "sine=frequency=#{downbeat_freq}:sample_rate=#{click_sample_rate}:duration=#{click_ms / 1000.0}",
-       '-f', 'lavfi', '-i', "sine=frequency=#{beat_freq}:sample_rate=#{click_sample_rate}:duration=#{click_ms / 1000.0}",
-       '-filter_complex', filter_parts.join(';'),
-       '-acodec', 'pcm_s16le',
-       '-ar', click_sample_rate.to_s,
-       '-t', total_duration_s.to_s,
-       output_path
+    Wavesync::FFMPEG.new
+                    .input("sine=frequency=#{downbeat_freq}:sample_rate=#{click_sample_rate}:duration=#{click_ms / 1000.0}", format: 'lavfi')
+                    .input("sine=frequency=#{beat_freq}:sample_rate=#{click_sample_rate}:duration=#{click_ms / 1000.0}", format: 'lavfi')
+                    .filter_complex(filter_parts.join(';'))
+                    .audio_codec('pcm_s16le')
+                    .sample_rate(click_sample_rate)
+                    .duration(total_duration_s)
+                    .run(output_path)
 
     Wavesync::AcidChunk.write_bpm_in_place(output_path, click_bpm)
     puts "Generated #{output_path} (#{click_bpm} BPM, #{click_bars} bars, #{total_duration_s}s)"
