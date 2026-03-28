@@ -172,8 +172,9 @@ module Wavesync
     test 'bank01 checksum is valid' do
       exporter.export
       bank01 = File.binread(File.join(project_dir, 'bank01.work')).bytes
-      expected = (bank01[0..-2].sum - 1) % 256
-      assert_equal expected, bank01.last
+      expected = bank01[16..-3].reduce(0) { |acc, byte| (acc + byte) & 0xFFFF }
+      stored = (bank01[-2] << 8) | bank01[-1]
+      assert_equal expected, stored
     end
 
     private

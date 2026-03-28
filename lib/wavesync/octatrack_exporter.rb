@@ -86,7 +86,9 @@ module Wavesync
       TRACK_ASSIGNMENT_OFFSETS.each do |offset|
         write_track_assignments(data, offset)
       end
-      data.setbyte(data.bytesize - 1, bank_checksum(data))
+      checksum = bank_checksum(data)
+      data.setbyte(data.bytesize - 2, checksum >> 8)
+      data.setbyte(data.bytesize - 1, checksum & 0xFF)
       data
     end
 
@@ -109,7 +111,7 @@ module Wavesync
 
     #: (String data) -> Integer
     def bank_checksum(data)
-      (data.byteslice(0, data.bytesize - 1).bytes.sum - 1) % 256
+      data.byteslice(16, data.bytesize - 18).bytes.reduce(0) { |acc, byte| (acc + byte) & 0xFFFF }
     end
 
     #: () -> String
