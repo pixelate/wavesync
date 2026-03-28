@@ -181,6 +181,30 @@ module Wavesync
       FileUtils.rm_rf('/tmp/test_cleanup_mixed')
     end
 
+    test 'resolve strips unsupported characters from filename' do
+      source_file = '/home/user/music/artist/song™.wav'
+      audio = stub(bpm: nil)
+      target_path = resolver_for('TP-7').resolve(source_file, audio)
+
+      assert_equal '/media/device/music/artist/song.wav', target_path.to_s
+    end
+
+    test 'resolve strips unsupported characters from filename for Octatrack with bpm' do
+      source_file = '/home/user/music/artist/song™.wav'
+      audio = stub(bpm: 140)
+      target_path = resolver_for('Octatrack').resolve(source_file, audio)
+
+      assert_equal '/media/device/music/artist/song 140 bpm.wav', target_path.to_s
+    end
+
+    test 'resolve strips unsupported characters from directory names' do
+      source_file = '/home/user/music/artist™/song.wav'
+      audio = stub(bpm: nil)
+      target_path = resolver_for('TP-7').resolve(source_file, audio)
+
+      assert_equal '/media/device/music/artist/song.wav', target_path.to_s
+    end
+
     test 'find_files_to_cleanup does not include the target file itself' do
       FileUtils.mkdir_p('/tmp/test_cleanup_self/artist')
       FileUtils.touch('/tmp/test_cleanup_self/artist/song 140 bpm.wav')

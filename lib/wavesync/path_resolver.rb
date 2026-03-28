@@ -24,7 +24,7 @@ module Wavesync
       bpm = audio.bpm
       target_path = add_bpm_to_filename(target_path, bpm) if @device.bpm_source == :filename && bpm
 
-      target_path
+      strip_unsupported_characters(target_path)
     end
 
     #: (Pathname target_path, Audio audio) -> Array[Pathname]
@@ -50,6 +50,13 @@ module Wavesync
 
       new_basename = "#{basename} #{bpm} bpm#{ext}"
       path.dirname.join(new_basename)
+    end
+
+    #: (Pathname path) -> Pathname
+    def strip_unsupported_characters(path)
+      return path if @device.unsupported_characters.empty?
+
+      Pathname(path.to_s.delete(@device.unsupported_characters.join))
     end
 
     #: (Pathname path) -> Pathname

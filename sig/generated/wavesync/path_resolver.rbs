@@ -19,6 +19,9 @@ module Wavesync
     def add_bpm_to_filename: (Pathname path, String | Integer bpm) -> Pathname
 
     # : (Pathname path) -> Pathname
+    def strip_unsupported_characters: (Pathname path) -> Pathname
+
+    # : (Pathname path) -> Pathname
     def remove_bpm_from_filename: (Pathname path) -> Pathname
   end
 end
