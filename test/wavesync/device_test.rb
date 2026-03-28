@@ -40,11 +40,31 @@ module Wavesync
       assert_equal %w[wav mp3], tp7.file_types
     end
 
+    test 'TP-7 has tm sign as unsupported character' do
+      tp7 = Device.find_by(name: 'TP-7')
+      assert_equal ['™'], tp7.unsupported_characters
+    end
+
     test 'Octatrack device attributes are correct' do
       octatrack = Device.find_by(name: 'Octatrack')
       refute_nil octatrack
       assert_equal [44_100], octatrack.sample_rates
       assert_equal %w[wav aiff aif], octatrack.file_types
+    end
+
+    test 'Octatrack has tm sign as unsupported character' do
+      octatrack = Device.find_by(name: 'Octatrack')
+      assert_equal ['™'], octatrack.unsupported_characters
+    end
+
+    test 'unsupported_characters defaults to empty array' do
+      device = Device.new(
+        name: 'Test',
+        sample_rates: [44_100],
+        file_types: ['wav'],
+        bit_depths: [16]
+      )
+      assert_equal [], device.unsupported_characters
     end
 
     test '#find_by returns nil for unknown device' do
