@@ -11,7 +11,7 @@ module Wavesync
 
       seconds_per_bar = BEATS_PER_BAR * 60.0 / bpm.to_f
       track_bars = (duration_seconds / seconds_per_bar).round(6)
-      target_bars = (track_bars / bar_multiple.to_f).ceil * bar_multiple.to_f
+      target_bars = next_power_of_two_multiple(track_bars, bar_multiple)
 
       padding = (target_bars * seconds_per_bar) - duration_seconds
       padding < 0.001 ? 0 : padding
@@ -23,8 +23,16 @@ module Wavesync
 
       seconds_per_bar = BEATS_PER_BAR * 60.0 / bpm.to_f
       original_bars = (duration_seconds / seconds_per_bar).round
-      target_bars = ((original_bars.to_f / bar_multiple).ceil * bar_multiple.to_f).to_i
+      target_bars = next_power_of_two_multiple(original_bars, bar_multiple).to_i
       [original_bars, target_bars]
     end
+
+    #: ((Float | Integer) value, (Float | Integer) base) -> Float
+    def self.next_power_of_two_multiple(value, base)
+      target = base.to_f
+      target *= 2 while target < value
+      target
+    end
+    private_class_method :next_power_of_two_multiple
   end
 end
