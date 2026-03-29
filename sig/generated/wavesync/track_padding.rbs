@@ -9,5 +9,8 @@ module Wavesync
 
     # : ((Float | Integer)? duration_seconds, (Integer | Float | String)? bpm, (Integer | Float)? bar_multiple) -> [Integer?, Integer?]
     def self.bar_counts: ((Float | Integer)? duration_seconds, (Integer | Float | String)? bpm, (Integer | Float)? bar_multiple) -> [ Integer?, Integer? ]
+
+    # : ((Float | Integer) value, (Float | Integer) base) -> Float
+    def self.next_power_of_two_multiple: (Float | Integer value, Float | Integer base) -> Float
   end
 end

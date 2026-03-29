@@ -37,8 +37,16 @@ module Wavesync
 
     test 'pads a track that exceeds 64 bars up to 128 bars' do
       # 120 bpm: 1 bar = 2s, 64 bars = 128s, 128 bars = 256s
-      # 130s track → next multiple of 64 bars is 128 bars = 256s → padding = 126s
+      # 130s track → next power-of-2 multiple of 64 bars is 128 bars = 256s → padding = 126s
       assert_in_delta 126.0, TrackPadding.compute(130, 120, 64), 0.001
+    end
+
+    test 'pads a 192-bar track to 256 bars, not 192' do
+      assert_in_delta 128.0, TrackPadding.compute(384, 120, 64), 0.001
+    end
+
+    test 'pads a track just over 128 bars to 256 bars' do
+      assert_in_delta 254.0, TrackPadding.compute(258, 120, 64), 0.001
     end
 
     test 'returns 0 when track aligns to 128 bars exactly' do
