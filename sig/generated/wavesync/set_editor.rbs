@@ -20,6 +20,8 @@ module Wavesync
 
     attr_writer player_started_at: untyped
 
+    attr_writer player_pid: untyped
+
     # : (Set set, String library_path) -> void
     def initialize: (Set set, String library_path) -> void
 
@@ -40,6 +42,12 @@ module Wavesync
 
     # : (Float semitones) -> String
     def format_pitch_shift: (Float semitones) -> String
+
+    # : () -> void
+    def kill_player: () -> void
+
+    # : () -> void
+    def check_player: () -> void
 
     private
 
@@ -98,13 +106,7 @@ module Wavesync
     def jump_to_next_cue: () -> void
 
     # : () -> void
-    def kill_player: () -> void
-
-    # : () -> void
     def stop_playback: () -> void
-
-    # : () -> void
-    def check_player: () -> void
 
     # : () -> void
     def advance_and_play: () -> void

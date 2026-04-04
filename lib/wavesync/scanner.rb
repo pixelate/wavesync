@@ -3,6 +3,7 @@
 
 require 'fileutils'
 require 'tempfile'
+require_relative 'logger'
 require_relative 'file_converter'
 
 module Wavesync
@@ -10,6 +11,7 @@ module Wavesync
     #: (String source_library_path) -> void
     def initialize(source_library_path)
       @source_library_path = File.expand_path(source_library_path) #: String
+      Logger.configure(@source_library_path)
       @audio_files = find_audio_files #: Array[String]
       @ui = Wavesync::UI.new #: UI
       @converter = FileConverter.new #: FileConverter
@@ -155,8 +157,8 @@ module Wavesync
     #: (String source, Pathname target) -> void
     def safe_copy(source, target)
       FileUtils.install(source, target)
-    rescue Errno::ENOENT
-      puts 'Errno::ENOENT'
+    rescue Errno::ENOENT => e
+      Logger.log_error(e, call_site: 'Scanner#safe_copy', arguments: { source:, target: })
     end
   end
 end

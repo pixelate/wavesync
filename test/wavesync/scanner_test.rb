@@ -7,6 +7,8 @@ module Wavesync
   class ScannerTest < Wavesync::TestCase
     def setup
       silence_output
+      Logger.stubs(:log_error)
+      Logger.stubs(:configure)
       @source_dir = Dir.mktmpdir
       @target_dir = Dir.mktmpdir
       @device = Device.find_by(name: 'TP-7')
@@ -16,6 +18,11 @@ module Wavesync
       restore_output
       FileUtils.rm_rf(@source_dir)
       FileUtils.rm_rf(@target_dir)
+    end
+
+    test 'initializing configures error logger with source library path' do
+      Logger.expects(:configure).with(File.expand_path(@source_dir))
+      Scanner.new(@source_dir)
     end
 
     test 'sync calls system sync to flush filesystem buffers after completing' do
@@ -63,6 +70,20 @@ module Wavesync
       FileUtils.cp(fixture('44100.mp3'), target_mp3)
 
       Audio.any_instance.expects(:write_cue_points).never
+      Scanner.new(@source_dir).sync(@target_dir, @device)
+    end
+
+    test 'safe_copy logs error with source and target when ENOENT is raised' do
+      source_wav = File.join(File.expand_path(@source_dir), 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), source_wav)
+
+      expected_target = Pathname(File.join(File.expand_path(@target_dir), 'track.wav'))
+      FileUtils.stubs(:install).raises(Errno::ENOENT)
+      Logger.expects(:log_error).with(
+        instance_of(Errno::ENOENT),
+        call_site: 'Scanner#safe_copy',
+        arguments: { source: source_wav, target: expected_target }
+      )
       Scanner.new(@source_dir).sync(@target_dir, @device)
     end
 

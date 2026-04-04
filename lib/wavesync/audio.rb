@@ -5,6 +5,7 @@ require 'securerandom'
 require 'tmpdir'
 require 'fileutils'
 require 'taglib'
+require_relative 'logger'
 
 module Wavesync
   class Audio
@@ -100,8 +101,8 @@ module Wavesync
         yield temp_path if block_given?
         FileUtils.install(temp_path, target_path)
         true
-      rescue Errno::ENOENT
-        puts 'Errno::ENOENT'
+      rescue Errno::ENOENT => e
+        Logger.log_error(e, call_site: 'Audio#transcode', arguments: { target_path:, target_sample_rate:, target_file_type:, target_bit_depth:, padding_seconds: })
         false
       ensure
         FileUtils.rm_f(temp_path)

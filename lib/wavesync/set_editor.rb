@@ -4,6 +4,7 @@
 require 'tty-prompt'
 require 'io/console'
 require 'stringio'
+require_relative 'logger'
 
 module Wavesync
   class SetEditor
@@ -21,12 +22,13 @@ module Wavesync
 
     attr_accessor :player_state #: Symbol
     attr_reader :selected, :set, :ui #: untyped
-    attr_writer :player_track, :player_index, :player_offset, :player_started_at
+    attr_writer :player_track, :player_index, :player_offset, :player_started_at, :player_pid
 
     #: (Set set, String library_path) -> void
     def initialize(set, library_path)
       @set = set #: Set
       @library_path = library_path #: String
+      Logger.configure(@library_path)
       @prompt = TTY::Prompt.new(interrupt: :exit, active_color: :red) #: untyped
       @ui = UI.new #: UI
       @selected = @set.tracks.empty? ? nil : 0 #: Integer?
@@ -64,7 +66,8 @@ module Wavesync
 
       @track_bpms[path] = begin
         Audio.new(path).bpm
-      rescue StandardError
+      rescue StandardError => e
+        Logger.log_error(e, call_site: 'SetEditor#track_bpm', arguments: { path: })
         nil
       end
     end
@@ -78,7 +81,8 @@ module Wavesync
 
       @track_durations[path] = begin
         Audio.new(path).duration
-      rescue StandardError
+      rescue StandardError => e
+        Logger.log_error(e, call_site: 'SetEditor#track_duration', arguments: { path: })
         nil
       end
     end
@@ -99,7 +103,8 @@ module Wavesync
         else
           [] #: Array[Float]
         end
-      rescue StandardError
+      rescue StandardError => e
+        Logger.log_error(e, call_site: 'SetEditor#track_cue_fractions', arguments: { path: })
         [] #: Array[Float]
       end
     end
@@ -444,9 +449,11 @@ module Wavesync
     def kill_player
       return unless @player_pid
 
+      player_pid = @player_pid
       Process.kill('TERM', @player_pid)
       @player_pid = nil
-    rescue Errno::ESRCH
+    rescue Errno::ESRCH => e
+      Logger.log_error(e, call_site: 'SetEditor#kill_player', arguments: { player_pid: })
       @player_pid = nil
     end
 
@@ -464,6 +471,7 @@ module Wavesync
     def check_player
       return unless @player_pid
 
+      player_pid = @player_pid
       result = Process.waitpid(@player_pid, Process::WNOHANG)
       return unless result
 
@@ -473,7 +481,8 @@ module Wavesync
       @player_state = :stopped
       @player_offset = 0
       advance_and_play
-    rescue Errno::ECHILD
+    rescue Errno::ECHILD => e
+      Logger.log_error(e, call_site: 'SetEditor#check_player', arguments: { player_pid: })
       @player_pid = nil
       @player_track = nil
       @player_index = nil
@@ -540,8 +549,8 @@ module Wavesync
       end
     end
 
-    public :handle_action, :advance_and_play, :display_name, :relative_path,
-           :format_duration, :playback_elapsed, :visible_length, :playback_bar,
-           :selected, :set, :ui
+    public :handle_action, :advance_and_play, :kill_player, :check_player,
+           :display_name, :relative_path, :format_duration, :playback_elapsed,
+           :visible_length, :playback_bar, :selected, :set, :ui
   end
 end

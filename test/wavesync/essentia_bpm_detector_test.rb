@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'test_case'
+require_relative '../../lib/wavesync/logger'
 require_relative '../../lib/wavesync/essentia_bpm_detector'
 
 module Wavesync
@@ -26,6 +27,13 @@ module Wavesync
     test 'detect returns nil when BPM is zero' do
       PythonVenv.stubs(:run_script).returns('{"bpm": 0, "confidence": 0.0}')
       assert_nil EssentiaBpmDetector.detect('/fake/file.wav')
+    end
+
+    test 'detect logs error with file_path when an exception occurs' do
+      error = StandardError.new('script failed')
+      PythonVenv.stubs(:run_script).raises(error)
+      Logger.expects(:log_error).with(error, call_site: 'EssentiaBpmDetector.detect', arguments: { file_path: '/fake/file.wav' })
+      EssentiaBpmDetector.detect('/fake/file.wav')
     end
   end
 end

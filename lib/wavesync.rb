@@ -3,6 +3,7 @@
 module Wavesync
 end
 
+require 'wavesync/logger'
 require 'wavesync/version'
 require 'wavesync/acid_chunk'
 require 'wavesync/cue_chunk'

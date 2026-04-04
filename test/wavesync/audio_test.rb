@@ -3,6 +3,7 @@
 require 'tempfile'
 require 'fileutils'
 require_relative 'test_case'
+require_relative '../../lib/wavesync/logger'
 require_relative '../../lib/wavesync/audio_format'
 require_relative '../../lib/wavesync/audio'
 require_relative '../../lib/wavesync/acid_chunk'
@@ -115,6 +116,24 @@ module Wavesync
       files.each do |f|
         assert_includes Audio::SUPPORTED_FORMATS, File.extname(f).downcase
       end
+    end
+
+    test 'transcode returns false and logs error with all arguments when ENOENT is raised' do
+      audio_obj = audio('44100_16.wav')
+      Wavesync::FFMPEG.any_instance.stubs(:run).raises(Errno::ENOENT)
+      Logger.expects(:log_error).with(
+        instance_of(Errno::ENOENT),
+        call_site: 'Audio#transcode',
+        arguments: {
+          target_path: '/tmp/output.wav',
+          target_sample_rate: 48_000,
+          target_file_type: 'wav',
+          target_bit_depth: 24,
+          padding_seconds: nil
+        }
+      )
+      result = audio_obj.transcode('/tmp/output.wav', target_sample_rate: 48_000, target_file_type: 'wav', target_bit_depth: 24)
+      assert_equal false, result
     end
 
     private

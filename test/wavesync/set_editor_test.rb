@@ -21,6 +21,8 @@ module Wavesync
 
       UI.stubs(:new).returns(stub(color: '', clear: nil))
       TTY::Prompt.stubs(:new).returns(stub)
+      Logger.stubs(:log_error)
+      Logger.stubs(:configure)
     end
 
     def teardown
@@ -35,6 +37,12 @@ module Wavesync
 
     def track(name)
       File.join(@library, name)
+    end
+
+    test 'initializing configures error logger with library path' do
+      set = Set.new(@library, 'test', [])
+      Logger.expects(:configure).with(@library)
+      SetEditor.new(set, @library)
     end
 
     test 'display_name strips leading number and space' do
@@ -537,6 +545,44 @@ module Wavesync
       e.ui.stubs(:color).returns('')
       e.ui.expects(:color).with('◆', :surface).returns('').once
       e.playback_bar(0.0, 100.0, 10, cue_fractions: [0.5])
+    end
+
+    test 'track_bpm logs error with path when audio raises' do
+      error = StandardError.new('load failed')
+      Audio.stubs(:new).raises(error)
+      Logger.expects(:log_error).with(error, call_site: 'SetEditor#track_bpm', arguments: { path: '/some/track.wav' })
+      editor.track_bpm('/some/track.wav')
+    end
+
+    test 'track_duration logs error with path when audio raises' do
+      error = StandardError.new('load failed')
+      Audio.stubs(:new).raises(error)
+      Logger.expects(:log_error).with(error, call_site: 'SetEditor#track_duration', arguments: { path: '/some/track.wav' })
+      editor.track_duration('/some/track.wav')
+    end
+
+    test 'track_cue_fractions logs error with path when audio raises' do
+      error = StandardError.new('load failed')
+      Audio.stubs(:new).raises(error)
+      Logger.expects(:log_error).with(error, call_site: 'SetEditor#track_cue_fractions', arguments: { path: '/some/track.wav' })
+      editor.track_cue_fractions('/some/track.wav')
+    end
+
+    test 'kill_player logs error with player_pid when ESRCH is raised' do
+      e = editor
+      e.player_pid = 99_999
+      Process.stubs(:kill).raises(Errno::ESRCH)
+      Logger.expects(:log_error).with(instance_of(Errno::ESRCH), call_site: 'SetEditor#kill_player', arguments: { player_pid: 99_999 })
+      e.kill_player
+    end
+
+    test 'check_player logs error with player_pid when ECHILD is raised' do
+      e = editor
+      e.player_pid = 99_999
+      Process.stubs(:waitpid).raises(Errno::ECHILD)
+      e.stubs(:advance_and_play)
+      Logger.expects(:log_error).with(instance_of(Errno::ECHILD), call_site: 'SetEditor#check_player', arguments: { player_pid: 99_999 })
+      e.check_player
     end
   end
 end

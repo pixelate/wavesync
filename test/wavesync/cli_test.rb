@@ -28,10 +28,30 @@ module Wavesync
 
       @ui = stub_everything('ui')
       UI.stubs(:new).returns(@ui)
+
+      Logger.stubs(:capture_invocation)
+      Logger.stubs(:configure)
+      Logger.stubs(:log_invocation)
     end
 
     def teardown
       ARGV.replace(@saved_argv)
+    end
+
+    test 'start captures invocation args before processing' do
+      ARGV.replace(['sync', '--device', 'TP-7'])
+      Logger.expects(:capture_invocation).with(['sync', '--device', 'TP-7'])
+      CLI.start
+    end
+
+    test 'parse_options configures error logger with library path' do
+      Logger.expects(:configure).with('/tmp/library')
+      Commands::Sync.new.run
+    end
+
+    test 'parse_options logs invocation' do
+      Logger.expects(:log_invocation)
+      Commands::Sync.new.run
     end
 
     test 'syncs single device without prompting' do
