@@ -1,0 +1,20 @@
+# Generated from lib/wavesync/logger.rb with RBS::Inline
+
+module Wavesync
+  module Logger
+    # : (String? library_path) -> void
+    def self.configure: (String? library_path) -> void
+
+    # : () -> String?
+    def self.log_path: () -> String?
+
+    # : (Array[String] args) -> void
+    def self.capture_invocation: (Array[String] args) -> void
+
+    # : () -> void
+    def self.log_invocation: () -> void
+
+    # : (Exception error, call_site: String, arguments: Hash[Symbol, untyped]) -> void
+    def self.log_error: (Exception error, call_site: String, arguments: Hash[Symbol, untyped]) -> void
+  end
+end

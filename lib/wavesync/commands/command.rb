@@ -23,6 +23,8 @@ module Wavesync
         end.parse!
         config_path = options[:config] || Wavesync::Config::DEFAULT_PATH
         config = Commands.load_config(config_path)
+        Logger.configure(config.library)
+        Logger.log_invocation
         [options, config]
       end
     end

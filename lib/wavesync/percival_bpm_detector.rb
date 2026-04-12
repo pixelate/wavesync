@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 # rbs_inline: enabled
 
+require_relative 'logger'
 require_relative 'python_venv'
 
 module Wavesync
@@ -22,7 +23,8 @@ module Wavesync
       output = PythonVenv.run_script(PYTHON_SCRIPT, file_path)
       bpm = output.strip.to_f
       bpm.positive? ? bpm.round : nil
-    rescue StandardError
+    rescue StandardError => e
+      Logger.log_error(e, call_site: 'PercivalBpmDetector.detect', arguments: { file_path: })
       nil
     end
   end

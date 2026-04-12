@@ -2,6 +2,7 @@
 # rbs_inline: enabled
 
 require 'json'
+require_relative 'logger'
 require_relative 'python_venv'
 
 module Wavesync
@@ -29,7 +30,8 @@ module Wavesync
       data = JSON.parse(output.strip)
       bpm = data['bpm'].to_f
       bpm.positive? ? { bpm: bpm.round, confidence: data['confidence'].to_f } : nil
-    rescue StandardError
+    rescue StandardError => e
+      Logger.log_error(e, call_site: 'EssentiaBpmDetector.detect', arguments: { file_path: })
       nil
     end
   end
