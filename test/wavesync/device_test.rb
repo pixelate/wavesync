@@ -42,7 +42,12 @@ module Wavesync
 
     test 'TP-7 has tm sign as unsupported character' do
       tp7 = Device.find_by(name: 'TP-7')
-      assert_equal ['™'], tp7.unsupported_characters
+      assert_includes tp7.unsupported_characters, '™'
+    end
+
+    test 'TP-7 has double-quote as unsupported character' do
+      tp7 = Device.find_by(name: 'TP-7')
+      assert_includes tp7.unsupported_characters, '"'
     end
 
     test 'Octatrack device attributes are correct' do
@@ -54,7 +59,12 @@ module Wavesync
 
     test 'Octatrack has tm sign as unsupported character' do
       octatrack = Device.find_by(name: 'Octatrack')
-      assert_equal ['™'], octatrack.unsupported_characters
+      assert_includes octatrack.unsupported_characters, '™'
+    end
+
+    test 'Octatrack has double-quote as unsupported character' do
+      octatrack = Device.find_by(name: 'Octatrack')
+      assert_includes octatrack.unsupported_characters, '"'
     end
 
     test 'unsupported_characters defaults to empty array' do
