@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'test_case'
-require_relative '../../lib/wavesync/audio_format'
-require_relative '../../lib/wavesync/file_converter'
-require_relative '../../lib/wavesync/path_resolver'
-require_relative '../../lib/wavesync/device'
+require_relative '../../lib/wavesync'
 
 module Wavesync
   class FileConverterTest < Wavesync::TestCase
@@ -22,20 +19,7 @@ module Wavesync
       FileUtils.rm_rf(@target_dir)
     end
 
-    test 'convert skips when converted file already exists in source location' do
-      source_aiff = File.join(@source_dir, 'track.aiff')
-      FileUtils.touch(source_aiff)
-      FileUtils.touch(File.join(@source_dir, 'track.mp3'))
-
-      audio = stub(bpm: nil)
-      source_format = AudioFormat.new(file_type: 'aiff', sample_rate: 44_100, bit_depth: 16)
-      target_format = AudioFormat.new(file_type: 'mp3', sample_rate: nil, bit_depth: nil)
-      result = @converter.convert(audio, source_aiff, @path_resolver, source_format, target_format)
-
-      assert_equal false, result
-    end
-
-    test 'convert does not skip when converted file does not exist in source location' do
+    test 'convert does not skip when converted file does not exist in target location' do
       source_aiff = File.join(@source_dir, 'track.aiff')
       FileUtils.touch(source_aiff)
 

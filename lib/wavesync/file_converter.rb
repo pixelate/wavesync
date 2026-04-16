@@ -15,11 +15,6 @@ module Wavesync
       files_to_cleanup = path_resolver.find_files_to_cleanup(target_path, audio)
       files_to_cleanup.each { |file| FileUtils.rm_f(file) }
 
-      if target_format.file_type
-        source_converted_path = Pathname(source_file_path).sub_ext(".#{target_format.file_type}")
-        return false if source_converted_path.exist?
-      end
-
       if target_path.exist?
         existing_duration = Audio.new(target_path.to_s).duration
         expected_duration = audio.duration + (padding_seconds || 0)
