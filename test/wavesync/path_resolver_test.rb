@@ -223,6 +223,22 @@ module Wavesync
       FileUtils.rm_rf('/tmp/test_cleanup_self')
     end
 
+    test 'find_files_to_cleanup excludes target file when target path uses different unicode normalization than disk' do
+      nfc_dir = "/tmp/test_cleanup_nfc/Bj\u00F6rk"
+      FileUtils.mkdir_p(nfc_dir)
+      FileUtils.touch("#{nfc_dir}/song 140 bpm.wav")
+
+      device = Device.find_by(name: 'Octatrack')
+      resolver = PathResolver.new(@source_library, '/tmp/test_cleanup_nfc', device)
+      nfd_target_path = Pathname.new("/tmp/test_cleanup_nfc/Bjo\u0308rk/song 140 bpm.wav")
+      audio = stub(bpm: 140)
+      files = resolver.find_files_to_cleanup(nfd_target_path, audio)
+
+      assert_equal [], files
+
+      FileUtils.rm_rf('/tmp/test_cleanup_nfc')
+    end
+
     private
 
     def resolver_for(device_name)
