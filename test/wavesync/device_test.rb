@@ -22,10 +22,11 @@ module Wavesync
 
     test '#all loads devices from YAML' do
       devices = Device.all
-      assert_equal 2, devices.size
+      assert_equal 3, devices.size
       names = devices.map(&:name)
       assert_includes names, 'TP-7'
       assert_includes names, 'Octatrack'
+      assert_includes names, 'Playdate'
     end
 
     test '#load_from_yaml creates device objects' do
@@ -66,7 +67,6 @@ module Wavesync
       octatrack = Device.find_by(name: 'Octatrack')
       assert_includes octatrack.unsupported_characters, '"'
     end
-
     test 'unsupported_characters defaults to empty array' do
       device = Device.new(
         name: 'Test',

@@ -34,3 +34,9 @@ devices:
   unsupported_characters:
     - "™"
     - '"'
+
+- name: Playdate
+  sample_rates:
+    - 44100
+  file_types:
+    - mp3

@@ -16,8 +16,8 @@ module Wavesync
 
     attr_reader unsupported_characters: Array[String]
 
-    # : (name: String, sample_rates: Array[Integer], bit_depths: Array[Integer], file_types: Array[String], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?unsupported_characters: Array[String]) -> void
-    def initialize: (name: String, sample_rates: Array[Integer], bit_depths: Array[Integer], file_types: Array[String], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?unsupported_characters: Array[String]) -> void
+    # : (name: String, sample_rates: Array[Integer], file_types: Array[String], ?bit_depths: Array[Integer], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?unsupported_characters: Array[String]) -> void
+    def initialize: (name: String, sample_rates: Array[Integer], file_types: Array[String], ?bit_depths: Array[Integer], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?unsupported_characters: Array[String]) -> void
 
     # : () -> String
     def self.config_path: () -> String

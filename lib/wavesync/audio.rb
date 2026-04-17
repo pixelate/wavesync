@@ -90,8 +90,7 @@ module Wavesync
       temp_path = File.join(Dir.tmpdir, "wavesync_transcode_#{SecureRandom.hex}.#{ext}")
 
       begin
-        audio_codec = target_bit_depth == 16 ? 'pcm_s16le' : 'pcm_s24le'
-        command = Wavesync::FFMPEG.new.input(@file_path).audio_codec(audio_codec)
+        command = Wavesync::FFMPEG.new.input(@file_path).audio_codec(transcode_codec(ext, target_bit_depth))
         command.sample_rate(target_sample_rate) if target_sample_rate
         if padding_seconds&.positive?
           total_duration = @audio.duration + padding_seconds
@@ -110,6 +109,13 @@ module Wavesync
     end
 
     private
+
+    #: (String target_file_type, Integer? target_bit_depth) -> String
+    def transcode_codec(target_file_type, target_bit_depth)
+      return 'libmp3lame' if target_file_type == 'mp3'
+
+      target_bit_depth == 16 ? 'pcm_s16le' : 'pcm_s24le'
+    end
 
     #: () -> (String | Integer)?
     def bpm_from_file

@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 require 'tempfile'
+require 'tmpdir'
 require 'fileutils'
 require_relative 'test_case'
 require_relative '../../lib/wavesync/logger'
 require_relative '../../lib/wavesync/audio_format'
+require_relative '../../lib/wavesync/ffmpeg'
 require_relative '../../lib/wavesync/audio'
 require_relative '../../lib/wavesync/acid_chunk'
 
@@ -115,6 +117,17 @@ module Wavesync
       files = Audio.find_all(FIXTURES_PATH)
       files.each do |f|
         assert_includes Audio::SUPPORTED_FORMATS, File.extname(f).downcase
+      end
+    end
+
+    test 'transcode from 24-bit wav to mp3 produces a valid mp3' do
+      audio_obj = audio('96000_24.wav')
+      Dir.mktmpdir do |dir|
+        output_path = File.join(dir, 'output.mp3')
+        result = audio_obj.transcode(output_path, target_sample_rate: 44_100, target_file_type: 'mp3', target_bit_depth: 24)
+        assert_equal true, result
+        assert File.exist?(output_path)
+        assert_equal 44_100, Audio.new(output_path).sample_rate
       end
     end
 
