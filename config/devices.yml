@@ -16,6 +16,7 @@ devices:
   bpm_source: :acid_chunk
   unsupported_characters:
     - "™"
+    - '"'
 
 - name: Octatrack
   sample_rates:
@@ -32,3 +33,4 @@ devices:
   bar_multiple: 64
   unsupported_characters:
     - "™"
+    - '"'
