@@ -42,6 +42,7 @@ module TagLib
     class TextIdentificationFrame
       def initialize: (::String id, untyped encoding) -> void
       def text=: (::String text) -> ::String
+      def to_string: () -> ::String
     end
 
     class Tag

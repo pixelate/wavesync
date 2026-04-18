@@ -16,6 +16,9 @@ module Wavesync
     # : (Audio audio, String source_file_path, PathResolver path_resolver) -> bool
     def copy_file: (Audio audio, String source_file_path, PathResolver path_resolver) -> bool
 
+    # : (String path, Device device) -> void
+    def inject_transliterated_metadata: (String path, Device device) -> void
+
     # : (String local_temp_path, (Integer | Float | String)? bpm, Device device) -> void
     def inject_acid_bpm: (String local_temp_path, (Integer | Float | String)? bpm, Device device) -> void
 

@@ -60,6 +60,7 @@ module Wavesync
                                          before_transcode: -> { @ui.conversion_progress(source_format, target_format) }) do |local_temp_path|
             inject_acid_bpm(local_temp_path, bpm, device)
             inject_cue_points(local_temp_path, audio, source_format, target_format)
+            inject_transliterated_metadata(local_temp_path, device)
           end
           path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
         else
@@ -76,7 +77,8 @@ module Wavesync
             end
           else
             copied = copy_file(audio, file, path_resolver)
-            path_resolver.resolve(file, audio)
+            target_path = path_resolver.resolve(file, audio)
+            inject_transliterated_metadata(target_path.to_s, device) if copied
           end
           @ui.copy(source_format)
         end
@@ -114,6 +116,13 @@ module Wavesync
         safe_copy(source_file_path, target_path)
         true
       end
+    end
+
+    #: (String path, Device device) -> void
+    def inject_transliterated_metadata(path, device)
+      return unless device.transliterate_metadata
+
+      Audio.new(path).transliterate_tags
     end
 
     #: (String local_temp_path, (Integer | Float | String)? bpm, Device device) -> void

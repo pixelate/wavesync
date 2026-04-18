@@ -67,6 +67,20 @@ module Wavesync
       octatrack = Device.find_by(name: 'Octatrack')
       assert_includes octatrack.unsupported_characters, '"'
     end
+    test 'Playdate has transliterate_metadata enabled' do
+      playdate = Device.find_by(name: 'Playdate')
+      assert_equal true, playdate.transliterate_metadata
+    end
+
+    test 'transliterate_metadata defaults to false' do
+      device = Device.new(
+        name: 'Test',
+        sample_rates: [44_100],
+        file_types: ['wav']
+      )
+      assert_equal false, device.transliterate_metadata
+    end
+
     test 'unsupported_characters defaults to empty array' do
       device = Device.new(
         name: 'Test',

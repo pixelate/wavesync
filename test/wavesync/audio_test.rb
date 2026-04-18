@@ -64,6 +64,52 @@ module Wavesync
       assert_nil audio('44100_16.aiff').bpm
     end
 
+    test 'transliterate_tags replaces umlauts across all supported id3v2 frames for mp3' do
+      with_temp_copy('44100.mp3') do |path|
+        write_id3v2_frames(
+          path,
+          'TIT2' => 'Jóga',
+          'TPE1' => 'Björk',
+          'TALB' => 'Åström Remixes',
+          'TPE2' => 'Sigur Rós',
+          'TCON' => 'Électronique',
+          'TCOM' => 'Jean-Michel Jarré',
+          'TENC' => 'Encöder',
+          'TCMP' => '1'
+        )
+
+        Audio.new(path).transliterate_tags
+
+        frames = read_id3v2_frames(path)
+        assert_equal 'Joga', frames['TIT2']
+        assert_equal 'Bjork', frames['TPE1']
+        assert_equal 'Astrom Remixes', frames['TALB']
+        assert_equal 'Sigur Ros', frames['TPE2']
+        assert_equal 'Electronique', frames['TCON']
+        assert_equal 'Jean-Michel Jarre', frames['TCOM']
+        assert_equal 'Encoder', frames['TENC']
+        assert_equal '1', frames['TCMP']
+      end
+    end
+
+    test 'transliterate_tags leaves ascii-only tags unchanged' do
+      with_temp_copy('44100.mp3') do |path|
+        write_id3v2_frames(path, 'TPE1' => 'Aphex Twin', 'TIT2' => 'Windowlicker')
+
+        Audio.new(path).transliterate_tags
+
+        frames = read_id3v2_frames(path)
+        assert_equal 'Aphex Twin', frames['TPE1']
+        assert_equal 'Windowlicker', frames['TIT2']
+      end
+    end
+
+    test 'transliterate_tags is a no-op for non-mp3 files' do
+      with_temp_copy('44100_16.wav') do |path|
+        Audio.new(path).transliterate_tags
+      end
+    end
+
     test 'write_bpm round-trips for wav via acid chunk' do
       with_temp_copy('44100_16.wav') do |path|
         Audio.new(path).write_bpm(128)
@@ -153,6 +199,30 @@ module Wavesync
 
     def audio(name)
       Audio.new(File.join(FIXTURES_PATH, name))
+    end
+
+    def write_id3v2_frames(path, frames)
+      TagLib::MPEG::File.open(path) do |file|
+        tag = file.id3v2_tag(true)
+        frames.each do |frame_id, text|
+          tag.remove_frames(frame_id)
+          frame = TagLib::ID3v2::TextIdentificationFrame.new(frame_id, TagLib::String::UTF8)
+          frame.text = text
+          tag.add_frame(frame)
+        end
+        file.save
+      end
+    end
+
+    def read_id3v2_frames(path)
+      result = {}
+      TagLib::MPEG::File.open(path) do |file|
+        tag = file.id3v2_tag
+        tag.frame_list.each do |frame|
+          result[frame.frame_id] = frame.to_string
+        end
+      end
+      result
     end
 
     def with_temp_copy(name)

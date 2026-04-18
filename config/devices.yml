@@ -40,3 +40,4 @@ devices:
     - 44100
   file_types:
     - mp3
+  transliterate_metadata: true

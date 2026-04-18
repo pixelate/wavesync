@@ -11,9 +11,10 @@ module Wavesync
     attr_reader :bpm_source #: Symbol?
     attr_reader :bar_multiple #: Integer?
     attr_reader :unsupported_characters #: Array[String]
+    attr_reader :transliterate_metadata #: bool
 
-    #: (name: String, sample_rates: Array[Integer], file_types: Array[String], ?bit_depths: Array[Integer], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?unsupported_characters: Array[String]) -> void
-    def initialize(name:, sample_rates:, file_types:, bit_depths: [], bpm_source: nil, bar_multiple: nil, unsupported_characters: [])
+    #: (name: String, sample_rates: Array[Integer], file_types: Array[String], ?bit_depths: Array[Integer], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?unsupported_characters: Array[String], ?transliterate_metadata: bool) -> void
+    def initialize(name:, sample_rates:, file_types:, bit_depths: [], bpm_source: nil, bar_multiple: nil, unsupported_characters: [], transliterate_metadata: false)
       @name = name
       @sample_rates = sample_rates
       @bit_depths = bit_depths
@@ -21,6 +22,7 @@ module Wavesync
       @bpm_source = bpm_source
       @bar_multiple = bar_multiple
       @unsupported_characters = unsupported_characters
+      @transliterate_metadata = transliterate_metadata
     end
 
     #: () -> String
@@ -49,7 +51,8 @@ module Wavesync
           file_types: attrs['file_types'],
           bpm_source: attrs['bpm_source']&.to_sym,
           bar_multiple: attrs['bar_multiple'],
-          unsupported_characters: attrs['unsupported_characters'] || []
+          unsupported_characters: attrs['unsupported_characters'] || [],
+          transliterate_metadata: attrs['transliterate_metadata'] || false
         )
       end
     end

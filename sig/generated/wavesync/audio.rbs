@@ -31,6 +31,29 @@ module Wavesync
     # : (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void
     def write_cue_points: (Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points) -> void
 
+    ID3V2_FRAME_TITLE: ::String
+
+    ID3V2_FRAME_ARTIST: ::String
+
+    ID3V2_FRAME_ALBUM: ::String
+
+    ID3V2_FRAME_ALBUM_ARTIST: ::String
+
+    ID3V2_FRAME_GENRE: ::String
+
+    ID3V2_FRAME_COMPOSER: ::String
+
+    ID3V2_FRAME_ENCODED_BY: ::String
+
+    ID3V2_FRAME_COMPILATION: ::String
+
+    COMBINING_MARKS: ::Regexp
+
+    TRANSLITERATE_FRAME_IDS: untyped
+
+    # : () -> void
+    def transliterate_tags: () -> void
+
     # : (String | Integer | Float bpm) -> void
     def write_bpm: (String | Integer | Float bpm) -> void
 
@@ -39,8 +62,8 @@ module Wavesync
 
     private
 
-    # : (Integer? target_sample_rate, Integer? target_bit_depth, ?Numeric? padding_seconds) -> Hash[Symbol, untyped]
-    def build_transcode_options: (Integer? target_sample_rate, Integer? target_bit_depth, ?Numeric? padding_seconds) -> Hash[Symbol, untyped]
+    # : (String target_file_type, Integer? target_bit_depth) -> String
+    def transcode_codec: (String target_file_type, Integer? target_bit_depth) -> String
 
     # : () -> (String | Integer)?
     def bpm_from_file: () -> (String | Integer)?
@@ -80,5 +103,8 @@ module Wavesync
 
     # : (untyped tag, String | Integer | Float bpm) -> void
     def write_id3v2_bpm: (untyped tag, String | Integer | Float bpm) -> void
+
+    # : (String string) -> String
+    def transliterate: (String string) -> String
   end
 end
