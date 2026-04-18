@@ -69,6 +69,46 @@ module Wavesync
       FileUtils.mv(temp_path, @file_path)
     end
 
+    ID3V2_FRAME_TITLE = 'TIT2'
+    ID3V2_FRAME_ARTIST = 'TPE1'
+    ID3V2_FRAME_ALBUM = 'TALB'
+    ID3V2_FRAME_ALBUM_ARTIST = 'TPE2'
+    ID3V2_FRAME_GENRE = 'TCON'
+    ID3V2_FRAME_COMPOSER = 'TCOM'
+    ID3V2_FRAME_ENCODED_BY = 'TENC'
+    ID3V2_FRAME_COMPILATION = 'TCMP'
+
+    COMBINING_MARKS = /\p{Mn}/
+
+    TRANSLITERATE_FRAME_IDS = [
+      ID3V2_FRAME_TITLE,
+      ID3V2_FRAME_ARTIST,
+      ID3V2_FRAME_ALBUM,
+      ID3V2_FRAME_ALBUM_ARTIST,
+      ID3V2_FRAME_GENRE,
+      ID3V2_FRAME_COMPOSER,
+      ID3V2_FRAME_ENCODED_BY,
+      ID3V2_FRAME_COMPILATION
+    ].freeze
+
+    #: () -> void
+    def transliterate_tags
+      return unless @file_ext == '.mp3'
+
+      TagLib::MPEG::File.open(@file_path) do |file|
+        tag = file.id3v2_tag
+        next if tag.nil?
+
+        TRANSLITERATE_FRAME_IDS.each do |frame_id|
+          tag.frame_list(frame_id).each do |frame|
+            frame.text = transliterate(frame.to_string)
+          end
+        end
+
+        file.save
+      end
+    end
+
     #: (String | Integer | Float bpm) -> void
     def write_bpm(bpm)
       case @file_ext
@@ -221,6 +261,13 @@ module Wavesync
       frame = TagLib::ID3v2::TextIdentificationFrame.new('TBPM', TagLib::String::UTF8)
       frame.text = bpm.to_s
       tag.add_frame(frame)
+    end
+
+    #: (String string) -> String
+    def transliterate(string)
+      string
+        .unicode_normalize(:nfd)
+        .gsub(COMBINING_MARKS, '')
     end
   end
 end
