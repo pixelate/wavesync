@@ -12,8 +12,8 @@ module Wavesync
     attr_reader :bar_multiple #: Integer?
     attr_reader :unsupported_characters #: Array[String]
 
-    #: (name: String, sample_rates: Array[Integer], bit_depths: Array[Integer], file_types: Array[String], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?unsupported_characters: Array[String]) -> void
-    def initialize(name:, sample_rates:, bit_depths:, file_types:, bpm_source: nil, bar_multiple: nil, unsupported_characters: [])
+    #: (name: String, sample_rates: Array[Integer], file_types: Array[String], ?bit_depths: Array[Integer], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?unsupported_characters: Array[String]) -> void
+    def initialize(name:, sample_rates:, file_types:, bit_depths: [], bpm_source: nil, bar_multiple: nil, unsupported_characters: [])
       @name = name
       @sample_rates = sample_rates
       @bit_depths = bit_depths
@@ -45,7 +45,7 @@ module Wavesync
         new(
           name: attrs['name'],
           sample_rates: attrs['sample_rates'],
-          bit_depths: attrs['bit_depths'],
+          bit_depths: attrs['bit_depths'] || [],
           file_types: attrs['file_types'],
           bpm_source: attrs['bpm_source']&.to_sym,
           bar_multiple: attrs['bar_multiple'],
@@ -81,7 +81,7 @@ module Wavesync
 
     #: (Integer? source_bit_depth) -> Integer?
     def target_bit_depth(source_bit_depth)
-      return nil if source_bit_depth.nil? || bit_depths.include?(source_bit_depth)
+      return nil if source_bit_depth.nil? || bit_depths.empty? || bit_depths.include?(source_bit_depth)
 
       bit_depths.min_by { |n| [(n - source_bit_depth).abs, -n] }
     end

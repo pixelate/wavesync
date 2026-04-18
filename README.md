@@ -1,6 +1,6 @@
 # Wavesync
 
-Wavesync is a Ruby-based CLI tool that scans your music library and automatically converts audio files to match the specifications of the [teenage engineering TP-7](https://teenage.engineering/products/tp-7) and the [Elektron Octatrack MKII](https://www.elektron.se/explore/octatrack-mkii), adjusting sample rate, bit depth and file format as needed while preserving your original library structure and only converting files that don't already meet the device requirements.
+Wavesync is a Ruby-based CLI tool that scans your music library and automatically converts audio files to match the specifications of the [teenage engineering TP-7](https://teenage.engineering/products/tp-7), the [Elektron Octatrack MKII](https://www.elektron.se/explore/octatrack-mkii), and the [Playdate](https://kicooya.com/), adjusting sample rate, bit depth and file format as needed while preserving your original library structure and only converting files that don't already meet the device requirements.
 
 It can also analyse the BPM of the tracks in your library and store the information as metadata in your files, as well as convert the metadata so that the target device can read the BPM. When syncing to the Octatrack, you can choose to add padding to each track, so that it's dead-simple to auto-slice your tracks to a multiple of full bars which allows precise looping, and seamlessly jumping to different parts of a track with Octatrack's sequencer.
 
@@ -63,12 +63,15 @@ devices:
   - name: Octatrack
     model: Octatrack
     path: /Volumes/OCTATRACK/LIBRARY/AUDIO
+  - name: Playdate
+    model: Playdate
+    path: /Volumes/PLAYDATE/Data/com.abenokobo.kicooya/media/music
 ```
 
 - `library`: path to your source music library
 - `devices`: list of devices to sync to, each with:
   - `name`: a label for this device, used with the `-d` command-line option
-  - `model`: device model (`TP-7` or `Octatrack`)
+  - `model`: device model (`TP-7`, `Octatrack`, or `Playdate`)
   - `path`: path to the device's library directory
 
 ## Usage
