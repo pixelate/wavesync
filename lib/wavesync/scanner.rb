@@ -17,11 +17,12 @@ module Wavesync
       @converter = FileConverter.new #: FileConverter
     end
 
-    #: (String target_library_path, Device device, ?pad: bool) -> void
-    def sync(target_library_path, device, pad: false)
+    #: (String target_library_path, Device device, ?pad: bool, ?log_only: bool) -> void
+    def sync(target_library_path, device, pad: false, log_only: false)
       path_resolver = PathResolver.new(@source_library_path, target_library_path, device)
       skipped_count = 0
       conversion_count = 0
+      append_downbeat_padding_log(target_library_path, "Started: #{Time.now}") if pad && device.bar_multiple
       @ui.sync_progress(0, @audio_files.size, device)
 
       @audio_files.each_with_index do |file, index|
@@ -32,71 +33,100 @@ module Wavesync
         target_format = device.target_format(source_format, file)
 
         padding_seconds = nil #: Numeric?
+        lead_in_seconds = nil #: Float?
+        detected_bpm = nil #: Float?
         original_bars = nil #: Integer?
         target_bars = nil #: Integer?
         if pad && device.bar_multiple
-          padding_seconds = TrackPadding.compute(audio.duration, bpm, device.bar_multiple)
-          original_bars, target_bars = TrackPadding.bar_counts(audio.duration, bpm, device.bar_multiple) unless padding_seconds.zero?
+          if BpmDetector.available?
+            beat_info = BpmDetector.detect_with_downbeat(file)
+            if beat_info
+              detected_bpm = beat_info[:bpm].to_f
+              bar_duration = TrackPadding::BEATS_PER_BAR * 60.0 / detected_bpm
+              offset_within_bar = beat_info[:first_downbeat_position] % bar_duration
+              lead_in_seconds = bar_duration - offset_within_bar if offset_within_bar > 0.001
+            end
+          end
+          if lead_in_seconds
+            lead_in_beats = (lead_in_seconds * detected_bpm / 60.0).round(2)
+            relative_path = file.delete_prefix("#{@source_library_path}/")
+            append_downbeat_padding_log(target_library_path, "#{relative_path} — #{lead_in_beats} beats lead-in")
+          end
+          effective_duration = audio.duration + (lead_in_seconds || 0)
+          padding_seconds = TrackPadding.compute(effective_duration, bpm, device.bar_multiple)
+          original_bars, target_bars = TrackPadding.bar_counts(effective_duration, bpm, device.bar_multiple) unless padding_seconds.zero?
           padding_seconds = nil if padding_seconds.zero?
         end
 
         @ui.bpm(bpm, original_bars: original_bars, target_bars: target_bars)
         @ui.file_progress(file)
 
-        if source_format.file_type == 'wav'
-          prospective_target_path = path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
-          if prospective_target_path.extname.downcase == '.wav' && prospective_target_path.exist?
-            target_cue_points = CueChunk.read(prospective_target_path.to_s)
-            if target_cue_points.any?
-              source_cue_points = audio.cue_points
-              audio.write_cue_points(target_cue_points) unless same_cue_points?(source_cue_points, target_cue_points)
+        unless log_only
+          if source_format.file_type == 'wav'
+            prospective_target_path = path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
+            if prospective_target_path.extname.downcase == '.wav' && prospective_target_path.exist?
+              target_cue_points = CueChunk.read(prospective_target_path.to_s)
+              if target_cue_points.any?
+                source_cue_points = audio.cue_points
+                audio.write_cue_points(target_cue_points) unless same_cue_points?(source_cue_points, target_cue_points)
+              end
             end
           end
-        end
 
-        if target_format.file_type || target_format.sample_rate || target_format.bit_depth || padding_seconds
-          converted = @converter.convert(audio, file, path_resolver, source_format, target_format,
-                                         padding_seconds: padding_seconds,
-                                         before_transcode: -> { @ui.conversion_progress(source_format, target_format) }) do |local_temp_path|
-            inject_acid_bpm(local_temp_path, bpm, device)
-            inject_cue_points(local_temp_path, audio, source_format, target_format)
-            inject_transliterated_metadata(local_temp_path, device)
-          end
-          path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
-        else
-          if device.bpm_source == :acid_chunk && bpm && File.extname(file).downcase == '.wav'
-            target_path = path_resolver.resolve(file, audio)
-            files_to_cleanup = path_resolver.find_files_to_cleanup(target_path, audio)
-            files_to_cleanup.each { |cleanup_file| FileUtils.rm_f(cleanup_file) }
-            if target_path.exist?
-              copied = false
-            else
-              target_path.dirname.mkpath
-              AcidChunk.write_bpm(file, target_path.to_s, bpm)
-              copied = true
+          if target_format.file_type || target_format.sample_rate || target_format.bit_depth || padding_seconds || lead_in_seconds
+            converted = @converter.convert(audio, file, path_resolver, source_format, target_format,
+                                           padding_seconds: padding_seconds,
+                                           lead_in_seconds: lead_in_seconds,
+                                           before_transcode: -> { @ui.conversion_progress(source_format, target_format) }) do |local_temp_path|
+              inject_acid_bpm(local_temp_path, bpm, device)
+              inject_cue_points(local_temp_path, audio, source_format, target_format)
+              inject_transliterated_metadata(local_temp_path, device)
             end
+            path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
           else
-            copied = copy_file(audio, file, path_resolver)
-            target_path = path_resolver.resolve(file, audio)
-            inject_transliterated_metadata(target_path.to_s, device) if copied
+            if device.bpm_source == :acid_chunk && bpm && File.extname(file).downcase == '.wav'
+              target_path = path_resolver.resolve(file, audio)
+              files_to_cleanup = path_resolver.find_files_to_cleanup(target_path, audio)
+              files_to_cleanup.each { |cleanup_file| FileUtils.rm_f(cleanup_file) }
+              if target_path.exist?
+                copied = false
+              else
+                target_path.dirname.mkpath
+                AcidChunk.write_bpm(file, target_path.to_s, bpm)
+                copied = true
+              end
+            else
+              copied = copy_file(audio, file, path_resolver)
+              target_path = path_resolver.resolve(file, audio)
+              inject_transliterated_metadata(target_path.to_s, device) if copied
+            end
+            @ui.copy(source_format)
           end
-          @ui.copy(source_format)
+
+          if !copied && !converted
+            skipped_count += 1
+            @ui.skip
+          end
+
+          conversion_count += 1 if converted
         end
 
-        if !copied && !converted
-          skipped_count += 1
-          @ui.skip
-        end
-
-        conversion_count += 1 if converted
         @ui.sync_progress(index, @audio_files.size, device)
       end
 
+      append_downbeat_padding_log(target_library_path, "Ended: #{Time.now}") if pad && device.bar_multiple
+
       puts
-      system('sync')
+      system('sync') unless log_only
     end
 
     private
+
+    #: (String target_library_path, String entry) -> void
+    def append_downbeat_padding_log(target_library_path, entry)
+      log_path = File.join(target_library_path, 'downbeat_padding.log')
+      File.open(log_path, 'a') { |file| file.puts(entry) }
+    end
 
     #: () -> Array[String]
     def find_audio_files

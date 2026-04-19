@@ -62,6 +62,68 @@ module Wavesync
       Scanner.new(@source_dir).sync(@target_dir, @device)
     end
 
+    test 'sync does not copy files when log_only is true' do
+      source_wav = File.join(@source_dir, 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), source_wav)
+
+      Scanner.new(@source_dir).sync(@target_dir, @device, log_only: true)
+
+      refute File.exist?(File.join(@target_dir, 'track.wav')), 'Expected no file to be copied in log_only mode'
+    end
+
+    test 'sync does not call system sync when log_only is true' do
+      Scanner.any_instance.expects(:system).never
+      Scanner.new(@source_dir).sync(@target_dir, @device, log_only: true)
+    end
+
+    test 'sync writes downbeat padding log with start and end timestamps' do
+      octatrack = Device.find_by(name: 'Octatrack')
+      FileConverter.any_instance.stubs(:convert).returns(true)
+      Scanner.any_instance.expects(:system).with('sync')
+
+      Scanner.new(@source_dir).sync(@target_dir, octatrack, pad: true)
+
+      log_content = File.read(File.join(@target_dir, 'downbeat_padding.log'))
+      assert_match(/\AStarted: /, log_content)
+      assert_match(/Ended: .+$/, log_content)
+    end
+
+    test 'sync writes track entry with beat count to downbeat padding log' do
+      octatrack = Device.find_by(name: 'Octatrack')
+      source_wav = File.join(@source_dir, 'Artist/track.wav')
+      FileUtils.mkdir_p(File.dirname(source_wav))
+      FileUtils.cp(fixture('44100_16.wav'), source_wav)
+
+      Audio.any_instance.stubs(:bpm).returns(120)
+      BpmDetector.stubs(:available?).returns(true)
+      BpmDetector.stubs(:detect_with_downbeat).returns({ bpm: 120, first_downbeat_position: 0.25 })
+      FileConverter.any_instance.stubs(:convert).returns(true)
+      Scanner.any_instance.expects(:system).with('sync')
+
+      Scanner.new(@source_dir).sync(@target_dir, octatrack, pad: true)
+
+      log_content = File.read(File.join(@target_dir, 'downbeat_padding.log'))
+      assert_includes log_content, 'Artist/track.wav'
+      assert_includes log_content, '3.5 beats lead-in'
+    end
+
+    test 'sync writes only start and end timestamps when no tracks need lead-in padding' do
+      octatrack = Device.find_by(name: 'Octatrack')
+      source_wav = File.join(@source_dir, 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), source_wav)
+
+      Audio.any_instance.stubs(:bpm).returns(120)
+      BpmDetector.stubs(:available?).returns(true)
+      BpmDetector.stubs(:detect_with_downbeat).returns({ bpm: 120, first_downbeat_position: 0.0 })
+      FileConverter.any_instance.stubs(:convert).returns(true)
+      Scanner.any_instance.expects(:system).with('sync')
+
+      Scanner.new(@source_dir).sync(@target_dir, octatrack, pad: true)
+
+      log_content = File.read(File.join(@target_dir, 'downbeat_padding.log'))
+      refute_includes log_content, 'beats lead-in'
+    end
+
     test 'sync does not write cue points to source when source is not a wav' do
       source_mp3 = File.join(@source_dir, 'track.mp3')
       FileUtils.cp(fixture('44100.mp3'), source_mp3)

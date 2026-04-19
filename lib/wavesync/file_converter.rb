@@ -5,10 +5,10 @@ module Wavesync
   class FileConverter
     DURATION_TOLERANCE_SECONDS = 0.5
 
-    #: (Audio audio, String source_file_path, PathResolver path_resolver, AudioFormat source_format, AudioFormat target_format, ?padding_seconds: Numeric?, ?before_transcode: (^() -> void)?) ?{ (String) -> void } -> bool
-    def convert(audio, source_file_path, path_resolver, source_format, target_format, padding_seconds: nil, before_transcode: nil, &post_transcode)
+    #: (Audio audio, String source_file_path, PathResolver path_resolver, AudioFormat source_format, AudioFormat target_format, ?padding_seconds: Numeric?, ?lead_in_seconds: Float?, ?before_transcode: (^() -> void)?) ?{ (String) -> void } -> bool
+    def convert(audio, source_file_path, path_resolver, source_format, target_format, padding_seconds: nil, lead_in_seconds: nil, before_transcode: nil, &post_transcode)
       needs_format_conversion = target_format.file_type || target_format.sample_rate || target_format.bit_depth
-      return false unless needs_format_conversion || padding_seconds&.positive?
+      return false unless needs_format_conversion || padding_seconds&.positive? || lead_in_seconds&.positive?
 
       target_path = path_resolver.resolve(source_file_path, audio, target_file_type: target_format.file_type)
 
@@ -22,7 +22,7 @@ module Wavesync
 
       if target_path.exist?
         existing_duration = Audio.new(target_path.to_s).duration
-        expected_duration = audio.duration + (padding_seconds || 0)
+        expected_duration = audio.duration + (lead_in_seconds || 0) + (padding_seconds || 0)
         return false if (existing_duration - expected_duration).abs < DURATION_TOLERANCE_SECONDS
 
         target_path.delete
@@ -35,6 +35,7 @@ module Wavesync
                                         target_file_type: target_format.file_type,
                                         target_bit_depth: target_format.bit_depth || source_format.bit_depth,
                                         padding_seconds: padding_seconds,
+                                        lead_in_seconds: lead_in_seconds,
                       &post_transcode)
 
       true

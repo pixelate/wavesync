@@ -9,5 +9,8 @@ module Wavesync
 
     # : (String file_path) -> Integer?
     def self.detect: (String file_path) -> Integer?
+
+    # : (String file_path) -> {bpm: Integer, first_downbeat_position: Float}?
+    def self.detect_with_downbeat: (String file_path) -> { bpm: Integer, first_downbeat_position: Float }?
   end
 end

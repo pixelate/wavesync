@@ -7,7 +7,7 @@ module Wavesync
     # : () -> bool?
     def self.available?: () -> bool?
 
-    # : (String file_path) -> {bpm: Integer, confidence: Float}?
-    def self.detect: (String file_path) -> { bpm: Integer, confidence: Float }?
+    # : (String file_path) -> {bpm: Integer, confidence: Float, first_downbeat_position: Float}?
+    def self.detect: (String file_path) -> { bpm: Integer, confidence: Float, first_downbeat_position: Float }?
   end
 end

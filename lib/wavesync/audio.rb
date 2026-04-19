@@ -124,17 +124,25 @@ module Wavesync
       @bpm = bpm
     end
 
-    #: (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?) ?{ (String) -> void } -> bool
-    def transcode(target_path, target_sample_rate: nil, target_file_type: nil, target_bit_depth: nil, padding_seconds: nil)
+    #: (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?, ?lead_in_seconds: Float?) ?{ (String) -> void } -> bool
+    def transcode(target_path, target_sample_rate: nil, target_file_type: nil, target_bit_depth: nil, padding_seconds: nil, lead_in_seconds: nil)
       ext = target_file_type || @file_ext.delete_prefix('.')
       temp_path = File.join(Dir.tmpdir, "wavesync_transcode_#{SecureRandom.hex}.#{ext}")
 
       begin
         command = Wavesync::FFMPEG.new.input(@file_path).audio_codec(transcode_codec(ext, target_bit_depth))
         command.sample_rate(target_sample_rate) if target_sample_rate
-        if padding_seconds&.positive?
-          total_duration = @audio.duration + padding_seconds
-          command.audio_filter("apad=whole_dur=#{total_duration.round(6)}")
+        if lead_in_seconds&.positive? || padding_seconds&.positive?
+          filters = [] #: Array[String]
+          if lead_in_seconds&.positive?
+            delay_ms = (lead_in_seconds * 1000).round
+            filters << "adelay=#{delay_ms}:all=1"
+          end
+          if padding_seconds&.positive?
+            total_duration = (lead_in_seconds || 0.0) + @audio.duration + padding_seconds
+            filters << "apad=whole_dur=#{total_duration.round(6)}"
+          end
+          command.audio_filter(filters.join(','))
         end
         command.run(temp_path)
         yield temp_path if block_given?
