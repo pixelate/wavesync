@@ -46,10 +46,15 @@ module Wavesync
     # : () -> void
     def clear: () -> void
 
+    MP3_BITRATE_KBPS: ::Integer
+
     private
 
-    # : (Integer? sample_rate, Integer? bit_depth) -> String
-    def audio_info: (Integer? sample_rate, Integer? bit_depth) -> String
+    # : (AudioFormat format) -> String
+    def audio_info: (AudioFormat format) -> String
+
+    # : (AudioFormat format) -> String
+    def target_audio_info: (AudioFormat format) -> String
 
     # : (String string, Symbol key) -> String
     def in_color: (String string, Symbol key) -> String
