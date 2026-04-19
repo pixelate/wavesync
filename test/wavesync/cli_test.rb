@@ -62,7 +62,7 @@ module Wavesync
     end
 
     test 'syncs single device to its configured path' do
-      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false)
+      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false, sync_throttle: nil)
 
       Commands::Sync.new.run
     end
@@ -78,7 +78,7 @@ module Wavesync
       @config.stubs(:device_configs).returns([DEVICE_CONFIG_A, DEVICE_CONFIG_B])
       @ui.stubs(:select).returns('Octatrack')
 
-      @scanner.expects(:sync).with('/tmp/ot', @device, pad: false).once
+      @scanner.expects(:sync).with('/tmp/ot', @device, pad: false, sync_throttle: nil).once
 
       Commands::Sync.new.run
     end
@@ -88,9 +88,39 @@ module Wavesync
       @config.stubs(:device_configs).returns([DEVICE_CONFIG_A, DEVICE_CONFIG_B])
 
       @ui.expects(:select).never
-      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false).once
+      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false, sync_throttle: nil).once
 
       Commands::Sync.new.run
+    end
+
+    test 'passes sync_throttle mode to scanner when --sync-throttle option is given' do
+      ARGV.replace(['--sync-throttle', 'disk_space'])
+
+      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false, sync_throttle: :disk_space).once
+
+      Commands::Sync.new.run
+    end
+
+    test 'passes fixed_delay throttle mode to scanner' do
+      ARGV.replace(['--sync-throttle', 'fixed_delay'])
+
+      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false, sync_throttle: :fixed_delay).once
+
+      Commands::Sync.new.run
+    end
+
+    test 'passes lsof throttle mode to scanner' do
+      ARGV.replace(['--sync-throttle', 'lsof'])
+
+      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false, sync_throttle: :lsof).once
+
+      Commands::Sync.new.run
+    end
+
+    test 'exits with error for unknown sync throttle mode' do
+      ARGV.replace(['--sync-throttle', 'unknown_mode'])
+
+      assert_raises(SystemExit) { Commands::Sync.new.run }
     end
 
     test 'exits with error for unknown device flag' do

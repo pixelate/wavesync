@@ -17,9 +17,11 @@ module Wavesync
       @converter = FileConverter.new #: FileConverter
     end
 
-    #: (String target_library_path, Device device, ?pad: bool) -> void
-    def sync(target_library_path, device, pad: false)
+    #: (String target_library_path, Device device, ?pad: bool, ?sync_throttle: Symbol?) -> void
+    def sync(target_library_path, device, pad: false, sync_throttle: nil)
       path_resolver = PathResolver.new(@source_library_path, target_library_path, device)
+      throttle_mode = sync_throttle || (device.sync_throttle ? :file_size : nil)
+      file_sync_throttle = FileSyncThrottle.new(mode: throttle_mode) if throttle_mode
       skipped_count = 0
       conversion_count = 0
       @ui.sync_progress(0, @audio_files.size, device)
@@ -87,6 +89,8 @@ module Wavesync
           skipped_count += 1
           @ui.skip
         end
+
+        file_sync_throttle.wait_for_sync(target_path) if file_sync_throttle && (copied || converted)
 
         conversion_count += 1 if converted
         @ui.sync_progress(index, @audio_files.size, device)

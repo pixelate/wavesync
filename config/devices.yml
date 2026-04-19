@@ -17,6 +17,7 @@ devices:
   unsupported_characters:
     - "™"
     - '"'
+  sync_throttle: true
 
 - name: Octatrack
   sample_rates:
