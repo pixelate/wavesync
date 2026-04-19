@@ -73,6 +73,53 @@ module Wavesync
       Scanner.new(@source_dir).sync(@target_dir, @device)
     end
 
+    test 'sync sleeps for throttle duration in seconds after copying a file' do
+      source_wav = File.join(@source_dir, 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), source_wav)
+
+      scanner = Scanner.new(@source_dir)
+      scanner.expects(:sleep).with(0.5)
+      scanner.sync(@target_dir, @device, throttle: 500)
+    end
+
+    test 'sync does not sleep when throttle is not set' do
+      source_wav = File.join(@source_dir, 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), source_wav)
+
+      scanner = Scanner.new(@source_dir)
+      scanner.expects(:sleep).never
+      scanner.sync(@target_dir, @device)
+    end
+
+    test 'sync does not sleep when file is skipped' do
+      source_wav = File.join(@source_dir, 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), source_wav)
+      target_wav = File.join(@target_dir, 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), target_wav)
+
+      scanner = Scanner.new(@source_dir)
+      scanner.expects(:sleep).never
+      scanner.sync(@target_dir, @device, throttle: 500)
+    end
+
+    test 'sync does not sleep when throttle is zero' do
+      source_wav = File.join(@source_dir, 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), source_wav)
+
+      scanner = Scanner.new(@source_dir)
+      scanner.expects(:sleep).never
+      scanner.sync(@target_dir, @device, throttle: 0)
+    end
+
+    test 'sync does not sleep when throttle is negative' do
+      source_wav = File.join(@source_dir, 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), source_wav)
+
+      scanner = Scanner.new(@source_dir)
+      scanner.expects(:sleep).never
+      scanner.sync(@target_dir, @device, throttle: -100)
+    end
+
     test 'safe_copy logs error with source and target when ENOENT is raised' do
       source_wav = File.join(File.expand_path(@source_dir), 'track.wav')
       FileUtils.cp(fixture('44100_16.wav'), source_wav)

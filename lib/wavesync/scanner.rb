@@ -17,8 +17,8 @@ module Wavesync
       @converter = FileConverter.new #: FileConverter
     end
 
-    #: (String target_library_path, Device device, ?pad: bool) -> void
-    def sync(target_library_path, device, pad: false)
+    #: (String target_library_path, Device device, ?pad: bool, ?throttle: Integer?) -> void
+    def sync(target_library_path, device, pad: false, throttle: nil)
       path_resolver = PathResolver.new(@source_library_path, target_library_path, device)
       skipped_count = 0
       conversion_count = 0
@@ -86,6 +86,8 @@ module Wavesync
         if !copied && !converted
           skipped_count += 1
           @ui.skip
+        elsif throttle&.positive?
+          sleep(throttle / 1000.0)
         end
 
         conversion_count += 1 if converted
