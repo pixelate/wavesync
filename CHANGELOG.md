@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.0.alpha4 - 2026-04-19
+
+- Replace extended characters with ASCII equivalents in Playdate metadata tags ([#51](https://github.com/pixelate/wavesync/pull/51))
+- Add Playdate (Kicooya) as a supported device ([#50](https://github.com/pixelate/wavesync/pull/50))
+- Fix re-conversion on FAT/exFAT caused by unicode path mismatch ([#49](https://github.com/pixelate/wavesync/pull/49))
+- Strip double-quote characters from filenames when syncing to FAT devices ([#47](https://github.com/pixelate/wavesync/pull/47))
+- Add error logging to all rescue sites ([#45](https://github.com/pixelate/wavesync/pull/45))
+- Pad to power-of-2 bar multiples to keep slice counts valid ([#44](https://github.com/pixelate/wavesync/pull/44))
+- Add `unsupported_characters` to devices and strip them from target paths ([#42](https://github.com/pixelate/wavesync/pull/42))
+- Replace streamio-ffmpeg with a custom FFMPEG wrapper class ([#41](https://github.com/pixelate/wavesync/pull/41))
+- Add integration tests for device sync ([#40](https://github.com/pixelate/wavesync/pull/40))
+- Write BPM and cue data in-place to save disk space on source device ([#39](https://github.com/pixelate/wavesync/pull/39))
+- Fix crash when writing BPM/cue data to MTP devices ([#37](https://github.com/pixelate/wavesync/pull/37), [#38](https://github.com/pixelate/wavesync/pull/38))
+
 ## 1.0.0.alpha3 - 2026-03-23
 
 - Flush filesystem buffers after sync completion ([#34](https://github.com/pixelate/wavesync/pull/34))
