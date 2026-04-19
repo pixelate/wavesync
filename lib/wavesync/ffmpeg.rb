@@ -42,6 +42,12 @@ module Wavesync
       self
     end
 
+    #: (String bitrate) -> self
+    def audio_bitrate(bitrate)
+      @options[:audio_bitrate] = bitrate
+      self
+    end
+
     #: (String filter) -> self
     def audio_filter(filter)
       @options[:audio_filter] = filter
@@ -79,6 +85,7 @@ module Wavesync
       args += ['-filter_complex', @options[:filter_complex]] if @options[:filter_complex]
       args += ['-af', @options[:audio_filter]] if @options[:audio_filter]
       args += ['-acodec', @options[:audio_codec]] if @options[:audio_codec]
+      args += ['-b:a', @options[:audio_bitrate]] if @options[:audio_bitrate]
       args += ['-ar', @options[:sample_rate].to_s] if @options[:sample_rate]
       args += ['-t', @options[:duration].to_s] if @options[:duration]
       args += ['-f', @options[:output_format]] if @options[:output_format]

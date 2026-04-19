@@ -29,6 +29,14 @@ module Wavesync
         bits&.positive? ? bits : nil
       end
 
+      #: () -> Integer?
+      def bitrate
+        bits_per_second = audio_stream&.fetch('bit_rate', nil)&.to_i
+        return nil unless bits_per_second&.positive?
+
+        (bits_per_second / 1000.0).round
+      end
+
       private
 
       #: () -> Hash[String, untyped]

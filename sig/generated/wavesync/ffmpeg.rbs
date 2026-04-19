@@ -23,6 +23,9 @@ module Wavesync
     # : (Integer rate) -> self
     def sample_rate: (Integer rate) -> self
 
+    # : (String bitrate) -> self
+    def audio_bitrate: (String bitrate) -> self
+
     # : (String filter) -> self
     def audio_filter: (String filter) -> self
 

@@ -39,6 +39,11 @@ module Wavesync
       @bit_depth ||= @audio.bit_depth
     end
 
+    #: () -> Integer?
+    def bitrate
+      @bitrate ||= @audio.bitrate
+    end
+
     #: () -> (String | Integer)?
     def bpm
       return @bpm if defined?(@bpm)
@@ -51,7 +56,8 @@ module Wavesync
       AudioFormat.new(
         file_type: @file_ext.delete_prefix('.'),
         sample_rate: sample_rate,
-        bit_depth: bit_depth
+        bit_depth: bit_depth,
+        bitrate: bitrate
       )
     end
 
@@ -131,6 +137,7 @@ module Wavesync
 
       begin
         command = Wavesync::FFMPEG.new.input(@file_path).audio_codec(transcode_codec(ext, target_bit_depth))
+        command.audio_bitrate('192k') if ext == 'mp3'
         command.sample_rate(target_sample_rate) if target_sample_rate
         if padding_seconds&.positive?
           total_duration = @audio.duration + padding_seconds

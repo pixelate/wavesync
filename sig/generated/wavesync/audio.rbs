@@ -19,6 +19,9 @@ module Wavesync
     # : () -> Integer?
     def bit_depth: () -> Integer?
 
+    # : () -> Integer?
+    def bitrate: () -> Integer?
+
     # : () -> (String | Integer)?
     def bpm: () -> (String | Integer)?
 

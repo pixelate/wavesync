@@ -15,6 +15,9 @@ module Wavesync
       # : () -> Integer?
       def bit_depth: () -> Integer?
 
+      # : () -> Integer?
+      def bitrate: () -> Integer?
+
       private
 
       # : () -> Hash[String, untyped]
