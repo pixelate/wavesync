@@ -8,9 +8,11 @@ module Wavesync
 
     attr_reader bit_depth: Integer?
 
-    def self.new: (?file_type: String?, ?sample_rate: Integer?, ?bit_depth: Integer?) -> instance
+    attr_reader bitrate: Integer?
 
-    def with: (?file_type: String?, ?sample_rate: Integer?, ?bit_depth: Integer?) -> AudioFormat
+    def self.new: (?file_type: String?, ?sample_rate: Integer?, ?bit_depth: Integer?, ?bitrate: Integer?) -> instance
+
+    def with: (?file_type: String?, ?sample_rate: Integer?, ?bit_depth: Integer?, ?bitrate: Integer?) -> AudioFormat
 
     def merge: (AudioFormat other) -> AudioFormat
   end

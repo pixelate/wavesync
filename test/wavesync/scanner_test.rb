@@ -9,6 +9,7 @@ module Wavesync
       silence_output
       Logger.stubs(:log_error)
       Logger.stubs(:configure)
+      Logger.stubs(:log_run_time)
       @source_dir = Dir.mktmpdir
       @target_dir = Dir.mktmpdir
       @device = Device.find_by(name: 'TP-7')
@@ -27,6 +28,11 @@ module Wavesync
 
     test 'sync calls system sync to flush filesystem buffers after completing' do
       Scanner.any_instance.expects(:system).with('sync')
+      Scanner.new(@source_dir).sync(@target_dir, @device)
+    end
+
+    test 'sync logs run time after completing' do
+      Logger.expects(:log_run_time).once
       Scanner.new(@source_dir).sync(@target_dir, @device)
     end
 

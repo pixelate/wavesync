@@ -19,6 +19,7 @@ module Wavesync
 
     #: (String target_library_path, Device device, ?pad: bool) -> void
     def sync(target_library_path, device, pad: false)
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       path_resolver = PathResolver.new(@source_library_path, target_library_path, device)
       skipped_count = 0
       conversion_count = 0
@@ -94,6 +95,8 @@ module Wavesync
 
       puts
       system('sync')
+      elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
+      Logger.log_run_time(elapsed)
     end
 
     private

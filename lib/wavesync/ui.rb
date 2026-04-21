@@ -46,8 +46,8 @@ module Wavesync
     def conversion_progress(source_format, target_format)
       effective = source_format.merge(target_format)
 
-      source_info = audio_info(source_format.sample_rate, source_format.bit_depth)
-      target_info = audio_info(effective.sample_rate, effective.bit_depth)
+      source_info = audio_info(source_format)
+      target_info = target_audio_info(effective)
 
       formatted_line = in_color(
         "Converting #{source_format.file_type} (#{source_info}) ⇢ #{effective.file_type} (#{target_info})", :highlight
@@ -57,7 +57,7 @@ module Wavesync
 
     #: (AudioFormat source_format) -> void
     def copy(source_format)
-      info = audio_info(source_format.sample_rate, source_format.bit_depth)
+      info = audio_info(source_format)
 
       sticky(in_color("Copying #{source_format.file_type} (#{info})", :highlight), 3)
     end
@@ -122,13 +122,25 @@ module Wavesync
       print @cursor.move_to(0, 0)
     end
 
+    MP3_BITRATE_KBPS = 192
+
     private
 
-    #: (Integer? sample_rate, Integer? bit_depth) -> String
-    def audio_info(sample_rate, bit_depth)
+    #: (AudioFormat format) -> String
+    def audio_info(format)
+      quality = format.file_type == 'mp3' ? format.bitrate&.to_s : format.bit_depth&.to_s
       [
-        sample_rate_to_khz(sample_rate),
-        bit_depth&.to_s
+        sample_rate_to_khz(format.sample_rate),
+        quality
+      ].compact.join('/')
+    end
+
+    #: (AudioFormat format) -> String
+    def target_audio_info(format)
+      quality = format.file_type == 'mp3' ? MP3_BITRATE_KBPS.to_s : format.bit_depth&.to_s
+      [
+        sample_rate_to_khz(format.sample_rate),
+        quality
       ].compact.join('/')
     end
 

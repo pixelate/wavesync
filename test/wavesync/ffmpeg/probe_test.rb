@@ -46,6 +46,10 @@ module Wavesync
         assert_nil probe('44100.m4a').bit_depth
       end
 
+      test 'bitrate returns kbps for mp3' do
+        assert probe('44100.mp3').bitrate.positive?
+      end
+
       private
 
       def probe(name)
