@@ -34,6 +34,9 @@ devices:
   unsupported_characters:
     - "™"
     - '"'
+    - "’"
+    - ":"
+    - "?"
 
 - name: Playdate
   sample_rates:
