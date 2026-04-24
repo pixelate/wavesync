@@ -22,6 +22,7 @@ module Wavesync
     def initialize
       @inputs = [] #: Array[Hash[Symbol, String?]]
       @options = {} #: Hash[Symbol, untyped]
+      @metadata_pairs = [] #: Array[[String, String]]
     end
 
     #: (String source, ?format: String?) -> self
@@ -72,6 +73,36 @@ module Wavesync
       self
     end
 
+    #: () -> self
+    def copy_streams
+      @options[:copy_streams] = true
+      self
+    end
+
+    #: (Integer source_index) -> self
+    def map_metadata(source_index)
+      @options[:map_metadata] = source_index
+      self
+    end
+
+    #: (String key, String value) -> self
+    def metadata(key, value)
+      @metadata_pairs << [key, value]
+      self
+    end
+
+    #: (String flags) -> self
+    def movflags(flags)
+      @options[:movflags] = flags
+      self
+    end
+
+    #: (Integer version) -> self
+    def write_id3v2(version)
+      @options[:write_id3v2] = version
+      self
+    end
+
     #: (String output_path) -> void
     def run(output_path)
       args = ['-y']
@@ -82,12 +113,17 @@ module Wavesync
       end
 
       args += ['-loglevel', 'warning', '-nostats', '-hide_banner']
+      args += ['-c', 'copy'] if @options[:copy_streams]
+      args += ['-map_metadata', @options[:map_metadata].to_s] if @options.key?(:map_metadata)
+      @metadata_pairs.each { |key, value| args += ['-metadata', "#{key}=#{value}"] }
       args += ['-filter_complex', @options[:filter_complex]] if @options[:filter_complex]
       args += ['-af', @options[:audio_filter]] if @options[:audio_filter]
       args += ['-acodec', @options[:audio_codec]] if @options[:audio_codec]
       args += ['-b:a', @options[:audio_bitrate]] if @options[:audio_bitrate]
       args += ['-ar', @options[:sample_rate].to_s] if @options[:sample_rate]
       args += ['-t', @options[:duration].to_s] if @options[:duration]
+      args += ['-movflags', @options[:movflags]] if @options[:movflags]
+      args += ['-write_id3v2', @options[:write_id3v2].to_s] if @options[:write_id3v2]
       args += ['-f', @options[:output_format]] if @options[:output_format]
       args << output_path
 

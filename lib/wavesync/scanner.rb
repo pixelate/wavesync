@@ -56,12 +56,15 @@ module Wavesync
         end
 
         if target_format.file_type || target_format.sample_rate || target_format.bit_depth || padding_seconds
+          target_ext = target_format.file_type || source_format.file_type
+          transliterated_metadata = {} #: Hash[String, String]
+          transliterated_metadata = audio.transliterated_tag_changes if device.transliterate_metadata && target_ext == 'mp3'
           converted = @converter.convert(audio, file, path_resolver, source_format, target_format,
                                          padding_seconds: padding_seconds,
+                                         metadata: transliterated_metadata,
                                          before_transcode: -> { @ui.conversion_progress(source_format, target_format) }) do |local_temp_path|
             inject_acid_bpm(local_temp_path, bpm, device)
             inject_cue_points(local_temp_path, audio, source_format, target_format)
-            inject_transliterated_metadata(local_temp_path, device)
           end
           path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
         else
