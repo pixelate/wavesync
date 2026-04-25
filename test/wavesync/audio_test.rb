@@ -110,6 +110,22 @@ module Wavesync
       end
     end
 
+    test 'transliterated_tag_changes returns changed tag values for tags with diacritics' do
+      with_temp_copy('44100.mp3') do |path|
+        write_id3v2_frames(path, 'TIT2' => 'Jóga', 'TPE1' => 'Aphex Twin')
+        changes = Audio.new(path).transliterated_tag_changes
+        assert_equal 'Joga', changes['title']
+        assert_equal false, changes.key?('artist')
+      end
+    end
+
+    test 'transliterated_tag_changes returns empty hash when no diacritics present' do
+      with_temp_copy('44100.mp3') do |path|
+        write_id3v2_frames(path, 'TIT2' => 'Windowlicker', 'TPE1' => 'Aphex Twin')
+        assert_equal({}, Audio.new(path).transliterated_tag_changes)
+      end
+    end
+
     test 'write_bpm round-trips for wav via acid chunk' do
       with_temp_copy('44100_16.wav') do |path|
         Audio.new(path).write_bpm(128)
@@ -202,27 +218,24 @@ module Wavesync
     end
 
     def write_id3v2_frames(path, frames)
-      TagLib::MPEG::File.open(path) do |file|
-        tag = file.id3v2_tag(true)
-        frames.each do |frame_id, text|
-          tag.remove_frames(frame_id)
-          frame = TagLib::ID3v2::TextIdentificationFrame.new(frame_id, TagLib::String::UTF8)
-          frame.text = text
-          tag.add_frame(frame)
-        end
-        file.save
+      ext = File.extname(path)
+      tmp = Tempfile.new(['audio_test_write', ext])
+      tmp.close
+      cmd = FFMPEG.new.input(path).copy_streams.map_metadata(0)
+      frames.each do |frame_id, value|
+        cmd.metadata(Audio::FRAME_ID_TO_FFMPEG_KEY.fetch(frame_id, frame_id), value)
       end
+      cmd.run(tmp.path)
+      FileUtils.cp(tmp.path, path)
+    ensure
+      tmp&.unlink
     end
 
     def read_id3v2_frames(path)
-      result = {}
-      TagLib::MPEG::File.open(path) do |file|
-        tag = file.id3v2_tag
-        tag.frame_list.each do |frame|
-          result[frame.frame_id] = frame.to_string
-        end
+      FFMPEG::Probe.new(path).tags.each_with_object({}) do |(key, value), result|
+        frame_id = Audio::FFMPEG_KEY_TO_FRAME_ID.fetch(key, key)
+        result[frame_id] = value
       end
-      result
     end
 
     def with_temp_copy(name)

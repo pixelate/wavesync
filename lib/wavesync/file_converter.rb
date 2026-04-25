@@ -5,8 +5,8 @@ module Wavesync
   class FileConverter
     DURATION_TOLERANCE_SECONDS = 0.5
 
-    #: (Audio audio, String source_file_path, PathResolver path_resolver, AudioFormat source_format, AudioFormat target_format, ?padding_seconds: Numeric?, ?before_transcode: (^() -> void)?) ?{ (String) -> void } -> bool
-    def convert(audio, source_file_path, path_resolver, source_format, target_format, padding_seconds: nil, before_transcode: nil, &post_transcode)
+    #: (Audio audio, String source_file_path, PathResolver path_resolver, AudioFormat source_format, AudioFormat target_format, ?padding_seconds: Numeric?, ?before_transcode: (^() -> void)?, ?metadata: Hash[String, String]) ?{ (String) -> void } -> bool
+    def convert(audio, source_file_path, path_resolver, source_format, target_format, padding_seconds: nil, before_transcode: nil, metadata: {}, &post_transcode)
       needs_format_conversion = target_format.file_type || target_format.sample_rate || target_format.bit_depth
       return false unless needs_format_conversion || padding_seconds&.positive?
 
@@ -35,6 +35,7 @@ module Wavesync
                                         target_file_type: target_format.file_type,
                                         target_bit_depth: target_format.bit_depth || source_format.bit_depth,
                                         padding_seconds: padding_seconds,
+                                        metadata: metadata,
                       &post_transcode)
 
       true

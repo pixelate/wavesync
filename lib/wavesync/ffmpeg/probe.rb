@@ -37,6 +37,11 @@ module Wavesync
         (bits_per_second / 1000.0).round
       end
 
+      #: () -> Hash[String, String]
+      def tags
+        format_data['tags'] || {}
+      end
+
       private
 
       #: () -> Hash[String, untyped]
