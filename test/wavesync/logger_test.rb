@@ -102,6 +102,24 @@ module Wavesync
       assert_equal false, File.exist?(log_path)
     end
 
+    test 'log_invocation writes invocation when configure is called after capture' do
+      Logger.capture_invocation(['sync', '--device', 'Octatrack'])
+      Logger.configure(@tmp_dir)
+      Logger.log_invocation
+
+      entry = File.read(log_path)
+      assert_match(/wavesync sync --device Octatrack/, entry)
+    end
+
+    test 'log_invocation writes analyze invocation when configure is called after capture' do
+      Logger.capture_invocation(['analyze', '--force'])
+      Logger.configure(@tmp_dir)
+      Logger.log_invocation
+
+      entry = File.read(log_path)
+      assert_match(/wavesync analyze --force/, entry)
+    end
+
     test 'log_invocation does nothing when no invocation was captured' do
       Logger.log_invocation
 
