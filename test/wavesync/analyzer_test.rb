@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'test_case'
+require_relative '../../lib/wavesync/logger'
 require_relative '../../lib/wavesync/bpm_detector'
 require_relative '../../lib/wavesync/audio'
 require_relative '../../lib/wavesync/acid_chunk'
@@ -19,6 +20,9 @@ module Wavesync
       UI.stubs(:new).returns(@ui)
 
       BpmDetector.stubs(:available?).returns(true)
+
+      Logger.stubs(:configure)
+      Logger.stubs(:log_run_time)
     end
 
     test 'skips files that already have BPM by default' do
@@ -79,6 +83,25 @@ module Wavesync
       @ui.stubs(:confirm).returns(false)
       BpmDetector.expects(:detect).never
       audio.expects(:write_bpm).never
+
+      Analyzer.new(@library_path).analyze
+    end
+
+    test 'logs run time after processing files' do
+      audio = stub(bpm: nil)
+      Audio.stubs(:new).returns(audio)
+      BpmDetector.stubs(:detect).returns(120)
+      audio.stubs(:write_bpm)
+
+      Logger.expects(:log_run_time).once
+
+      Analyzer.new(@library_path).analyze
+    end
+
+    test 'does not log run time when user declines confirmation' do
+      @ui.stubs(:confirm).returns(false)
+
+      Logger.expects(:log_run_time).never
 
       Analyzer.new(@library_path).analyze
     end

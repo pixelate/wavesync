@@ -12,8 +12,6 @@ gem 'tty-prompt', '~> 0.23'
 
 gem 'rainbow', '~> 3.1'
 
-gem 'taglib-ruby', '~> 2.0'
-
 gem 'rake'
 
 gem 'minitest', '~> 6.0'

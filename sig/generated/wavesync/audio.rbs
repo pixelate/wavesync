@@ -19,6 +19,9 @@ module Wavesync
     # : () -> Integer?
     def bit_depth: () -> Integer?
 
+    # : () -> Integer?
+    def bitrate: () -> Integer?
+
     # : () -> (String | Integer)?
     def bpm: () -> (String | Integer)?
 
@@ -47,9 +50,14 @@ module Wavesync
 
     ID3V2_FRAME_COMPILATION: ::String
 
+    FRAME_ID_TO_FFMPEG_KEY: untyped
+
+    FFMPEG_KEY_TO_FRAME_ID: untyped
+
     COMBINING_MARKS: ::Regexp
 
-    TRANSLITERATE_FRAME_IDS: untyped
+    # : () -> Hash[String, String]
+    def transliterated_tag_changes: () -> Hash[String, String]
 
     # : () -> void
     def transliterate_tags: () -> void
@@ -57,8 +65,8 @@ module Wavesync
     # : (String | Integer | Float bpm) -> void
     def write_bpm: (String | Integer | Float bpm) -> void
 
-    # : (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?) ?{ (String) -> void } -> bool
-    def transcode: (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?) ?{ (String) -> void } -> bool
+    # : (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?, ?metadata: Hash[String, String]) ?{ (String) -> void } -> bool
+    def transcode: (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?, ?metadata: Hash[String, String]) ?{ (String) -> void } -> bool
 
     private
 
@@ -80,11 +88,8 @@ module Wavesync
     # : () -> String?
     def bpm_from_aiff: () -> String?
 
-    # : (untyped tag) -> Integer?
-    def bpm_from_item_map: (untyped tag) -> Integer?
-
-    # : (untyped tag) -> String?
-    def bpm_from_frame_list: (untyped tag) -> String?
+    # : (Hash[String, String] tags, String key) -> String?
+    def find_in_tags: (Hash[String, String] tags, String key) -> String?
 
     # : () -> Integer?
     def bpm_from_acid_chunk: () -> Integer?
@@ -101,8 +106,8 @@ module Wavesync
     # : (String | Integer | Float bpm) -> void
     def write_bpm_to_aiff: (String | Integer | Float bpm) -> void
 
-    # : (untyped tag, String | Integer | Float bpm) -> void
-    def write_id3v2_bpm: (untyped tag, String | Integer | Float bpm) -> void
+    # : (Hash[String, String] metadata_hash) -> void
+    def write_file_metadata: (Hash[String, String] metadata_hash) -> void
 
     # : (String string) -> String
     def transliterate: (String string) -> String

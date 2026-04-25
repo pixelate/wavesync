@@ -24,7 +24,6 @@ module Wavesync
       path = log_path
       return unless path && @invocation_args
 
-      timestamp = Time.now.strftime('%Y-%m-%d %H:%M:%S')
       invocation = (['wavesync'] + @invocation_args).join(' ')
       entry = "---\n[#{timestamp}] #{invocation}\n"
       File.open(path, 'a') { |file| file.write(entry) }
@@ -36,10 +35,41 @@ module Wavesync
       path = log_path
       return unless path
 
-      timestamp = Time.now.strftime('%Y-%m-%d %H:%M:%S')
       args_str = arguments.map { |key, value| "#{key}: #{value.inspect}" }.join(', ')
       entry = "[#{timestamp}] #{call_site}(#{args_str}) raised #{error.class}: #{error.message}\n"
       File.open(path, 'a') { |file| file.write(entry) }
     end
+
+    #: (Float seconds) -> void
+    def self.log_run_time(seconds)
+      path = log_path
+      return unless path
+
+      entry = "[#{timestamp}] Run time: #{format_duration(seconds)}\n"
+      File.open(path, 'a') { |file| file.write(entry) }
+    end
+
+    #: () -> String
+    def self.timestamp
+      Time.now.strftime('%Y-%m-%d %H:%M:%S')
+    end
+    private_class_method :timestamp
+
+    #: (Float seconds) -> String
+    def self.format_duration(seconds)
+      total_seconds = seconds.to_i
+      hours = total_seconds / 3600
+      minutes = (total_seconds % 3600) / 60
+      secs = total_seconds % 60
+
+      if hours.positive?
+        "#{hours}h #{minutes}m #{secs}s"
+      elsif minutes.positive?
+        "#{minutes}m #{secs}s"
+      else
+        "#{secs}s"
+      end
+    end
+    private_class_method :format_duration
   end
 end

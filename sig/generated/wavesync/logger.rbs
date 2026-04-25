@@ -16,5 +16,14 @@ module Wavesync
 
     # : (Exception error, call_site: String, arguments: Hash[Symbol, untyped]) -> void
     def self.log_error: (Exception error, call_site: String, arguments: Hash[Symbol, untyped]) -> void
+
+    # : (Float seconds) -> void
+    def self.log_run_time: (Float seconds) -> void
+
+    # : () -> String
+    def self.timestamp: () -> String
+
+    # : (Float seconds) -> String
+    def self.format_duration: (Float seconds) -> String
   end
 end

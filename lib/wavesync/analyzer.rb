@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 # rbs_inline: enabled
 
+require_relative 'logger'
+
 module Wavesync
   class Analyzer
     CONFIRM_MESSAGE = 'wavesync analyze will add bpm meta data to files in library. Continue? [y/N] '
@@ -9,6 +11,7 @@ module Wavesync
     #: (String library_path) -> void
     def initialize(library_path)
       @library_path = File.expand_path(library_path) #: String
+      Logger.configure(@library_path)
       @audio_files = find_audio_files #: Array[String]
       @ui = UI.new #: UI
     end
@@ -21,6 +24,8 @@ module Wavesync
       end
 
       return unless @ui.confirm(CONFIRM_MESSAGE)
+
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
       @audio_files.each_with_index do |file, index|
         audio = Audio.new(file)
@@ -36,6 +41,9 @@ module Wavesync
         @ui.analyze_progress(index, @audio_files.size)
         @ui.analyze_result(file, bpm)
       end
+
+      elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
+      Logger.log_run_time(elapsed)
     end
 
     private

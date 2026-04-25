@@ -9,6 +9,7 @@ module Wavesync
       silence_output
       Logger.stubs(:log_error)
       Logger.stubs(:configure)
+      Logger.stubs(:log_run_time)
       @source_dir = Dir.mktmpdir
       @target_dir = Dir.mktmpdir
       @device = Device.find_by(name: 'TP-7')
@@ -27,6 +28,11 @@ module Wavesync
 
     test 'sync calls system sync to flush filesystem buffers after completing' do
       Scanner.any_instance.expects(:system).with('sync')
+      Scanner.new(@source_dir).sync(@target_dir, @device)
+    end
+
+    test 'sync logs run time after completing' do
+      Logger.expects(:log_run_time).once
       Scanner.new(@source_dir).sync(@target_dir, @device)
     end
 
@@ -70,6 +76,58 @@ module Wavesync
       FileUtils.cp(fixture('44100.mp3'), target_mp3)
 
       Audio.any_instance.expects(:write_cue_points).never
+      Scanner.new(@source_dir).sync(@target_dir, @device)
+    end
+
+    test 'sync logs error when target file is missing after acid chunk write' do
+      source_wav = File.join(File.expand_path(@source_dir), 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), source_wav)
+
+      expected_target = Pathname(File.join(File.expand_path(@target_dir), 'track.wav'))
+      Audio.any_instance.stubs(:bpm).returns(120)
+      AcidChunk.stubs(:write_bpm)
+      Logger.expects(:log_error).with(
+        instance_of(RuntimeError),
+        call_site: 'Scanner#verify_written',
+        arguments: { source: source_wav, target: expected_target.to_s }
+      )
+      Scanner.new(@source_dir).sync(@target_dir, @device)
+    end
+
+    test 'sync logs error when target file is missing after copy' do
+      source_wav = File.join(File.expand_path(@source_dir), 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), source_wav)
+
+      expected_target = Pathname(File.join(File.expand_path(@target_dir), 'track.wav'))
+      Audio.any_instance.stubs(:bpm).returns(nil)
+      FileUtils.stubs(:install)
+      Logger.expects(:log_error).with(
+        instance_of(RuntimeError),
+        call_site: 'Scanner#verify_written',
+        arguments: { source: source_wav, target: expected_target.to_s }
+      )
+      Scanner.new(@source_dir).sync(@target_dir, @device)
+    end
+
+    test 'sync logs error when target file is missing after conversion' do
+      source_aiff = File.join(File.expand_path(@source_dir), 'track.aiff')
+      FileUtils.cp(fixture('44100_16.aiff'), source_aiff)
+
+      expected_target = Pathname(File.join(File.expand_path(@target_dir), 'track.wav'))
+      Audio.any_instance.stubs(:transcode).returns(true)
+      Logger.expects(:log_error).with(
+        instance_of(RuntimeError),
+        call_site: 'Scanner#verify_written',
+        arguments: { source: source_aiff, target: expected_target.to_s }
+      )
+      Scanner.new(@source_dir).sync(@target_dir, @device)
+    end
+
+    test 'sync does not log verify_written error when target file exists after write' do
+      source_wav = File.join(File.expand_path(@source_dir), 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), source_wav)
+
+      Logger.expects(:log_error).never
       Scanner.new(@source_dir).sync(@target_dir, @device)
     end
 

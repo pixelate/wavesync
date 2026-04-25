@@ -4,7 +4,6 @@
 require 'securerandom'
 require 'tmpdir'
 require 'fileutils'
-require 'taglib'
 require_relative 'logger'
 
 module Wavesync
@@ -39,6 +38,11 @@ module Wavesync
       @bit_depth ||= @audio.bit_depth
     end
 
+    #: () -> Integer?
+    def bitrate
+      @bitrate ||= @audio.bitrate
+    end
+
     #: () -> (String | Integer)?
     def bpm
       return @bpm if defined?(@bpm)
@@ -51,7 +55,8 @@ module Wavesync
       AudioFormat.new(
         file_type: @file_ext.delete_prefix('.'),
         sample_rate: sample_rate,
-        bit_depth: bit_depth
+        bit_depth: bit_depth,
+        bitrate: bitrate
       )
     end
 
@@ -78,35 +83,45 @@ module Wavesync
     ID3V2_FRAME_ENCODED_BY = 'TENC'
     ID3V2_FRAME_COMPILATION = 'TCMP'
 
+    FRAME_ID_TO_FFMPEG_KEY = {
+      ID3V2_FRAME_TITLE => 'title',
+      ID3V2_FRAME_ARTIST => 'artist',
+      ID3V2_FRAME_ALBUM => 'album',
+      ID3V2_FRAME_ALBUM_ARTIST => 'album_artist',
+      ID3V2_FRAME_GENRE => 'genre',
+      ID3V2_FRAME_COMPOSER => 'composer',
+      ID3V2_FRAME_ENCODED_BY => 'encoded_by',
+      ID3V2_FRAME_COMPILATION => 'compilation'
+    }.freeze
+
+    FFMPEG_KEY_TO_FRAME_ID = FRAME_ID_TO_FFMPEG_KEY.invert.freeze
+
     COMBINING_MARKS = /\p{Mn}/
 
-    TRANSLITERATE_FRAME_IDS = [
-      ID3V2_FRAME_TITLE,
-      ID3V2_FRAME_ARTIST,
-      ID3V2_FRAME_ALBUM,
-      ID3V2_FRAME_ALBUM_ARTIST,
-      ID3V2_FRAME_GENRE,
-      ID3V2_FRAME_COMPOSER,
-      ID3V2_FRAME_ENCODED_BY,
-      ID3V2_FRAME_COMPILATION
-    ].freeze
+    #: () -> Hash[String, String]
+    def transliterated_tag_changes
+      current_tags = @audio.tags
+      changes = {} #: Hash[String, String]
+
+      FRAME_ID_TO_FFMPEG_KEY.each_value do |ffmpeg_key|
+        current_value = find_in_tags(current_tags, ffmpeg_key)
+        next if current_value.nil?
+
+        transliterated = transliterate(current_value)
+        changes[ffmpeg_key] = transliterated if transliterated != current_value
+      end
+
+      changes
+    end
 
     #: () -> void
     def transliterate_tags
       return unless @file_ext == '.mp3'
 
-      TagLib::MPEG::File.open(@file_path) do |file|
-        tag = file.id3v2_tag
-        next if tag.nil?
+      changes = transliterated_tag_changes
+      return if changes.empty?
 
-        TRANSLITERATE_FRAME_IDS.each do |frame_id|
-          tag.frame_list(frame_id).each do |frame|
-            frame.text = transliterate(frame.to_string)
-          end
-        end
-
-        file.save
-      end
+      write_file_metadata(changes)
     end
 
     #: (String | Integer | Float bpm) -> void
@@ -124,18 +139,20 @@ module Wavesync
       @bpm = bpm
     end
 
-    #: (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?) ?{ (String) -> void } -> bool
-    def transcode(target_path, target_sample_rate: nil, target_file_type: nil, target_bit_depth: nil, padding_seconds: nil)
+    #: (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?, ?metadata: Hash[String, String]) ?{ (String) -> void } -> bool
+    def transcode(target_path, target_sample_rate: nil, target_file_type: nil, target_bit_depth: nil, padding_seconds: nil, metadata: {})
       ext = target_file_type || @file_ext.delete_prefix('.')
       temp_path = File.join(Dir.tmpdir, "wavesync_transcode_#{SecureRandom.hex}.#{ext}")
 
       begin
         command = Wavesync::FFMPEG.new.input(@file_path).audio_codec(transcode_codec(ext, target_bit_depth))
+        command.audio_bitrate('192k') if ext == 'mp3'
         command.sample_rate(target_sample_rate) if target_sample_rate
         if padding_seconds&.positive?
           total_duration = @audio.duration + padding_seconds
           command.audio_filter("apad=whole_dur=#{total_duration.round(6)}")
         end
+        metadata.each { |key, value| command.metadata(key, value) }
         command.run(temp_path)
         yield temp_path if block_given?
         FileUtils.install(temp_path, target_path)
@@ -173,48 +190,36 @@ module Wavesync
 
     #: () -> Integer?
     def bpm_from_m4a
-      TagLib::MP4::File.open(@file_path) do |file|
-        tag = file.tag
-        return bpm_from_item_map(tag) if tag
-      end
+      value = find_in_tags(@audio.tags, 'BPM')
+      return nil if value.nil?
+
+      int_value = value.to_i
+      int_value.zero? ? nil : int_value
     end
 
     #: () -> String?
     def bpm_from_mp3
-      TagLib::MPEG::File.open(@file_path) do |file|
-        tag = file.id3v2_tag
-        return bpm_from_frame_list(tag) if tag
-      end
+      value = find_in_tags(@audio.tags, 'TBPM')
+      value&.then { |v| v.empty? ? nil : v }
     end
 
     #: () -> (String | Integer)?
     def bpm_from_wav
-      TagLib::RIFF::WAV::File.open(@file_path) do |file|
-        tag = file.id3v2_tag
-        bpm_from_frame_list = bpm_from_frame_list(tag) if tag
-        return bpm_from_frame_list if bpm_from_frame_list
-      end
+      value = find_in_tags(@audio.tags, 'TBPM')
+      return value if value && !value.empty?
 
       bpm_from_acid_chunk
     end
 
     #: () -> String?
     def bpm_from_aiff
-      TagLib::RIFF::AIFF::File.open(@file_path) do |file|
-        tag = file.tag
-        return bpm_from_frame_list(tag) if tag
-      end
+      value = find_in_tags(@audio.tags, 'TBPM')
+      value&.then { |v| v.empty? ? nil : v }
     end
 
-    #: (untyped tag) -> Integer?
-    def bpm_from_item_map(tag)
-      tmpo = tag.item_map['tmpo']&.to_int
-      tmpo&.zero? ? nil : tmpo
-    end
-
-    #: (untyped tag) -> String?
-    def bpm_from_frame_list(tag)
-      tag.frame_list('TBPM').first&.to_s
+    #: (Hash[String, String] tags, String key) -> String?
+    def find_in_tags(tags, key)
+      tags.find { |k, _| k.casecmp(key).zero? }&.last
     end
 
     #: () -> Integer?
@@ -232,35 +237,31 @@ module Wavesync
 
     #: (String | Integer | Float bpm) -> void
     def write_bpm_to_mp3(bpm)
-      TagLib::MPEG::File.open(@file_path) do |file|
-        write_id3v2_bpm(file.id3v2_tag(true), bpm)
-        file.save
-      end
+      write_file_metadata('TBPM' => bpm.to_s)
     end
 
     #: (String | Integer | Float bpm) -> void
     def write_bpm_to_m4a(bpm)
-      TagLib::MP4::File.open(@file_path) do |file|
-        tag = file.tag
-        tag.item_map.insert('tmpo', TagLib::MP4::Item.from_int(bpm.to_i))
-        file.save
-      end
+      write_file_metadata('BPM' => bpm.to_i.to_s)
     end
 
     #: (String | Integer | Float bpm) -> void
     def write_bpm_to_aiff(bpm)
-      TagLib::RIFF::AIFF::File.open(@file_path) do |file|
-        write_id3v2_bpm(file.tag, bpm)
-        file.save
-      end
+      write_file_metadata('TBPM' => bpm.to_s)
     end
 
-    #: (untyped tag, String | Integer | Float bpm) -> void
-    def write_id3v2_bpm(tag, bpm)
-      tag.remove_frames('TBPM')
-      frame = TagLib::ID3v2::TextIdentificationFrame.new('TBPM', TagLib::String::UTF8)
-      frame.text = bpm.to_s
-      tag.add_frame(frame)
+    #: (Hash[String, String] metadata_hash) -> void
+    def write_file_metadata(metadata_hash)
+      ext = File.extname(@file_path)
+      temp_path = File.join(Dir.tmpdir, "wavesync_meta_#{SecureRandom.hex}#{ext}")
+      command = FFMPEG.new.input(@file_path).copy_streams.map_metadata(0)
+      command.movflags('+use_metadata_tags') if ext == '.m4a'
+      command.write_id3v2(1) if %w[.aif .aiff].include?(ext)
+      metadata_hash.each { |key, value| command.metadata(key, value) }
+      command.run(temp_path)
+      FileUtils.mv(temp_path, @file_path)
+    ensure
+      FileUtils.rm_f(temp_path)
     end
 
     #: (String string) -> String

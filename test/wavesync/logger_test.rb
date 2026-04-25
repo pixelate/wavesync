@@ -127,5 +127,50 @@ module Wavesync
       assert_match(/wavesync sync/, lines[1])
       assert_match(/Foo#bar/, lines[2])
     end
+
+    test 'log_run_time formats seconds only' do
+      Logger.log_run_time(45.9)
+
+      entry = File.read(log_path)
+      assert_match(/Run time: 45s/, entry)
+    end
+
+    test 'log_run_time formats minutes and seconds' do
+      Logger.log_run_time(245)
+
+      entry = File.read(log_path)
+      assert_match(/Run time: 4m 5s/, entry)
+    end
+
+    test 'log_run_time formats hours, minutes and seconds' do
+      Logger.log_run_time(5025)
+
+      entry = File.read(log_path)
+      assert_match(/Run time: 1h 23m 45s/, entry)
+    end
+
+    test 'log_run_time includes a timestamp' do
+      Logger.log_run_time(5.0)
+
+      entry = File.read(log_path)
+      assert_match(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] Run time:/, entry)
+    end
+
+    test 'log_run_time does nothing when not configured' do
+      Logger.configure(nil)
+      Logger.log_run_time(5.0)
+
+      assert_equal false, File.exist?(log_path)
+    end
+
+    test 'log_run_time appends entry without truncating existing log' do
+      Logger.log_error(RuntimeError.new('oops'), call_site: 'Foo#bar')
+      Logger.log_run_time(3.0)
+
+      lines = File.readlines(log_path)
+      assert_equal 2, lines.size
+      assert_match(/Foo#bar/, lines[0])
+      assert_match(/Run time:/, lines[1])
+    end
   end
 end

@@ -20,7 +20,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'logger'
   spec.add_dependency 'rainbow', '~> 3.1'
-  spec.add_dependency 'taglib-ruby', '~> 2.0'
   spec.add_dependency 'tty-cursor', '~> 0.7.1'
   spec.add_dependency 'tty-prompt', '~> 0.23'
 end
