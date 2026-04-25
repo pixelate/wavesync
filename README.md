@@ -111,19 +111,19 @@ wavesync sync -p
 
 When a source file's sample rate isn't supported by the target device, Wavesync selects the closest supported rate. Example: If a 96kHz file is synced to an Octatrack (which only supports 44.1kHz), it will be downsampled to 44.1kHz.
 
-### Sets (experimental)
+### Setlists (experimental)
 
-A set is a named, ordered selection of tracks from your library. Sets are stored as YAML files inside a `.sets` folder within the library directory. Syncing sets to devices is not yet implemented.
+A setlist is a named, ordered selection of tracks from your library. Setlists are stored as YAML files inside a `.setlists` folder within the library directory. Syncing setlists to devices is not yet implemented.
 
 ```bash
-# Create a new set and open the interactive editor
-wavesync set create NAME
+# Create a new setlist and open the interactive editor
+wavesync setlist create NAME
 
-# Edit an existing set
-wavesync set edit NAME
+# Edit an existing setlist
+wavesync setlist edit NAME
 
-# List all sets
-wavesync set list
+# List all setlists
+wavesync setlist list
 ```
 
 ## Development
