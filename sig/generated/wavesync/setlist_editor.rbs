@@ -1,14 +1,14 @@
-# Generated from lib/wavesync/set_editor.rb with RBS::Inline
+# Generated from lib/wavesync/setlist_editor.rb with RBS::Inline
 
 module Wavesync
-  class SetEditor
+  class SetlistEditor
     KEY_MAP: untyped
 
     attr_accessor player_state: Symbol
 
     attr_reader selected: untyped
 
-    attr_reader set: untyped
+    attr_reader setlist: untyped
 
     attr_reader ui: untyped
 
@@ -22,8 +22,8 @@ module Wavesync
 
     attr_writer player_pid: untyped
 
-    # : (Set set, String library_path) -> void
-    def initialize: (Set set, String library_path) -> void
+    # : (Setlist setlist, String library_path) -> void
+    def initialize: (Setlist setlist, String library_path) -> void
 
     # : () -> void
     def run: () -> void

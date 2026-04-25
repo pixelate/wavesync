@@ -106,7 +106,7 @@ module Wavesync
 
       assert_includes output, 'sync'
       assert_includes output, 'analyze'
-      assert_includes output, 'set'
+      assert_includes output, 'setlist'
       assert_includes output, 'help'
     end
 

@@ -1,8 +1,8 @@
-# Generated from lib/wavesync/set.rb with RBS::Inline
+# Generated from lib/wavesync/setlist.rb with RBS::Inline
 
 module Wavesync
-  class Set
-    SETS_FOLDER: ::String
+  class Setlist
+    SETLISTS_FOLDER: ::String
 
     attr_reader name: String
 
@@ -11,16 +11,16 @@ module Wavesync
     attr_reader library_path: String
 
     # : (String library_path) -> String
-    def self.sets_path: (String library_path) -> String
+    def self.setlists_path: (String library_path) -> String
 
     # : (String library_path, String name) -> String
-    def self.set_path: (String library_path, String name) -> String
+    def self.setlist_path: (String library_path, String name) -> String
 
-    # : (String library_path, String name) -> Set
-    def self.load: (String library_path, String name) -> Set
+    # : (String library_path, String name) -> Setlist
+    def self.load: (String library_path, String name) -> Setlist
 
-    # : (String library_path) -> Array[Set]
-    def self.all: (String library_path) -> Array[Set]
+    # : (String library_path) -> Array[Setlist]
+    def self.all: (String library_path) -> Array[Setlist]
 
     # : (String library_path, String name) -> bool
     def self.exists?: (String library_path, String name) -> bool

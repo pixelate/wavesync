@@ -20,9 +20,9 @@ module Wavesync
     require_relative 'commands/command'
     require_relative 'commands/sync'
     require_relative 'commands/analyze'
-    require_relative 'commands/set'
+    require_relative 'commands/setlist'
     require_relative 'commands/help'
 
-    ALL = [Sync, Analyze, Set, Help].freeze
+    ALL = [Sync, Analyze, Setlist, Help].freeze
   end
 end
