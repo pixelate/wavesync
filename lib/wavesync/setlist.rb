@@ -5,32 +5,32 @@ require 'yaml'
 require 'fileutils'
 
 module Wavesync
-  class Set
-    SETS_FOLDER = '.sets'
+  class Setlist
+    SETLISTS_FOLDER = '.setlists'
 
     attr_reader :name #: String
     attr_reader :tracks #: Array[String]
     attr_reader :library_path #: String
 
     #: (String library_path) -> String
-    def self.sets_path(library_path)
-      File.join(library_path, SETS_FOLDER)
+    def self.setlists_path(library_path)
+      File.join(library_path, SETLISTS_FOLDER)
     end
 
     #: (String library_path, String name) -> String
-    def self.set_path(library_path, name)
-      File.join(sets_path(library_path), "#{name}.yml")
+    def self.setlist_path(library_path, name)
+      File.join(setlists_path(library_path), "#{name}.yml")
     end
 
-    #: (String library_path, String name) -> Set
+    #: (String library_path, String name) -> Setlist
     def self.load(library_path, name)
-      data = YAML.load_file(set_path(library_path, name))
+      data = YAML.load_file(setlist_path(library_path, name))
       new(library_path, data['name'], expand_tracks(library_path, data['tracks']))
     end
 
-    #: (String library_path) -> Array[Set]
+    #: (String library_path) -> Array[Setlist]
     def self.all(library_path)
-      path = sets_path(library_path)
+      path = setlists_path(library_path)
       return [] unless Dir.exist?(path)
 
       Dir.glob(File.join(path, '*.yml')).map do |file|
@@ -41,7 +41,7 @@ module Wavesync
 
     #: (String library_path, String name) -> bool
     def self.exists?(library_path, name)
-      File.exist?(set_path(library_path, name))
+      File.exist?(setlist_path(library_path, name))
     end
 
     #: (String library_path, String name, ?Array[String] tracks) -> void
@@ -77,8 +77,8 @@ module Wavesync
 
     #: () -> void
     def save
-      FileUtils.mkdir_p(self.class.sets_path(@library_path))
-      File.write(self.class.set_path(@library_path, @name), to_yaml)
+      FileUtils.mkdir_p(self.class.setlists_path(@library_path))
+      File.write(self.class.setlist_path(@library_path, @name), to_yaml)
     end
 
     private

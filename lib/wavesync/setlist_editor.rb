@@ -7,7 +7,7 @@ require 'stringio'
 require_relative 'logger'
 
 module Wavesync
-  class SetEditor
+  class SetlistEditor
     KEY_MAP = {
       'a' => :add,
       'u' => :move_up,
@@ -21,17 +21,17 @@ module Wavesync
     }.freeze
 
     attr_accessor :player_state #: Symbol
-    attr_reader :selected, :set, :ui #: untyped
+    attr_reader :selected, :setlist, :ui #: untyped
     attr_writer :player_track, :player_index, :player_offset, :player_started_at, :player_pid
 
-    #: (Set set, String library_path) -> void
-    def initialize(set, library_path)
-      @set = set #: Set
+    #: (Setlist setlist, String library_path) -> void
+    def initialize(setlist, library_path)
+      @setlist = setlist #: Setlist
       @library_path = library_path #: String
       Logger.configure(@library_path)
       @prompt = TTY::Prompt.new(interrupt: :exit, active_color: :red) #: untyped
       @ui = UI.new #: UI
-      @selected = @set.tracks.empty? ? nil : 0 #: Integer?
+      @selected = @setlist.tracks.empty? ? nil : 0 #: Integer?
       @player_pid = nil #: Integer?
       @player_track = nil #: String?
       @player_index = nil #: Integer?
@@ -67,7 +67,7 @@ module Wavesync
       @track_bpms[path] = begin
         Audio.new(path).bpm
       rescue StandardError => e
-        Logger.log_error(e, call_site: 'SetEditor#track_bpm', arguments: { path: })
+        Logger.log_error(e, call_site: 'SetlistEditor#track_bpm', arguments: { path: })
         nil
       end
     end
@@ -82,7 +82,7 @@ module Wavesync
       @track_durations[path] = begin
         Audio.new(path).duration
       rescue StandardError => e
-        Logger.log_error(e, call_site: 'SetEditor#track_duration', arguments: { path: })
+        Logger.log_error(e, call_site: 'SetlistEditor#track_duration', arguments: { path: })
         nil
       end
     end
@@ -104,7 +104,7 @@ module Wavesync
           [] #: Array[Float]
         end
       rescue StandardError => e
-        Logger.log_error(e, call_site: 'SetEditor#track_cue_fractions', arguments: { path: })
+        Logger.log_error(e, call_site: 'SetlistEditor#track_cue_fractions', arguments: { path: })
         [] #: Array[Float]
       end
     end
@@ -254,22 +254,22 @@ module Wavesync
     end
 
     #: (?String title) -> void
-    def render(title = "wavesync set #{@set.name}")
+    def render(title = "wavesync setlist #{@setlist.name}")
       buffer = StringIO.new
       $stdout = buffer
 
       header = @ui.color(title, :primary)
-      total_duration = @set.tracks.sum { |track_path| track_duration(track_path) || 0.0 }
+      total_duration = @setlist.tracks.sum { |track_path| track_duration(track_path) || 0.0 }
 
-      duration_widths = @set.tracks.map { |track_path| format_duration(track_duration(track_path))&.length || 0 }
+      duration_widths = @setlist.tracks.map { |track_path| format_duration(track_duration(track_path))&.length || 0 }
       duration_widths << (format_duration(total_duration)&.length || 0)
-      player_duration = @player_index ? track_duration(@set.tracks[@player_index]) : nil
+      player_duration = @player_index ? track_duration(@setlist.tracks[@player_index]) : nil
       duration_widths << remaining_display(0.0, player_duration).length if player_duration
       duration_col_width = duration_widths.max || 0
 
-      if @set.tracks.any? && total_duration.positive?
-        track_label = @set.tracks.size == 1 ? 'track' : 'tracks'
-        track_count_part = @ui.color("#{@set.tracks.size} #{track_label}", :secondary)
+      if @setlist.tracks.any? && total_duration.positive?
+        track_label = @setlist.tracks.size == 1 ? 'track' : 'tracks'
+        track_count_part = @ui.color("#{@setlist.tracks.size} #{track_label}", :secondary)
         duration_part = @ui.color(format_duration(total_duration).to_s.rjust(duration_col_width), :secondary)
         summary = "#{track_count_part}   #{duration_part}"
         gap = [terminal_width - visible_length(header) - visible_length(summary), 2].max
@@ -280,13 +280,13 @@ module Wavesync
 
       puts
 
-      if @set.tracks.empty?
+      if @setlist.tracks.empty?
         puts @ui.color('  (no tracks)', :secondary)
       else
-        @set.tracks.each_with_index do |track, i|
+        @setlist.tracks.each_with_index do |track, i|
           current_bpm = track_bpm(track)
           current_duration = track_duration(track)
-          pitch_shift = pitch_shift_semitones(current_bpm, track_bpm(@set.tracks[i + 1]))
+          pitch_shift = pitch_shift_semitones(current_bpm, track_bpm(@setlist.tracks[i + 1]))
           render_track(i, relative_path(track), i == @selected, i == @player_index,
                        bpm: current_bpm, pitch_shift: pitch_shift, duration: current_duration,
                        duration_col_width: duration_col_width, cue_fractions: track_cue_fractions(track))
@@ -362,10 +362,10 @@ module Wavesync
     def handle_action(action)
       case action
       when :cursor_up
-        @selected = [@selected - 1, 0].max unless @set.tracks.empty?
+        @selected = [@selected - 1, 0].max unless @setlist.tracks.empty?
         nil
       when :cursor_down
-        @selected = [@selected + 1, @set.tracks.size - 1].min unless @set.tracks.empty?
+        @selected = [@selected + 1, @setlist.tracks.size - 1].min unless @setlist.tracks.empty?
         nil
       when :toggle_play
         toggle_playback
@@ -386,7 +386,7 @@ module Wavesync
         jump_to_next_cue
         nil
       when :quit
-        @set.save
+        @setlist.save
         :quit
       end
     end
@@ -395,7 +395,7 @@ module Wavesync
     def toggle_playback
       return if @selected.nil?
 
-      track = @set.tracks[@selected]
+      track = @setlist.tracks[@selected]
 
       if @player_track == track
         case @player_state
@@ -453,7 +453,7 @@ module Wavesync
       Process.kill('TERM', @player_pid)
       @player_pid = nil
     rescue Errno::ESRCH => e
-      Logger.log_error(e, call_site: 'SetEditor#kill_player', arguments: { player_pid: })
+      Logger.log_error(e, call_site: 'SetlistEditor#kill_player', arguments: { player_pid: })
       @player_pid = nil
     end
 
@@ -482,7 +482,7 @@ module Wavesync
       @player_offset = 0
       advance_and_play
     rescue Errno::ECHILD => e
-      Logger.log_error(e, call_site: 'SetEditor#check_player', arguments: { player_pid: })
+      Logger.log_error(e, call_site: 'SetlistEditor#check_player', arguments: { player_pid: })
       @player_pid = nil
       @player_track = nil
       @player_index = nil
@@ -493,10 +493,10 @@ module Wavesync
 
     #: () -> void
     def advance_and_play
-      return if @selected.nil? || @selected >= @set.tracks.size - 1
+      return if @selected.nil? || @selected >= @setlist.tracks.size - 1
 
       @selected += 1
-      start_player(@set.tracks[@selected])
+      start_player(@setlist.tracks[@selected])
     end
 
     #: () -> Array[String]
@@ -514,43 +514,43 @@ module Wavesync
 
       choices = audio_files.map { |file| { name: relative_path(file), value: file } }
 
-      render("wavesync set #{@set.name} — add track")
+      render("wavesync setlist #{@setlist.name} — add track")
       puts
       picked = @prompt.select('Select a track to add:', choices, cycle: true, filter: true, per_page: 20)
 
       insert_at = @selected.nil? ? 0 : @selected + 1
-      @set.tracks.insert(insert_at, picked)
+      @setlist.tracks.insert(insert_at, picked)
       @selected = insert_at
     end
 
     #: () -> void
     def remove_track
-      return if @set.tracks.empty? || @selected.nil?
+      return if @setlist.tracks.empty? || @selected.nil?
 
-      stop_playback if @player_track == @set.tracks[@selected]
-      @set.remove_track(@selected)
-      @selected = if @set.tracks.empty?
+      stop_playback if @player_track == @setlist.tracks[@selected]
+      @setlist.remove_track(@selected)
+      @selected = if @setlist.tracks.empty?
                     nil
                   else
-                    [@selected, @set.tracks.size - 1].min
+                    [@selected, @setlist.tracks.size - 1].min
                   end
     end
 
     #: (Symbol direction) -> void
     def move_track(direction)
-      return if @set.tracks.size < 2 || @selected.nil?
+      return if @setlist.tracks.size < 2 || @selected.nil?
 
       if direction == :up
-        @set.move_up(@selected)
+        @setlist.move_up(@selected)
         @selected = [@selected - 1, 0].max
       else
-        @set.move_down(@selected)
-        @selected = [@selected + 1, @set.tracks.size - 1].min
+        @setlist.move_down(@selected)
+        @selected = [@selected + 1, @setlist.tracks.size - 1].min
       end
     end
 
     public :handle_action, :advance_and_play, :kill_player, :check_player,
            :display_name, :relative_path, :format_duration, :playback_elapsed,
-           :visible_length, :playback_bar, :selected, :set, :ui
+           :visible_length, :playback_bar, :selected, :setlist, :ui
   end
 end

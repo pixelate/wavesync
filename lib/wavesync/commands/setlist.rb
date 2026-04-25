@@ -5,43 +5,43 @@ require 'optparse'
 
 module Wavesync
   module Commands
-    class Set < Command
-      self.name = 'set'
+    class Setlist < Command
+      self.name = 'setlist'
       self.subcommands = [
-        Subcommand.new(usage: 'set create NAME', description: 'Create a new track set'),
-        Subcommand.new(usage: 'set edit NAME', description: 'Edit an existing track set'),
-        Subcommand.new(usage: 'set list', description: 'List all track sets')
+        Subcommand.new(usage: 'setlist create NAME', description: 'Create a new setlist'),
+        Subcommand.new(usage: 'setlist edit NAME', description: 'Edit an existing setlist'),
+        Subcommand.new(usage: 'setlist list', description: 'List all setlists')
       ].freeze
 
       #: () -> void
       def run
         subcommand = ARGV.shift
 
-        _options, config = parse_options(banner: 'Usage: wavesync set <subcommand> [options]')
+        _options, config = parse_options(banner: 'Usage: wavesync setlist <subcommand> [options]')
 
         case subcommand
         when 'create'
           name = require_name('create')
-          if Wavesync::Set.exists?(config.library, name)
-            puts "Set '#{name}' already exists. Use 'wavesync set edit #{name}' to edit it."
+          if Wavesync::Setlist.exists?(config.library, name)
+            puts "Setlist '#{name}' already exists. Use 'wavesync setlist edit #{name}' to edit it."
             exit 1
           end
-          set = Wavesync::Set.new(config.library, name)
-          Wavesync::SetEditor.new(set, config.library).run
+          setlist = Wavesync::Setlist.new(config.library, name)
+          Wavesync::SetlistEditor.new(setlist, config.library).run
         when 'edit'
           name = require_name('edit')
-          unless Wavesync::Set.exists?(config.library, name)
-            puts "Set '#{name}' not found. Use 'wavesync set create #{name}' to create it."
+          unless Wavesync::Setlist.exists?(config.library, name)
+            puts "Setlist '#{name}' not found. Use 'wavesync setlist create #{name}' to create it."
             exit 1
           end
-          set = Wavesync::Set.load(config.library, name)
-          Wavesync::SetEditor.new(set, config.library).run
+          setlist = Wavesync::Setlist.load(config.library, name)
+          Wavesync::SetlistEditor.new(setlist, config.library).run
         when 'list'
-          sets = Wavesync::Set.all(config.library)
-          if sets.empty?
-            puts 'No sets found.'
+          setlists = Wavesync::Setlist.all(config.library)
+          if setlists.empty?
+            puts 'No setlists found.'
           else
-            sets.each { |set| puts "#{set.name} (#{set.tracks.size} tracks)" }
+            setlists.each { |setlist| puts "#{setlist.name} (#{setlist.tracks.size} tracks)" }
           end
         else
           puts "Unknown subcommand: #{subcommand || '(none)'}"
@@ -56,7 +56,7 @@ module Wavesync
       def require_name(subcommand)
         name = ARGV.shift
         unless name
-          puts "Usage: wavesync set #{subcommand} <name>"
+          puts "Usage: wavesync setlist #{subcommand} <name>"
           exit 1
         end
         name

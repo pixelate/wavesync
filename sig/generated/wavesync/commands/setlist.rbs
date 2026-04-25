@@ -1,8 +1,8 @@
-# Generated from lib/wavesync/commands/set.rb with RBS::Inline
+# Generated from lib/wavesync/commands/setlist.rb with RBS::Inline
 
 module Wavesync
   module Commands
-    class Set < Command
+    class Setlist < Command
       # : () -> void
       def run: () -> void
 

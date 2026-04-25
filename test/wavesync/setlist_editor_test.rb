@@ -4,13 +4,13 @@ require 'tmpdir'
 require 'stringio'
 require_relative 'test_case'
 require_relative '../../lib/wavesync/ui'
-require_relative '../../lib/wavesync/set'
-require_relative '../../lib/wavesync/set_editor'
+require_relative '../../lib/wavesync/setlist'
+require_relative '../../lib/wavesync/setlist_editor'
 
 module Wavesync
   Audio = Class.new unless defined?(Audio)
 
-  class SetEditorTest < Wavesync::TestCase
+  class SetlistEditorTest < Wavesync::TestCase
     def setup
       @orig_stdout = $stdout
       $stdout = StringIO.new
@@ -31,8 +31,8 @@ module Wavesync
     end
 
     def editor(*tracks)
-      set = Set.new(@library, 'test', tracks)
-      SetEditor.new(set, @library)
+      setlist = Setlist.new(@library, 'test', tracks)
+      SetlistEditor.new(setlist, @library)
     end
 
     def track(name)
@@ -40,9 +40,9 @@ module Wavesync
     end
 
     test 'initializing configures error logger with library path' do
-      set = Set.new(@library, 'test', [])
+      setlist = Setlist.new(@library, 'test', [])
       Logger.expects(:configure).with(@library)
-      SetEditor.new(set, @library)
+      SetlistEditor.new(setlist, @library)
     end
 
     test 'display_name strips leading number and space' do
@@ -75,7 +75,7 @@ module Wavesync
       assert_equal 0, e.selected
     end
 
-    test 'cursor starts as nil when set is empty' do
+    test 'cursor starts as nil when setlist is empty' do
       e = editor
       assert_nil e.selected
     end
@@ -106,7 +106,7 @@ module Wavesync
       assert_equal 0, e.selected
     end
 
-    test 'cursor navigation is a no-op on empty set' do
+    test 'cursor navigation is a no-op on empty setlist' do
       e = editor
       e.handle_action(:cursor_down)
       e.handle_action(:cursor_up)
@@ -120,7 +120,7 @@ module Wavesync
       e = editor(a, b, c)
       e.handle_action(:cursor_down)
       e.handle_action(:remove)
-      assert_equal [a, c], e.set.tracks
+      assert_equal [a, c], e.setlist.tracks
     end
 
     test 'remove_track keeps selection in bounds when removing last track' do
@@ -130,7 +130,7 @@ module Wavesync
       assert_equal 0, e.selected
     end
 
-    test 'remove_track sets selected to nil when set becomes empty' do
+    test 'remove_track sets selected to nil when setlist becomes empty' do
       e = editor(track('a.wav'))
       e.handle_action(:remove)
       assert_nil e.selected
@@ -162,7 +162,7 @@ module Wavesync
       e = editor(a, b, c)
       e.handle_action(:cursor_down)
       e.handle_action(:move_up)
-      assert_equal [b, a, c], e.set.tracks
+      assert_equal [b, a, c], e.setlist.tracks
       assert_equal 0, e.selected
     end
 
@@ -172,7 +172,7 @@ module Wavesync
       c = track('c.wav')
       e = editor(a, b, c)
       e.handle_action(:move_down)
-      assert_equal [b, a, c], e.set.tracks
+      assert_equal [b, a, c], e.setlist.tracks
       assert_equal 1, e.selected
     end
 
@@ -181,7 +181,7 @@ module Wavesync
       b = track('b.wav')
       e = editor(a, b)
       e.handle_action(:move_up)
-      assert_equal [a, b], e.set.tracks
+      assert_equal [a, b], e.setlist.tracks
       assert_equal 0, e.selected
     end
 
@@ -191,7 +191,7 @@ module Wavesync
       e = editor(a, b)
       e.handle_action(:cursor_down)
       e.handle_action(:move_down)
-      assert_equal [a, b], e.set.tracks
+      assert_equal [a, b], e.setlist.tracks
       assert_equal 1, e.selected
     end
 
@@ -243,7 +243,7 @@ module Wavesync
       e.handle_action(:toggle_play)
     end
 
-    test 'toggle_playback does nothing on empty set' do
+    test 'toggle_playback does nothing on empty setlist' do
       e = editor
       e.expects(:start_player).never
       e.handle_action(:toggle_play)
@@ -267,7 +267,7 @@ module Wavesync
       e.advance_and_play
     end
 
-    test 'advance_and_play does nothing when set is empty' do
+    test 'advance_and_play does nothing when setlist is empty' do
       e = editor
       e.expects(:start_player).never
       e.advance_and_play
@@ -550,21 +550,21 @@ module Wavesync
     test 'track_bpm logs error with path when audio raises' do
       error = StandardError.new('load failed')
       Audio.stubs(:new).raises(error)
-      Logger.expects(:log_error).with(error, call_site: 'SetEditor#track_bpm', arguments: { path: '/some/track.wav' })
+      Logger.expects(:log_error).with(error, call_site: 'SetlistEditor#track_bpm', arguments: { path: '/some/track.wav' })
       editor.track_bpm('/some/track.wav')
     end
 
     test 'track_duration logs error with path when audio raises' do
       error = StandardError.new('load failed')
       Audio.stubs(:new).raises(error)
-      Logger.expects(:log_error).with(error, call_site: 'SetEditor#track_duration', arguments: { path: '/some/track.wav' })
+      Logger.expects(:log_error).with(error, call_site: 'SetlistEditor#track_duration', arguments: { path: '/some/track.wav' })
       editor.track_duration('/some/track.wav')
     end
 
     test 'track_cue_fractions logs error with path when audio raises' do
       error = StandardError.new('load failed')
       Audio.stubs(:new).raises(error)
-      Logger.expects(:log_error).with(error, call_site: 'SetEditor#track_cue_fractions', arguments: { path: '/some/track.wav' })
+      Logger.expects(:log_error).with(error, call_site: 'SetlistEditor#track_cue_fractions', arguments: { path: '/some/track.wav' })
       editor.track_cue_fractions('/some/track.wav')
     end
 
@@ -572,7 +572,7 @@ module Wavesync
       e = editor
       e.player_pid = 99_999
       Process.stubs(:kill).raises(Errno::ESRCH)
-      Logger.expects(:log_error).with(instance_of(Errno::ESRCH), call_site: 'SetEditor#kill_player', arguments: { player_pid: 99_999 })
+      Logger.expects(:log_error).with(instance_of(Errno::ESRCH), call_site: 'SetlistEditor#kill_player', arguments: { player_pid: 99_999 })
       e.kill_player
     end
 
@@ -581,7 +581,7 @@ module Wavesync
       e.player_pid = 99_999
       Process.stubs(:waitpid).raises(Errno::ECHILD)
       e.stubs(:advance_and_play)
-      Logger.expects(:log_error).with(instance_of(Errno::ECHILD), call_site: 'SetEditor#check_player', arguments: { player_pid: 99_999 })
+      Logger.expects(:log_error).with(instance_of(Errno::ECHILD), call_site: 'SetlistEditor#check_player', arguments: { player_pid: 99_999 })
       e.check_player
     end
   end
