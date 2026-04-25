@@ -66,7 +66,8 @@ module Wavesync
             inject_acid_bpm(local_temp_path, bpm, device)
             inject_cue_points(local_temp_path, audio, source_format, target_format)
           end
-          path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
+          converted_target_path = path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
+          verify_written(converted_target_path, source: file) if converted
         else
           if device.bpm_source == :acid_chunk && bpm && File.extname(file).downcase == '.wav'
             target_path = path_resolver.resolve(file, audio)
@@ -77,12 +78,16 @@ module Wavesync
             else
               target_path.dirname.mkpath
               AcidChunk.write_bpm(file, target_path.to_s, bpm)
+              verify_written(target_path, source: file)
               copied = true
             end
           else
             copied = copy_file(audio, file, path_resolver)
             target_path = path_resolver.resolve(file, audio)
-            inject_transliterated_metadata(target_path.to_s, device) if copied
+            if copied
+              verify_written(target_path, source: file)
+              inject_transliterated_metadata(target_path.to_s, device)
+            end
           end
           @ui.copy(source_format)
         end
@@ -174,6 +179,14 @@ module Wavesync
       FileUtils.install(source, target)
     rescue Errno::ENOENT => e
       Logger.log_error(e, call_site: 'Scanner#safe_copy', arguments: { source:, target: })
+    end
+
+    #: (Pathname target_path, source: String) -> void
+    def verify_written(target_path, source:)
+      return if target_path.exist?
+
+      error = RuntimeError.new('target file missing after write')
+      Logger.log_error(error, call_site: 'Scanner#verify_written', arguments: { source:, target: target_path.to_s })
     end
   end
 end
