@@ -13,7 +13,8 @@ module Wavesync
     #: (String library_path) -> Array[String]
     def self.find_all(library_path)
       Dir.glob(File.join(library_path, '**', '*'))
-         .select { |f| SUPPORTED_FORMATS.include?(File.extname(f).downcase) }
+         .select { |file| SUPPORTED_FORMATS.include?(File.extname(file).downcase) }
+         .sort_by(&:downcase)
     end
 
     #: (String file_path) -> void
