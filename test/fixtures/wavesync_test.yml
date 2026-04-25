@@ -1,0 +1,5 @@
+library: LIBRARY_PATH
+devices:
+  - name: TP-7
+    model: TP-7
+    path: DEVICE_PATH

@@ -6,7 +6,7 @@ module Wavesync
     #: (String? library_path) -> void
     def self.configure(library_path)
       @log_path = library_path ? File.join(library_path, 'wavesync.log') : nil
-      @invocation_args = nil
+      @invocation_args = nil unless library_path
     end
 
     #: () -> String?
