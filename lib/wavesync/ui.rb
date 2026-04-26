@@ -62,9 +62,10 @@ module Wavesync
       sticky(in_color("Copying #{source_format.file_type} (#{info})", :highlight), 3)
     end
 
-    #: () -> void
-    def skip
-      sticky(in_color('↷ Skipping, already synced', :highlight), 3)
+    #: (?staged: bool) -> void
+    def skip(staged: false)
+      message = staged ? '↷ Already in cache' : '↷ Already on device'
+      sticky(in_color(message, :highlight), 3)
     end
 
     #: ((String | Integer)? tbpm, ?original_bars: Integer?, ?target_bars: Integer?) -> void

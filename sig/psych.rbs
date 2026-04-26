@@ -3,4 +3,6 @@
 module Psych
   class SyntaxError < StandardError
   end
+
+  def self.safe_load_file: (String path) -> untyped
 end

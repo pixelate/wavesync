@@ -19,8 +19,8 @@ module Wavesync
     # : (AudioFormat source_format) -> void
     def copy: (AudioFormat source_format) -> void
 
-    # : () -> void
-    def skip: () -> void
+    # : (?staged: bool) -> void
+    def skip: (?staged: bool) -> void
 
     # : ((String | Integer)? tbpm, ?original_bars: Integer?, ?target_bars: Integer?) -> void
     def bpm: ((String | Integer)? tbpm, ?original_bars: Integer?, ?target_bars: Integer?) -> void

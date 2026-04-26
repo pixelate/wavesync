@@ -62,7 +62,7 @@ module Wavesync
     end
 
     test 'syncs single device to its configured path' do
-      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false, pull_cue_points: false)
+      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false, pull_cue_points: false, staged: false)
 
       Commands::Sync.new.run
     end
@@ -78,7 +78,7 @@ module Wavesync
       @config.stubs(:device_configs).returns([DEVICE_CONFIG_A, DEVICE_CONFIG_B])
       @ui.stubs(:select).returns('Octatrack')
 
-      @scanner.expects(:sync).with('/tmp/ot', @device, pad: false, pull_cue_points: false).once
+      @scanner.expects(:sync).with('/tmp/ot', @device, pad: false, pull_cue_points: false, staged: false).once
 
       Commands::Sync.new.run
     end
@@ -88,7 +88,7 @@ module Wavesync
       @config.stubs(:device_configs).returns([DEVICE_CONFIG_A, DEVICE_CONFIG_B])
 
       @ui.expects(:select).never
-      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false, pull_cue_points: false).once
+      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false, pull_cue_points: false, staged: false).once
 
       Commands::Sync.new.run
     end

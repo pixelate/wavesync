@@ -7,6 +7,7 @@ target :wavesync do
 
   # Ignore files whose bodies Steep cannot check due to DSL patterns
   ignore 'lib/wavesync/audio_format.rb'
+  ignore 'lib/wavesync/libmtp.rb'
 
   library 'json'
   library 'logger'

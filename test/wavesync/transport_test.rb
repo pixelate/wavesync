@@ -43,6 +43,7 @@ module Wavesync
     def setup
       @cache_root = Dir.mktmpdir
       @libmtp = mock('Libmtp')
+      @libmtp.stubs(:close!)
       @device_config = { name: 'TP-7', model: 'TP-7', path: 'library', transport: 'mtp' }
       @transport = Transport::Mtp.new(@device_config, libmtp: @libmtp, cache_root: @cache_root)
       @staging = @transport.working_directory
@@ -302,6 +303,8 @@ module Wavesync
         @get_file_calls << { id: id, local_path: local_path }
         File.binwrite(local_path, @pull_payload.fetch(id, ''))
       end
+
+      def close!; end
     end
   end
 end

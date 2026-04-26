@@ -55,9 +55,18 @@ module Wavesync
           device_config = pair[0] #: { name: String, model: String, path: String, transport: String }
           device = pair[1] #: Wavesync::Device
           transport = Wavesync::Transport.for(device_config)
-          prepare_transport(transport, device_config[:name]) if pull_cue_points
-          scanner.sync(transport.working_directory, device, pad: options[:pad] || false, pull_cue_points: pull_cue_points)
-          commit_transport(transport, device_config[:name])
+          with_mtp_retry(transport, device_config[:name]) do
+            prepare_transport(transport, device_config[:name]) if pull_cue_points
+            puts "Pushing to #{device_config[:name]} via MTP..." if transport.is_a?(Wavesync::Transport::Mtp)
+            transport.begin_push!
+          end
+          begin
+            scanner.sync(transport.working_directory, device, pad: options[:pad] || false, pull_cue_points: pull_cue_points, staged: transport.is_a?(Wavesync::Transport::Mtp)) do |relative_path|
+              transport.push_file!(relative_path)
+            end
+          ensure
+            transport.finish_push!
+          end
         end
       end
 
@@ -71,13 +80,16 @@ module Wavesync
         transport.prepare! { |index, total, relative_path| puts "  [#{index + 1}/#{total}] #{relative_path}" }
       end
 
-      #: ((Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp) transport, String device_name) -> void
-      def commit_transport(transport, device_name)
-        if transport.is_a?(Wavesync::Transport::Mtp)
-          puts "Pushing to #{device_name} via MTP..."
-          transport.commit! { |index, total, relative_path| puts "  [#{index + 1}/#{total}] #{relative_path}" }
-        else
-          transport.commit!
+      #: ((Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp) transport, String device_name) { () -> void } -> void
+      def with_mtp_retry(transport, device_name, &block)
+        return block.call unless transport.is_a?(Wavesync::Transport::Mtp)
+
+        begin
+          block.call
+        rescue Wavesync::Libmtp::Error => e
+          puts "Could not reach #{device_name} over MTP (#{e.message}). Put the device in MTP mode, then press Enter to retry (Ctrl+C to abort)."
+          $stdin.gets
+          retry
         end
       end
     end

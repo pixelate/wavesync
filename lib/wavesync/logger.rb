@@ -40,6 +40,15 @@ module Wavesync
       File.open(path, 'a') { |file| file.write(entry) }
     end
 
+    #: (String message) -> void
+    def self.log_event(message)
+      path = log_path
+      return unless path
+
+      entry = "[#{timestamp}] #{message}\n"
+      File.open(path, 'a') { |file| file.write(entry) }
+    end
+
     #: (Float seconds) -> void
     def self.log_run_time(seconds)
       path = log_path

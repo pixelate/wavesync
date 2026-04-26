@@ -1,0 +1,42 @@
+module Wavesync
+  class Libmtp
+    class Error < StandardError
+    end
+
+    class DeviceNotFound < Error
+    end
+
+    INSTALL_HINT: String
+
+    class DeviceFile
+      attr_reader id: Integer
+      attr_reader filename: String
+      attr_reader size: Integer
+      attr_reader parent_id: Integer
+      attr_reader storage_id: Integer
+
+      def self.new: (id: Integer, filename: String, size: Integer, parent_id: Integer, storage_id: Integer) -> DeviceFile
+    end
+
+    class DeviceFolder
+      attr_reader folder_id: Integer
+      attr_reader name: String
+      attr_reader parent_id: Integer
+      attr_reader storage_id: Integer
+
+      def self.new: (folder_id: Integer, name: String, parent_id: Integer, storage_id: Integer) -> DeviceFolder
+    end
+
+    def self.init_library!: () -> void
+
+    def initialize: () -> void
+    def detected?: () -> bool
+    def files: () -> Array[DeviceFile]
+    def folders: () -> Array[DeviceFolder]
+    def send_file: (local_path: String, remote_filename: String, parent_id: Integer, storage_id: Integer) -> void
+    def create_folder: (name: String, parent_id: Integer, storage_id: Integer) -> Integer
+    def delete_file: (id: Integer) -> void
+    def get_file: (id: Integer, local_path: String) -> void
+    def close!: () -> void
+  end
+end

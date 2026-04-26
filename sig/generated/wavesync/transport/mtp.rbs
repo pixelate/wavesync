@@ -5,17 +5,38 @@ module Wavesync
     class Mtp
       DEFAULT_CACHE_ROOT: untyped
 
+      MTP_ILLEGAL_CHARACTERS: Regexp
+
+      CACHE_DIR_ILLEGAL_CHARACTERS: Regexp
+
+      MANIFEST_FILENAME: ::String
+
       attr_reader working_directory: String
 
       attr_reader device_path: String
 
       attr_reader name: String
 
+      # : (String name, ?cache_root: String) -> String
+      def self.cache_path: (String name, ?cache_root: String) -> String
+
+      # : (String name) -> String
+      def self.sanitize_dir_name: (String name) -> String
+
       # : ({ name: String, model: String, path: String, transport: String? } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
       def initialize: ({ name: String, model: String, path: String, transport: String? } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
 
       # : () ?{ (Integer, Integer, String) -> void } -> void
       def prepare!: () ?{ (Integer, Integer, String) -> void } -> void
+
+      # : () -> void
+      def begin_push!: () -> void
+
+      # : (String relative_path) -> void
+      def push_file!: (String relative_path) -> void
+
+      # : () -> void
+      def finish_push!: () -> void
 
       # : () ?{ (Integer, Integer, String) -> void } -> void
       def commit!: () ?{ (Integer, Integer, String) -> void } -> void
@@ -31,6 +52,21 @@ module Wavesync
       # : (String remote_path, folders_by_parent: Hash[Integer, Array[Libmtp::DeviceFolder]], storage_id: Integer) -> Integer
       def ensure_folder: (String remote_path, folders_by_parent: Hash[Integer, Array[Libmtp::DeviceFolder]], storage_id: Integer) -> Integer
 
+      # : (String name) -> String
+      def normalize_unicode: (String name) -> String
+
+      # : () -> String
+      def manifest_path: () -> String
+
+      # : () -> Hash[String, Integer]
+      def load_manifest: () -> Hash[String, Integer]
+
+      # : () -> void
+      def save_manifest: () -> void
+
+      # : (String name) -> String
+      def sanitize_for_mtp: (String name) -> String
+
       # : (Hash[Integer, Array[Libmtp::DeviceFolder]] folders_by_parent) -> Integer
       def primary_storage_id: (Hash[Integer, Array[Libmtp::DeviceFolder]] folders_by_parent) -> Integer
 
@@ -39,9 +75,6 @@ module Wavesync
 
       # : (String left, String right) -> String
       def join_remote_paths: (String left, String right) -> String
-
-      # : (String name) -> String
-      def sanitize_dir_name: (String name) -> String
 
       # : (Array[Libmtp::DeviceFolder] folders) -> Hash[Integer, String]
       def build_folder_paths: (Array[Libmtp::DeviceFolder] folders) -> Hash[Integer, String]

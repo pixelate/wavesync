@@ -50,7 +50,12 @@ python3.11 -m venv ~/.wavesync-venv
 brew install libmtp
 ```
 
-Recent versions of field kit no longer expose the TP-7 as a filesystem path, so wavesync talks to the device over MTP directly. Field kit and any other apps that claim the TP-7 must be quit before syncing, otherwise libmtp cannot reach the device.
+Recent versions of field kit no longer expose the TP-7 as a filesystem path, so wavesync talks to the device over MTP directly.
+
+Before syncing the TP-7:
+
+- Quit field kit and any other app that may claim the TP-7. They cannot run at the same time as wavesync — only one process can hold the MTP session.
+- Put the TP-7 into MTP mode: hold down the Stop button while turning the TP-7 on, and keep holding until MTP mode is engaged.
 
 ## Configuration
 

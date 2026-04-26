@@ -2,6 +2,7 @@
 # rbs_inline: enabled
 
 require 'fileutils'
+require 'pathname'
 require 'tempfile'
 require_relative 'logger'
 require_relative 'file_converter'
@@ -17,9 +18,10 @@ module Wavesync
       @converter = FileConverter.new #: FileConverter
     end
 
-    #: (String target_library_path, Device device, ?pad: bool, ?pull_cue_points: bool) -> void
-    def sync(target_library_path, device, pad: false, pull_cue_points: false)
+    #: (String target_library_path, Device device, ?pad: bool, ?pull_cue_points: bool, ?staged: bool) ?{ (String) -> void } -> void
+    def sync(target_library_path, device, pad: false, pull_cue_points: false, staged: false, &on_file_synced)
       start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      target_library_pathname = Pathname.new(target_library_path)
       path_resolver = PathResolver.new(@source_library_path, target_library_path, device)
       skipped_count = 0
       conversion_count = 0
@@ -68,6 +70,7 @@ module Wavesync
           end
           converted_target_path = path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
           verify_written(converted_target_path, source: file) if converted
+          final_target_path = converted_target_path
         else
           if device.bpm_source == :acid_chunk && bpm && File.extname(file).downcase == '.wav'
             target_path = path_resolver.resolve(file, audio)
@@ -89,16 +92,22 @@ module Wavesync
               inject_transliterated_metadata(target_path.to_s, device)
             end
           end
+          final_target_path = target_path
           @ui.copy(source_format)
         end
 
         if !copied && !converted
           skipped_count += 1
-          @ui.skip
+          @ui.skip(staged: staged)
         end
 
         conversion_count += 1 if converted
         @ui.sync_progress(index, @audio_files.size, device)
+
+        if on_file_synced && final_target_path
+          relative_path = final_target_path.relative_path_from(target_library_pathname).to_s
+          on_file_synced.call(relative_path)
+        end
       end
 
       puts

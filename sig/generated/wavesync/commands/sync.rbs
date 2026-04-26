@@ -17,8 +17,8 @@ module Wavesync
       # : ((Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp) transport, String device_name) -> void
       def prepare_transport: (Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp transport, String device_name) -> void
 
-      # : ((Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp) transport, String device_name) -> void
-      def commit_transport: (Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp transport, String device_name) -> void
+      # : ((Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp) transport, String device_name) { () -> void } -> void
+      def with_mtp_retry: (Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp transport, String device_name) { () -> void } -> void
     end
   end
 end

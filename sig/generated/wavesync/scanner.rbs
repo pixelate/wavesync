@@ -5,8 +5,8 @@ module Wavesync
     # : (String source_library_path) -> void
     def initialize: (String source_library_path) -> void
 
-    # : (String target_library_path, Device device, ?pad: bool, ?pull_cue_points: bool) -> void
-    def sync: (String target_library_path, Device device, ?pad: bool, ?pull_cue_points: bool) -> void
+    # : (String target_library_path, Device device, ?pad: bool, ?pull_cue_points: bool, ?staged: bool) ?{ (String) -> void } -> void
+    def sync: (String target_library_path, Device device, ?pad: bool, ?pull_cue_points: bool, ?staged: bool) ?{ (String) -> void } -> void
 
     private
 

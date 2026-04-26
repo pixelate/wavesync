@@ -3,24 +3,40 @@
 
 require 'fileutils'
 require 'tmpdir'
+require 'yaml'
 require_relative '../libmtp'
 require_relative '../cue_chunk'
+require_relative '../logger'
 
 module Wavesync
   module Transport
     class Mtp
       DEFAULT_CACHE_ROOT = File.join(Dir.home, '.cache', 'wavesync').freeze
+      MTP_ILLEGAL_CHARACTERS = %r{[<>:"/\\|?*\x00-\x1f]} #: Regexp
+      CACHE_DIR_ILLEGAL_CHARACTERS = /[^a-z0-9._-]/ #: Regexp
+      MANIFEST_FILENAME = '.manifest.yml'
 
       attr_reader :working_directory #: String
       attr_reader :device_path #: String
       attr_reader :name #: String
+
+      #: (String name, ?cache_root: String) -> String
+      def self.cache_path(name, cache_root: DEFAULT_CACHE_ROOT)
+        File.join(cache_root, sanitize_dir_name(name))
+      end
+
+      #: (String name) -> String
+      def self.sanitize_dir_name(name)
+        sanitized = name.downcase.gsub(CACHE_DIR_ILLEGAL_CHARACTERS, '_')
+        sanitized.empty? ? 'device' : sanitized
+      end
 
       #: ({ name: String, model: String, path: String, transport: String? } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
       def initialize(device_config, libmtp: Libmtp.new, cache_root: DEFAULT_CACHE_ROOT)
         @name = device_config[:name]
         @device_path = device_config[:path]
         @libmtp = libmtp
-        @working_directory = File.join(cache_root, sanitize_dir_name(@name))
+        @working_directory = self.class.cache_path(@name, cache_root: cache_root)
         FileUtils.mkdir_p(@working_directory)
       end
 
@@ -47,17 +63,48 @@ module Wavesync
         end
       end
 
+      #: () -> void
+      def begin_push!
+        @push_files_by_parent = @libmtp.files.group_by(&:parent_id)
+        @push_folders_by_parent = @libmtp.folders.group_by(&:parent_id)
+        @push_storage_id = primary_storage_id(@push_folders_by_parent)
+        @push_manifest = load_manifest
+      end
+
+      #: (String relative_path) -> void
+      def push_file!(relative_path)
+        files_by_parent = @push_files_by_parent
+        folders_by_parent = @push_folders_by_parent
+        storage_id = @push_storage_id
+        raise Libmtp::Error, 'push_file! called before begin_push!' unless files_by_parent && folders_by_parent && storage_id
+
+        local_path = File.join(@working_directory, relative_path)
+        return unless File.file?(local_path)
+
+        remote_path = join_remote_paths(@device_path, relative_path)
+        entry = { local_path: local_path, relative_path: relative_path, remote_path: remote_path } #: { local_path: String, relative_path: String, remote_path: String }
+        push_one(entry, files_by_parent: files_by_parent, folders_by_parent: folders_by_parent, storage_id: storage_id)
+      end
+
+      #: () -> void
+      def finish_push!
+        save_manifest if @push_manifest
+        @push_files_by_parent = nil
+        @push_folders_by_parent = nil
+        @push_storage_id = nil
+        @push_manifest = nil
+        @libmtp.close!
+      end
+
       #: () ?{ (Integer, Integer, String) -> void } -> void
       def commit!(&progress)
-        files_by_parent = @libmtp.files.group_by(&:parent_id)
-        folders_by_parent = @libmtp.folders.group_by(&:parent_id)
-        storage_id = primary_storage_id(folders_by_parent)
-
+        begin_push!
         local_files = enumerate_local_files
         local_files.each_with_index do |entry, index|
           progress&.call(index, local_files.size, entry[:relative_path])
-          push_one(entry, files_by_parent: files_by_parent, folders_by_parent: folders_by_parent, storage_id: storage_id)
+          push_file!(entry[:relative_path])
         end
+        finish_push!
       end
 
       private
@@ -79,14 +126,24 @@ module Wavesync
         target_dir = File.dirname(entry[:remote_path])
         parent_id = ensure_folder(target_dir, folders_by_parent: folders_by_parent, storage_id: storage_id)
 
-        filename = File.basename(entry[:remote_path])
-        existing = (files_by_parent[parent_id] || []).find { |file| file.filename == filename }
+        filename = sanitize_for_mtp(File.basename(entry[:remote_path]))
+        existing = (files_by_parent[parent_id] || []).find { |file| sanitize_for_mtp(file.filename) == filename }
+
+        local_size = File.size(entry[:local_path])
+        manifest = @push_manifest || {} #: Hash[String, Integer]
+        manifest_size = manifest[entry[:relative_path]]
+
+        if existing && (manifest_size == local_size || (manifest_size.nil? && existing.size == local_size))
+          manifest[entry[:relative_path]] = local_size
+          return
+        end
 
         if existing
-          return if existing.size == File.size(entry[:local_path])
-
+          Logger.log_event("MTP replacing (size mismatch device=#{existing.size} local=#{local_size}): #{entry[:relative_path]}")
           @libmtp.delete_file(id: existing.id)
           files_by_parent[parent_id]&.delete(existing)
+        else
+          Logger.log_event("MTP uploading new file (#{local_size} bytes): #{entry[:relative_path]}")
         end
 
         @libmtp.send_file(
@@ -95,14 +152,16 @@ module Wavesync
           parent_id: parent_id,
           storage_id: storage_id
         )
+        manifest[entry[:relative_path]] = local_size
       end
 
       #: (String remote_path, folders_by_parent: Hash[Integer, Array[Libmtp::DeviceFolder]], storage_id: Integer) -> Integer
       def ensure_folder(remote_path, folders_by_parent:, storage_id:)
         parent_id = 0
-        path_components(remote_path).each do |name|
+        path_components(remote_path).each do |raw_name|
+          name = sanitize_for_mtp(raw_name)
           children = folders_by_parent[parent_id] || []
-          existing = children.find { |folder| folder.name == name }
+          existing = children.find { |folder| sanitize_for_mtp(folder.name) == name }
           if existing
             parent_id = existing.folder_id
           else
@@ -113,6 +172,39 @@ module Wavesync
           end
         end
         parent_id
+      end
+
+      #: (String name) -> String
+      def normalize_unicode(name)
+        name.unicode_normalize(:nfc)
+      end
+
+      #: () -> String
+      def manifest_path
+        File.join(@working_directory, MANIFEST_FILENAME)
+      end
+
+      #: () -> Hash[String, Integer]
+      def load_manifest
+        return {} unless File.exist?(manifest_path)
+
+        data = YAML.safe_load_file(manifest_path)
+        data.is_a?(Hash) ? data : {}
+      rescue Psych::SyntaxError
+        {}
+      end
+
+      #: () -> void
+      def save_manifest
+        manifest = @push_manifest
+        return unless manifest
+
+        File.write(manifest_path, manifest.to_yaml)
+      end
+
+      #: (String name) -> String
+      def sanitize_for_mtp(name)
+        normalize_unicode(name).gsub(MTP_ILLEGAL_CHARACTERS, '')
       end
 
       #: (Hash[Integer, Array[Libmtp::DeviceFolder]] folders_by_parent) -> Integer
@@ -131,12 +223,6 @@ module Wavesync
       #: (String left, String right) -> String
       def join_remote_paths(left, right)
         "#{left}/#{right}".split('/').reject(&:empty?).join('/')
-      end
-
-      #: (String name) -> String
-      def sanitize_dir_name(name)
-        sanitized = name.downcase.gsub(/[^a-z0-9._-]/, '_')
-        sanitized.empty? ? 'device' : sanitized
       end
 
       #: (Array[Libmtp::DeviceFolder] folders) -> Hash[Integer, String]

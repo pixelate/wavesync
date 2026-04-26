@@ -22,6 +22,15 @@ module Wavesync
         # Filesystem destinations are written to directly during sync, so there
         # is nothing to commit here.
       end
+
+      #: () -> void
+      def begin_push!; end
+
+      #: (String relative_path) -> void
+      def push_file!(relative_path); end
+
+      #: () -> void
+      def finish_push!; end
     end
   end
 end

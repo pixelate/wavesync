@@ -13,6 +13,15 @@ module Wavesync
 
       # : () ?{ (Integer, Integer, String) -> void } -> void
       def commit!: () ?{ (Integer, Integer, String) -> void } -> void
+
+      # : () -> void
+      def begin_push!: () -> void
+
+      # : (String relative_path) -> void
+      def push_file!: (String relative_path) -> void
+
+      # : () -> void
+      def finish_push!: () -> void
     end
   end
 end

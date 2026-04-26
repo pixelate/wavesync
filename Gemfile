@@ -14,6 +14,8 @@ gem 'rainbow', '~> 3.1'
 
 gem 'rake'
 
+gem 'ffi', '~> 1.17'
+
 gem 'minitest', '~> 6.0'
 
 gem 'mocha', '~> 3.0'
