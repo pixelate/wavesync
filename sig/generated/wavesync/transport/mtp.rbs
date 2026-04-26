@@ -1,0 +1,59 @@
+# Generated from lib/wavesync/transport/mtp.rb with RBS::Inline
+
+module Wavesync
+  module Transport
+    class Mtp
+      DEFAULT_CACHE_ROOT: untyped
+
+      attr_reader working_directory: String
+
+      attr_reader device_path: String
+
+      attr_reader name: String
+
+      # : ({ name: String, model: String, path: String, transport: String? } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
+      def initialize: ({ name: String, model: String, path: String, transport: String? } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
+
+      # : () ?{ (Integer, Integer, String) -> void } -> void
+      def prepare!: () ?{ (Integer, Integer, String) -> void } -> void
+
+      # : () ?{ (Integer, Integer, String) -> void } -> void
+      def commit!: () ?{ (Integer, Integer, String) -> void } -> void
+
+      private
+
+      # : () -> Array[{ local_path: String, relative_path: String, remote_path: String }]
+      def enumerate_local_files: () -> Array[{ local_path: String, relative_path: String, remote_path: String }]
+
+      # : ({ local_path: String, relative_path: String, remote_path: String } entry, files_by_parent: Hash[Integer, Array[Libmtp::DeviceFile]], folders_by_parent: Hash[Integer, Array[Libmtp::DeviceFolder]], storage_id: Integer) -> void
+      def push_one: ({ local_path: String, relative_path: String, remote_path: String } entry, files_by_parent: Hash[Integer, Array[Libmtp::DeviceFile]], folders_by_parent: Hash[Integer, Array[Libmtp::DeviceFolder]], storage_id: Integer) -> void
+
+      # : (String remote_path, folders_by_parent: Hash[Integer, Array[Libmtp::DeviceFolder]], storage_id: Integer) -> Integer
+      def ensure_folder: (String remote_path, folders_by_parent: Hash[Integer, Array[Libmtp::DeviceFolder]], storage_id: Integer) -> Integer
+
+      # : (Hash[Integer, Array[Libmtp::DeviceFolder]] folders_by_parent) -> Integer
+      def primary_storage_id: (Hash[Integer, Array[Libmtp::DeviceFolder]] folders_by_parent) -> Integer
+
+      # : (String path) -> Array[String]
+      def path_components: (String path) -> Array[String]
+
+      # : (String left, String right) -> String
+      def join_remote_paths: (String left, String right) -> String
+
+      # : (String name) -> String
+      def sanitize_dir_name: (String name) -> String
+
+      # : (Array[Libmtp::DeviceFolder] folders) -> Hash[Integer, String]
+      def build_folder_paths: (Array[Libmtp::DeviceFolder] folders) -> Hash[Integer, String]
+
+      # : (Integer folder_id, Hash[Integer, Libmtp::DeviceFolder] by_id, Hash[Integer, String] paths) -> String?
+      def resolve_folder_path: (Integer folder_id, Hash[Integer, Libmtp::DeviceFolder] by_id, Hash[Integer, String] paths) -> String?
+
+      # : (Libmtp::DeviceFile device_file, Hash[Integer, String] folder_paths) -> String?
+      def relative_path_for: (Libmtp::DeviceFile device_file, Hash[Integer, String] folder_paths) -> String?
+
+      # : (String filename) -> bool
+      def wav?: (String filename) -> bool
+    end
+  end
+end

@@ -1,0 +1,18 @@
+# Generated from lib/wavesync/transport/filesystem.rb with RBS::Inline
+
+module Wavesync
+  module Transport
+    class Filesystem
+      attr_reader working_directory: String
+
+      # : ({ name: String, model: String, path: String, transport: String? } device_config) -> void
+      def initialize: ({ name: String, model: String, path: String, transport: String? } device_config) -> void
+
+      # : () ?{ (Integer, Integer, String) -> void } -> void
+      def prepare!: () ?{ (Integer, Integer, String) -> void } -> void
+
+      # : () ?{ (Integer, Integer, String) -> void } -> void
+      def commit!: () ?{ (Integer, Integer, String) -> void } -> void
+    end
+  end
+end

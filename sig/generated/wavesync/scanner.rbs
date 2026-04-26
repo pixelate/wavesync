@@ -36,5 +36,8 @@ module Wavesync
 
     # : (String source, Pathname target) -> void
     def safe_copy: (String source, Pathname target) -> void
+
+    # : (Pathname target_path, source: String) -> void
+    def verify_written: (Pathname target_path, source: String) -> void
   end
 end

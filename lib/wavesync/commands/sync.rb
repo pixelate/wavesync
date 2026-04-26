@@ -2,6 +2,7 @@
 # rbs_inline: enabled
 
 require 'optparse'
+require_relative '../transport'
 
 module Wavesync
   module Commands
@@ -47,9 +48,32 @@ module Wavesync
         scanner = Wavesync::Scanner.new(config.library)
 
         device_pairs.each do |pair|
-          device_config = pair[0] #: { name: String, model: String, path: String }
+          device_config = pair[0] #: { name: String, model: String, path: String, transport: String }
           device = pair[1] #: Wavesync::Device
-          scanner.sync(device_config[:path], device, pad: options[:pad] || false)
+          transport = Wavesync::Transport.for(device_config)
+          prepare_transport(transport, device_config[:name])
+          scanner.sync(transport.working_directory, device, pad: options[:pad] || false)
+          commit_transport(transport, device_config[:name])
+        end
+      end
+
+      private
+
+      #: ((Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp) transport, String device_name) -> void
+      def prepare_transport(transport, device_name)
+        return unless transport.is_a?(Wavesync::Transport::Mtp)
+
+        puts "Pulling cue points from #{device_name} via MTP..."
+        transport.prepare! { |index, total, relative_path| puts "  [#{index + 1}/#{total}] #{relative_path}" }
+      end
+
+      #: ((Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp) transport, String device_name) -> void
+      def commit_transport(transport, device_name)
+        if transport.is_a?(Wavesync::Transport::Mtp)
+          puts "Pushing to #{device_name} via MTP..."
+          transport.commit! { |index, total, relative_path| puts "  [#{index + 1}/#{total}] #{relative_path}" }
+        else
+          transport.commit!
         end
       end
     end

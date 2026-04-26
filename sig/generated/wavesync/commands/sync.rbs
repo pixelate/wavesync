@@ -9,6 +9,14 @@ module Wavesync
 
       # : () -> void
       def run: () -> void
+
+      private
+
+      # : ((Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp) transport, String device_name) -> void
+      def prepare_transport: (Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp transport, String device_name) -> void
+
+      # : ((Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp) transport, String device_name) -> void
+      def commit_transport: (Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp transport, String device_name) -> void
     end
   end
 end

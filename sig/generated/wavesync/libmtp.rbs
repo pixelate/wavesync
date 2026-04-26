@@ -1,0 +1,94 @@
+# Generated from lib/wavesync/libmtp.rb with RBS::Inline
+
+module Wavesync
+  class Libmtp
+    class Error < StandardError
+    end
+
+    class ToolNotInstalled < Error
+    end
+
+    class DeviceNotFound < Error
+    end
+
+    INSTALL_HINT: ::String
+
+    class DeviceFile < Data
+      attr_reader id(): untyped
+
+      attr_reader filename(): untyped
+
+      attr_reader size(): untyped
+
+      attr_reader parent_id(): untyped
+
+      attr_reader storage_id(): untyped
+
+      def self.new: (untyped id, untyped filename, untyped size, untyped parent_id, untyped storage_id) -> instance
+                  | (id: untyped, filename: untyped, size: untyped, parent_id: untyped, storage_id: untyped) -> instance
+
+      def self.members: () -> [ :id, :filename, :size, :parent_id, :storage_id ]
+
+      def members: () -> [ :id, :filename, :size, :parent_id, :storage_id ]
+    end
+
+    class DeviceFolder < Data
+      attr_reader folder_id(): untyped
+
+      attr_reader name(): untyped
+
+      attr_reader parent_id(): untyped
+
+      attr_reader storage_id(): untyped
+
+      def self.new: (untyped folder_id, untyped name, untyped parent_id, untyped storage_id) -> instance
+                  | (folder_id: untyped, name: untyped, parent_id: untyped, storage_id: untyped) -> instance
+
+      def self.members: () -> [ :folder_id, :name, :parent_id, :storage_id ]
+
+      def members: () -> [ :folder_id, :name, :parent_id, :storage_id ]
+    end
+
+    # : () -> bool
+    def detected?: () -> bool
+
+    # : () -> Array[DeviceFile]
+    def files: () -> Array[DeviceFile]
+
+    # : () -> Array[DeviceFolder]
+    def folders: () -> Array[DeviceFolder]
+
+    # : (local_path: String, remote_filename: String, parent_id: Integer, storage_id: Integer) -> void
+    def send_file: (local_path: String, remote_filename: String, parent_id: Integer, storage_id: Integer) -> void
+
+    # : (name: String, parent_id: Integer, storage_id: Integer) -> Integer
+    def create_folder: (name: String, parent_id: Integer, storage_id: Integer) -> Integer
+
+    # : (id: Integer) -> void
+    def delete_file: (id: Integer) -> void
+
+    # : (id: Integer, local_path: String) -> void
+    def get_file: (id: Integer, local_path: String) -> void
+
+    # : (String tool) -> String
+    def self.tool_path: (String tool) -> String
+
+    # : () -> void
+    def self.reset_tool_path_cache!: () -> void
+
+    private
+
+    # rubocop:disable Style/ArgumentsForwarding
+    # : (String tool, *String args) -> String
+    def run!: (String tool, *String args) -> String
+
+    # : (Integer storage_id) -> String
+    def format_storage_id: (Integer storage_id) -> String
+
+    # : (String output) -> Array[DeviceFile]
+    def parse_files: (String output) -> Array[DeviceFile]
+
+    # : (String output) -> Array[DeviceFolder]
+    def parse_folders: (String output) -> Array[DeviceFolder]
+  end
+end
