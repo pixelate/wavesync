@@ -2,7 +2,9 @@
 # rbs_inline: enabled
 
 require 'fileutils'
+require 'tmpdir'
 require_relative '../libmtp'
+require_relative '../cue_chunk'
 
 module Wavesync
   module Transport
@@ -28,20 +30,20 @@ module Wavesync
         folder_paths = build_folder_paths(@libmtp.folders)
 
         candidates = device_files.filter_map do |device_file|
-          relative_path = relative_path_for(device_file, folder_paths)
-          next unless relative_path
           next unless wav?(device_file.filename)
 
-          local_path = File.join(@working_directory, relative_path)
-          next if File.exist?(local_path) && File.size(local_path) == device_file.size
+          relative_path = relative_path_for(device_file, folder_paths)
+          next unless relative_path
 
+          local_path = File.join(@working_directory, relative_path)
           { device_file: device_file, relative_path: relative_path, local_path: local_path }
         end
 
-        candidates.each_with_index do |candidate, index|
-          progress&.call(index, candidates.size, candidate[:relative_path])
-          FileUtils.mkdir_p(File.dirname(candidate[:local_path]))
-          @libmtp.get_file(id: candidate[:device_file].id, local_path: candidate[:local_path])
+        Dir.mktmpdir('wavesync_mtp_pull') do |tmpdir|
+          candidates.each_with_index do |candidate, index|
+            progress&.call(index, candidates.size, candidate[:relative_path])
+            pull_if_cues_differ(candidate, tmpdir)
+          end
         end
       end
 
@@ -175,6 +177,22 @@ module Wavesync
       #: (String filename) -> bool
       def wav?(filename)
         File.extname(filename).downcase == '.wav'
+      end
+
+      #: ({ device_file: Libmtp::DeviceFile, relative_path: String, local_path: String } candidate, String tmpdir) -> void
+      def pull_if_cues_differ(candidate, tmpdir)
+        device_file = candidate[:device_file]
+        local_path = candidate[:local_path]
+        tmp_path = File.join(tmpdir, "#{device_file.id}.wav")
+
+        @libmtp.get_file(id: device_file.id, local_path: tmp_path)
+
+        device_cues = CueChunk.read(tmp_path)
+        local_cues = File.exist?(local_path) ? CueChunk.read(local_path) : [] #: Array[{identifier: Integer, sample_offset: Integer, label: String?}]
+        return if CueChunk.same?(device_cues, local_cues)
+
+        FileUtils.mkdir_p(File.dirname(local_path))
+        FileUtils.mv(tmp_path, local_path)
       end
     end
   end

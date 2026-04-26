@@ -153,82 +153,103 @@ module Wavesync
       @transport.commit!
     end
 
-    test 'prepare! pulls device WAVs whose staging copy is missing or has a different size' do
-      write_local_file('music/existing.wav', 'aaaa')
-      write_local_file('music/up_to_date.wav', 'bbbbb')
+    test 'prepare! replaces the staging copy when the device cue points differ from the local cue points' do
+      staging_path = File.join(@staging, 'music/track.wav')
+      write_wav_with_cues(staging_path, [{ identifier: 1, sample_offset: 100, label: 'A' }])
 
-      device_folders = [
-        Libmtp::DeviceFolder.new(folder_id: 10, name: 'library', parent_id: 0, storage_id: 0x00010001),
-        Libmtp::DeviceFolder.new(folder_id: 50, name: 'music', parent_id: 10, storage_id: 0x00010001)
-      ]
-      device_files = [
-        Libmtp::DeviceFile.new(id: 100, filename: 'existing.wav', size: 6, parent_id: 50, storage_id: 0x00010001),
-        Libmtp::DeviceFile.new(id: 101, filename: 'up_to_date.wav', size: 5, parent_id: 50, storage_id: 0x00010001),
-        Libmtp::DeviceFile.new(id: 102, filename: 'new.wav', size: 8, parent_id: 50, storage_id: 0x00010001)
-      ]
-      @libmtp.expects(:files).returns(device_files)
-      @libmtp.expects(:folders).returns(device_folders)
+      device_cues = [{ identifier: 1, sample_offset: 200, label: 'B' }]
+      fake = build_fake_libmtp(
+        files: [Libmtp::DeviceFile.new(id: 100, filename: 'track.wav', size: 0, parent_id: 50, storage_id: 0x00010001)],
+        folders: music_folders,
+        pull_payload: { 100 => build_wav_payload_with_cues(device_cues) }
+      )
+      transport = Transport::Mtp.new(@device_config, libmtp: fake, cache_root: @cache_root)
 
-      @libmtp.expects(:get_file).with(id: 100, local_path: File.join(@staging, 'music/existing.wav'))
-      @libmtp.expects(:get_file).with(id: 102, local_path: File.join(@staging, 'music/new.wav'))
+      transport.prepare!
 
-      progress = []
-      @transport.prepare! { |index, total, path| progress << [index, total, path] }
-      assert_equal 2, progress.size
-      assert_equal [0, 2], progress.first[0..1]
+      result = CueChunk.read(staging_path)
+      assert_equal 1, result.size
+      assert_equal 200, result.first[:sample_offset]
+      assert_equal 'B', result.first[:label]
+    end
+
+    test 'prepare! leaves the staging copy unchanged when cue points match' do
+      cues = [{ identifier: 1, sample_offset: 100, label: 'A' }]
+      staging_path = File.join(@staging, 'music/track.wav')
+      write_wav_with_cues(staging_path, cues)
+      original_bytes = File.binread(staging_path)
+
+      fake = build_fake_libmtp(
+        files: [Libmtp::DeviceFile.new(id: 100, filename: 'track.wav', size: 0, parent_id: 50, storage_id: 0x00010001)],
+        folders: music_folders,
+        pull_payload: { 100 => build_wav_payload_with_cues(cues) }
+      )
+      transport = Transport::Mtp.new(@device_config, libmtp: fake, cache_root: @cache_root)
+
+      transport.prepare!
+
+      assert_equal original_bytes, File.binread(staging_path)
+    end
+
+    test 'prepare! materializes a new staging file when a device WAV has cue points and no local copy exists' do
+      device_cues = [{ identifier: 1, sample_offset: 50, label: 'X' }]
+      fake = build_fake_libmtp(
+        files: [Libmtp::DeviceFile.new(id: 100, filename: 'new.wav', size: 0, parent_id: 50, storage_id: 0x00010001)],
+        folders: music_folders,
+        pull_payload: { 100 => build_wav_payload_with_cues(device_cues) }
+      )
+      transport = Transport::Mtp.new(@device_config, libmtp: fake, cache_root: @cache_root)
+
+      transport.prepare!
+
+      staged_path = File.join(@staging, 'music/new.wav')
+      assert File.exist?(staged_path)
+      assert_equal 50, CueChunk.read(staged_path).first[:sample_offset]
     end
 
     test 'prepare! ignores non-WAV device files' do
-      write_local_file('music/track.mp3', 'a')
+      fake = build_fake_libmtp(
+        files: [Libmtp::DeviceFile.new(id: 200, filename: 'track.mp3', size: 999, parent_id: 50, storage_id: 0x00010001)],
+        folders: music_folders
+      )
+      transport = Transport::Mtp.new(@device_config, libmtp: fake, cache_root: @cache_root)
 
-      @libmtp.expects(:files).returns([
-                                        Libmtp::DeviceFile.new(id: 200, filename: 'track.mp3', size: 999,
-                                                               parent_id: 50, storage_id: 0x00010001)
-                                      ])
-      @libmtp.expects(:folders).returns([
-                                          Libmtp::DeviceFolder.new(folder_id: 10, name: 'library',
-                                                                   parent_id: 0, storage_id: 0x00010001),
-                                          Libmtp::DeviceFolder.new(folder_id: 50, name: 'music',
-                                                                   parent_id: 10, storage_id: 0x00010001)
-                                        ])
-      @libmtp.expects(:get_file).never
+      transport.prepare!
 
-      @transport.prepare!
+      assert_equal [], fake.get_file_calls
     end
 
     test 'prepare! ignores files outside the configured device path' do
-      @libmtp.expects(:files).returns([
-                                        Libmtp::DeviceFile.new(id: 300, filename: 'log.wav', size: 999,
-                                                               parent_id: 60, storage_id: 0x00010001)
-                                      ])
-      @libmtp.expects(:folders).returns([
-                                          Libmtp::DeviceFolder.new(folder_id: 10, name: 'library',
-                                                                   parent_id: 0, storage_id: 0x00010001),
-                                          Libmtp::DeviceFolder.new(folder_id: 60, name: 'logs',
-                                                                   parent_id: 0, storage_id: 0x00010001)
-                                        ])
-      @libmtp.expects(:get_file).never
+      fake = build_fake_libmtp(
+        files: [Libmtp::DeviceFile.new(id: 300, filename: 'log.wav', size: 999, parent_id: 60, storage_id: 0x00010001)],
+        folders: [
+          Libmtp::DeviceFolder.new(folder_id: 10, name: 'library', parent_id: 0, storage_id: 0x00010001),
+          Libmtp::DeviceFolder.new(folder_id: 60, name: 'logs', parent_id: 0, storage_id: 0x00010001)
+        ]
+      )
+      transport = Transport::Mtp.new(@device_config, libmtp: fake, cache_root: @cache_root)
 
-      @transport.prepare!
+      transport.prepare!
+
+      assert_equal [], fake.get_file_calls
     end
 
-    test 'prepare! creates intermediate staging directories when pulling new files' do
-      @libmtp.expects(:files).returns([
-                                        Libmtp::DeviceFile.new(id: 400, filename: 'track.wav', size: 8,
-                                                               parent_id: 70, storage_id: 0x00010001)
-                                      ])
-      @libmtp.expects(:folders).returns([
-                                          Libmtp::DeviceFolder.new(folder_id: 10, name: 'library',
-                                                                   parent_id: 0, storage_id: 0x00010001),
-                                          Libmtp::DeviceFolder.new(folder_id: 70, name: 'sounds',
-                                                                   parent_id: 10, storage_id: 0x00010001)
-                                        ])
-      expected_local = File.join(@staging, 'sounds/track.wav')
-      @libmtp.expects(:get_file).with(id: 400, local_path: expected_local)
+    test 'prepare! reports progress for each candidate WAV' do
+      cues = [{ identifier: 1, sample_offset: 100, label: 'A' }]
+      payload = build_wav_payload_with_cues(cues)
+      fake = build_fake_libmtp(
+        files: [
+          Libmtp::DeviceFile.new(id: 100, filename: 'a.wav', size: 0, parent_id: 50, storage_id: 0x00010001),
+          Libmtp::DeviceFile.new(id: 101, filename: 'b.wav', size: 0, parent_id: 50, storage_id: 0x00010001)
+        ],
+        folders: music_folders,
+        pull_payload: { 100 => payload, 101 => payload }
+      )
+      transport = Transport::Mtp.new(@device_config, libmtp: fake, cache_root: @cache_root)
 
-      refute File.directory?(File.dirname(expected_local))
-      @transport.prepare!
-      assert File.directory?(File.dirname(expected_local))
+      progress = []
+      transport.prepare! { |index, total, path| progress << [index, total, path] }
+      assert_equal [[0, 2, 'music/a.wav'], [1, 2, 'music/b.wav']], progress
     end
 
     private
@@ -238,6 +259,49 @@ module Wavesync
       FileUtils.mkdir_p(File.dirname(full_path))
       File.binwrite(full_path, content)
       full_path
+    end
+
+    def write_wav_with_cues(path, cues)
+      FileUtils.mkdir_p(File.dirname(path))
+      FileUtils.cp(File.join(FIXTURES_PATH, '44100_16.wav'), path)
+      tmp = "#{path}.tmp"
+      CueChunk.write(path, tmp, cues)
+      FileUtils.mv(tmp, path)
+    end
+
+    def build_wav_payload_with_cues(cues)
+      Tempfile.create(['wav_payload', '.wav']) do |file|
+        file.close
+        write_wav_with_cues(file.path, cues)
+        File.binread(file.path)
+      end
+    end
+
+    def build_fake_libmtp(files:, folders:, pull_payload: {})
+      FakeLibmtp.new(files: files, folders: folders, pull_payload: pull_payload)
+    end
+
+    def music_folders
+      [
+        Libmtp::DeviceFolder.new(folder_id: 10, name: 'library', parent_id: 0, storage_id: 0x00010001),
+        Libmtp::DeviceFolder.new(folder_id: 50, name: 'music', parent_id: 10, storage_id: 0x00010001)
+      ]
+    end
+
+    class FakeLibmtp
+      attr_reader :files, :folders, :get_file_calls
+
+      def initialize(files:, folders:, pull_payload: {})
+        @files = files
+        @folders = folders
+        @pull_payload = pull_payload
+        @get_file_calls = []
+      end
+
+      def get_file(id:, local_path:)
+        @get_file_calls << { id: id, local_path: local_path }
+        File.binwrite(local_path, @pull_payload.fetch(id, ''))
+      end
     end
   end
 end

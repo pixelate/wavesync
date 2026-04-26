@@ -7,6 +7,8 @@ module Wavesync
 
       PAD_OPTION: untyped
 
+      PULL_CUE_POINTS_OPTION: untyped
+
       # : () -> void
       def run: () -> void
 

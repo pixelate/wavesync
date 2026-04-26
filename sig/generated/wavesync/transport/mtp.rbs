@@ -54,6 +54,9 @@ module Wavesync
 
       # : (String filename) -> bool
       def wav?: (String filename) -> bool
+
+      # : ({ device_file: Libmtp::DeviceFile, relative_path: String, local_path: String } candidate, String tmpdir) -> void
+      def pull_if_cues_differ: ({ device_file: Libmtp::DeviceFile, relative_path: String, local_path: String } candidate, String tmpdir) -> void
     end
   end
 end

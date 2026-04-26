@@ -55,6 +55,17 @@ module Wavesync
       cue_points.map { |cue_point| { identifier: cue_point[:identifier], sample_offset: cue_point[:sample_offset], label: labels[cue_point[:identifier]] } }
     end
 
+    #: (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_a, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_b) -> bool
+    def self.same?(cue_points_a, cue_points_b)
+      to_comparable(cue_points_a) == to_comparable(cue_points_b)
+    end
+
+    #: (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> Array[{sample_offset: Integer, label: String?}]
+    def self.to_comparable(cue_points)
+      mapped = cue_points.map { |cp| { sample_offset: cp[:sample_offset], label: cp[:label] } } #: Array[{sample_offset: Integer, label: String?}]
+      mapped.sort_by { |cp| cp[:sample_offset] }
+    end
+
     #: (String filepath, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void
     def self.append_to_file(filepath, cue_points)
       return if cue_points.empty?
