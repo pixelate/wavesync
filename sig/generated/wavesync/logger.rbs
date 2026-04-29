@@ -17,6 +17,9 @@ module Wavesync
     # : (Exception error, call_site: String, arguments: Hash[Symbol, untyped]) -> void
     def self.log_error: (Exception error, call_site: String, arguments: Hash[Symbol, untyped]) -> void
 
+    # : (String message) -> void
+    def self.log_event: (String message) -> void
+
     # : (Float seconds) -> void
     def self.log_run_time: (Float seconds) -> void
 

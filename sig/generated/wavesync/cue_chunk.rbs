@@ -27,6 +27,12 @@ module Wavesync
     # : (String filepath) -> Array[{identifier: Integer, sample_offset: Integer, label: String?}]
     def self.read: (String filepath) -> Array[{ identifier: Integer, sample_offset: Integer, label: String? }]
 
+    # : (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_a, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_b) -> bool
+    def self.same?: (Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points_a, Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points_b) -> bool
+
+    # : (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> Array[{sample_offset: Integer, label: String?}]
+    def self.to_comparable: (Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points) -> Array[{ sample_offset: Integer, label: String? }]
+
     # : (String filepath, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void
     def self.append_to_file: (String filepath, Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points) -> void
 

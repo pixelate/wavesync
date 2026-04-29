@@ -1,0 +1,95 @@
+# Generated from lib/wavesync/transport/mtp.rb with RBS::Inline
+
+module Wavesync
+  module Transport
+    class Mtp
+      DEFAULT_CACHE_ROOT: untyped
+
+      MTP_ILLEGAL_CHARACTERS: Regexp
+
+      CACHE_DIR_ILLEGAL_CHARACTERS: Regexp
+
+      MANIFEST_FILENAME: ::String
+
+      attr_reader working_directory: String
+
+      attr_reader device_path: String
+
+      attr_reader name: String
+
+      # : (String name, ?cache_root: String) -> String
+      def self.cache_path: (String name, ?cache_root: String) -> String
+
+      # : (String name) -> String
+      def self.sanitize_dir_name: (String name) -> String
+
+      # : ({ name: String, model: String, path: String, transport: String? } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
+      def initialize: ({ name: String, model: String, path: String, transport: String? } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
+
+      # : () ?{ (Integer, Integer, String) -> void } -> void
+      def prepare!: () ?{ (Integer, Integer, String) -> void } -> void
+
+      # : () -> void
+      def begin_push!: () -> void
+
+      # : (String relative_path) -> void
+      def push_file!: (String relative_path) -> void
+
+      # : () -> void
+      def finish_push!: () -> void
+
+      # : () ?{ (Integer, Integer, String) -> void } -> void
+      def commit!: () ?{ (Integer, Integer, String) -> void } -> void
+
+      private
+
+      # : () -> Array[{ local_path: String, relative_path: String, remote_path: String }]
+      def enumerate_local_files: () -> Array[{ local_path: String, relative_path: String, remote_path: String }]
+
+      # : ({ local_path: String, relative_path: String, remote_path: String } entry, files_by_parent: Hash[Integer, Array[Libmtp::DeviceFile]], folders_by_parent: Hash[Integer, Array[Libmtp::DeviceFolder]], storage_id: Integer) -> void
+      def push_one: ({ local_path: String, relative_path: String, remote_path: String } entry, files_by_parent: Hash[Integer, Array[Libmtp::DeviceFile]], folders_by_parent: Hash[Integer, Array[Libmtp::DeviceFolder]], storage_id: Integer) -> void
+
+      # : (String remote_path, folders_by_parent: Hash[Integer, Array[Libmtp::DeviceFolder]], storage_id: Integer) -> Integer
+      def ensure_folder: (String remote_path, folders_by_parent: Hash[Integer, Array[Libmtp::DeviceFolder]], storage_id: Integer) -> Integer
+
+      # : (String name) -> String
+      def normalize_unicode: (String name) -> String
+
+      # : () -> String
+      def manifest_path: () -> String
+
+      # : () -> Hash[String, Integer]
+      def load_manifest: () -> Hash[String, Integer]
+
+      # : () -> void
+      def save_manifest: () -> void
+
+      # : (String name) -> String
+      def sanitize_for_mtp: (String name) -> String
+
+      # : (Hash[Integer, Array[Libmtp::DeviceFolder]] folders_by_parent) -> Integer
+      def primary_storage_id: (Hash[Integer, Array[Libmtp::DeviceFolder]] folders_by_parent) -> Integer
+
+      # : (String path) -> Array[String]
+      def path_components: (String path) -> Array[String]
+
+      # : (String left, String right) -> String
+      def join_remote_paths: (String left, String right) -> String
+
+      # : (Array[Libmtp::DeviceFolder] folders) -> Hash[Integer, String]
+      def build_folder_paths: (Array[Libmtp::DeviceFolder] folders) -> Hash[Integer, String]
+
+      # : (Integer folder_id, Hash[Integer, Libmtp::DeviceFolder] by_id, Hash[Integer, String] paths) -> String?
+      def resolve_folder_path: (Integer folder_id, Hash[Integer, Libmtp::DeviceFolder] by_id, Hash[Integer, String] paths) -> String?
+
+      # : (Libmtp::DeviceFile device_file, Hash[Integer, String] folder_paths) -> String?
+      def relative_path_for: (Libmtp::DeviceFile device_file, Hash[Integer, String] folder_paths) -> String?
+
+      # : (String filename) -> bool
+      def wav?: (String filename) -> bool
+
+      # : ({ device_file: Libmtp::DeviceFile, relative_path: String, local_path: String } candidate, String tmpdir) -> void
+      def pull_if_cues_differ: ({ device_file: Libmtp::DeviceFile, relative_path: String, local_path: String } candidate, String tmpdir) -> void
+    end
+  end
+end

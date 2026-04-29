@@ -46,7 +46,7 @@ module Wavesync
       CueChunk.write(target_wav, "#{target_wav}.tmp", cue_points)
       FileUtils.mv("#{target_wav}.tmp", target_wav)
 
-      Scanner.new(@source_dir).sync(@target_dir, @device)
+      Scanner.new(@source_dir).sync(@target_dir, @device, pull_cue_points: true)
 
       result = CueChunk.read(source_wav)
       assert_equal 1, result.size
@@ -65,7 +65,7 @@ module Wavesync
       FileUtils.cp(source_wav, target_wav)
 
       Audio.any_instance.expects(:write_cue_points).never
-      Scanner.new(@source_dir).sync(@target_dir, @device)
+      Scanner.new(@source_dir).sync(@target_dir, @device, pull_cue_points: true)
     end
 
     test 'sync does not write cue points to source when source is not a wav' do
@@ -74,6 +74,20 @@ module Wavesync
 
       target_mp3 = File.join(@target_dir, 'track.mp3')
       FileUtils.cp(fixture('44100.mp3'), target_mp3)
+
+      Audio.any_instance.expects(:write_cue_points).never
+      Scanner.new(@source_dir).sync(@target_dir, @device, pull_cue_points: true)
+    end
+
+    test 'sync does not write cue points to source when pull_cue_points is false' do
+      source_wav = File.join(@source_dir, 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), source_wav)
+
+      target_wav = File.join(@target_dir, 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), target_wav)
+      cue_points = [{ identifier: 1, sample_offset: 44_100, label: 'Marker' }]
+      CueChunk.write(target_wav, "#{target_wav}.tmp", cue_points)
+      FileUtils.mv("#{target_wav}.tmp", target_wav)
 
       Audio.any_instance.expects(:write_cue_points).never
       Scanner.new(@source_dir).sync(@target_dir, @device)

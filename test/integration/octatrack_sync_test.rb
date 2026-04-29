@@ -114,7 +114,7 @@ module Wavesync
       sync
 
       FileUtils.cp(File.join(FIXTURES_PATH, '44100_16.wav'), File.join(@source_dir, 'track.wav'))
-      sync
+      sync(pull_cue_points: true)
 
       source_cue_points = Wavesync::CueChunk.read(File.join(@source_dir, 'track.wav'))
       assert_equal 1, source_cue_points.size

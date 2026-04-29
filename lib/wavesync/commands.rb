@@ -21,8 +21,9 @@ module Wavesync
     require_relative 'commands/sync'
     require_relative 'commands/analyze'
     require_relative 'commands/setlist'
+    require_relative 'commands/clear_cache'
     require_relative 'commands/help'
 
-    ALL = [Sync, Analyze, Setlist, Help].freeze
+    ALL = [Sync, Analyze, Setlist, ClearCache, Help].freeze
   end
 end

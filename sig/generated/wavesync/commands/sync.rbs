@@ -7,8 +7,18 @@ module Wavesync
 
       PAD_OPTION: untyped
 
+      PULL_CUE_POINTS_OPTION: untyped
+
       # : () -> void
       def run: () -> void
+
+      private
+
+      # : ((Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp) transport, String device_name) -> void
+      def prepare_transport: (Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp transport, String device_name) -> void
+
+      # : ((Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp) transport, String device_name) { () -> void } -> void
+      def with_mtp_retry: (Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp transport, String device_name) { () -> void } -> void
     end
   end
 end

@@ -44,9 +44,18 @@ python3.11 -m venv ~/.wavesync-venv
 ~/.wavesync-venv/bin/pip install essentia
 ```
 
-5. Install field kit (only required for syncing to TP-7)
+5. Install libmtp (only required for syncing to TP-7)
 
-https://teenage.engineering/guides/fieldkit
+```bash
+brew install libmtp
+```
+
+Recent versions of field kit no longer expose the TP-7 as a filesystem path, so wavesync talks to the device over MTP directly.
+
+Before syncing the TP-7:
+
+- Quit field kit and any other app that may claim the TP-7. They cannot run at the same time as wavesync — only one process can hold the MTP session.
+- Put the TP-7 into MTP mode: hold down the Stop button while turning the TP-7 on, and keep holding until MTP mode is engaged.
 
 ## Configuration
 
@@ -59,7 +68,8 @@ library: ~/Music/Library
 devices:
   - name: TP-7
     model: TP-7
-    path: ~/Library/Containers/engineering.teenage.fieldkit/Data/Documents/TP-7 MTP Device-F1ELN21A/library
+    transport: mtp
+    path: library
   - name: Octatrack
     model: Octatrack
     path: /Volumes/OCTATRACK/LIBRARY/AUDIO
@@ -72,7 +82,12 @@ devices:
 - `devices`: list of devices to sync to, each with:
   - `name`: a label for this device, used with the `-d` command-line option
   - `model`: device model (`TP-7`, `Octatrack`, or `Playdate`)
-  - `path`: path to the device's library directory
+  - `path`: where to write files on the device
+    - For `transport: filesystem` (default): a path on your local filesystem (e.g. a mounted USB volume).
+    - For `transport: mtp`: a folder path inside the device (e.g. `library` for the TP-7).
+  - `transport` (optional): `filesystem` (default) or `mtp`. Use `mtp` for the TP-7.
+
+When syncing over MTP, wavesync caches converted files in `~/.cache/wavesync/<device-name>/` so subsequent syncs only push files that aren't already on the device.
 
 ## Usage
 

@@ -156,6 +156,28 @@ module Wavesync
       assert_equal 'My Device', config.device_configs.first[:name]
       assert_equal 'TP-7', config.device_configs.first[:model]
       assert_equal File.expand_path('/tmp/device'), config.device_configs.first[:path]
+      assert_equal 'filesystem', config.device_configs.first[:transport]
+    end
+
+    test 'preserves the device path verbatim when transport is mtp' do
+      device = { 'name' => 'TP-7', 'model' => 'TP-7', 'path' => 'library', 'transport' => 'mtp' }
+      config = Config.new(VALID_CONFIG.merge('devices' => [device]))
+      assert_equal 'library', config.device_configs.first[:path]
+      assert_equal 'mtp', config.device_configs.first[:transport]
+    end
+
+    test 'raises ConfigError when transport is not a string' do
+      device = { 'name' => 'TP-7', 'model' => 'TP-7', 'path' => 'library', 'transport' => 123 }
+      data = VALID_CONFIG.merge('devices' => [device])
+      error = assert_raises(ConfigError) { Config.new(data) }
+      assert_match "Device 1 'transport' must be a string", error.message
+    end
+
+    test 'raises ConfigError when transport is unsupported' do
+      device = { 'name' => 'TP-7', 'model' => 'TP-7', 'path' => 'library', 'transport' => 'bluetooth' }
+      data = VALID_CONFIG.merge('devices' => [device])
+      error = assert_raises(ConfigError) { Config.new(data) }
+      assert_match "Device 1 'transport' must be one of: filesystem, mtp", error.message
     end
 
     test 'initializes with multiple devices' do

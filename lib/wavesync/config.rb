@@ -10,11 +10,12 @@ module Wavesync
     DEFAULT_PATH = File.join(Dir.home, 'wavesync.yml')
 
     SUPPORTED_KEYS = %w[library devices].freeze
-    DEVICE_SUPPORTED_KEYS = %w[name model path].freeze
+    DEVICE_SUPPORTED_KEYS = %w[name model path transport].freeze
     DEVICE_REQUIRED_KEYS = %w[name model path].freeze
+    SUPPORTED_TRANSPORTS = %w[filesystem mtp].freeze
 
     attr_reader :library #: String
-    attr_reader :device_configs #: Array[{ name: String, model: String, path: String }]
+    attr_reader :device_configs #: Array[{ name: String, model: String, path: String, transport: String }]
 
     #: (?String path) -> Config
     def self.load(path = DEFAULT_PATH)
@@ -35,7 +36,9 @@ module Wavesync
       @library = File.expand_path(data['library'])
       @device_configs = data['devices'].each_with_index.map do |device, i|
         validate_device!(device, i)
-        { name: device['name'], model: device['model'], path: File.expand_path(device['path']) }
+        transport = device['transport'] || 'filesystem'
+        path = transport == 'filesystem' ? File.expand_path(device['path']) : device['path']
+        { name: device['name'], model: device['model'], path: path, transport: transport }
       end
     end
 
@@ -71,6 +74,13 @@ module Wavesync
       %w[name model path].each do |key|
         raise ConfigError, "Device #{index + 1} '#{key}' must be a string" unless device[key].is_a?(String)
       end
+
+      return unless device.key?('transport')
+
+      raise ConfigError, "Device #{index + 1} 'transport' must be a string" unless device['transport'].is_a?(String)
+      return if SUPPORTED_TRANSPORTS.include?(device['transport'])
+
+      raise ConfigError, "Device #{index + 1} 'transport' must be one of: #{SUPPORTED_TRANSPORTS.join(', ')}"
     end
   end
 end

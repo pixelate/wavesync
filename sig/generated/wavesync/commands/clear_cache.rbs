@@ -1,0 +1,23 @@
+# Generated from lib/wavesync/commands/clear_cache.rb with RBS::Inline
+
+module Wavesync
+  module Commands
+    class ClearCache < Command
+      DEVICE_OPTION: untyped
+
+      # : () -> void
+      def run: () -> void
+
+      private
+
+      # : (String device_name) -> void
+      def clear_one: (String device_name) -> void
+
+      # : (String path) -> Integer
+      def directory_size: (String path) -> Integer
+
+      # : (Integer bytes) -> String
+      def format_bytes: (Integer bytes) -> String
+    end
+  end
+end

@@ -1,0 +1,10 @@
+# Generated from lib/wavesync/transport.rb with RBS::Inline
+
+module Wavesync
+  module Transport
+    SUPPORTED_KINDS: untyped
+
+    # : ({ name: String, model: String, path: String, transport: String? } device_config) -> (Filesystem | Mtp)
+    def self.for: ({ name: String, model: String, path: String, transport: String? } device_config) -> (Filesystem | Mtp)
+  end
+end
