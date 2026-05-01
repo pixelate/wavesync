@@ -15,9 +15,13 @@ module Wavesync
 
     SUPPORTED_TRANSPORTS: untyped
 
+    SUPPORTED_MP3_BITRATES: untyped
+
+    DEFAULT_MP3_BITRATE: ::Integer
+
     attr_reader library: String
 
-    attr_reader device_configs: Array[{ name: String, model: String, path: String, transport: String }]
+    attr_reader device_configs: Array[{ name: String, model: String, path: String, transport: String, mp3_bitrate: Integer }]
 
     # : (?String path) -> Config
     def self.load: (?String path) -> Config
@@ -32,5 +36,11 @@ module Wavesync
 
     # : (untyped device, Integer index) -> void
     def validate_device!: (untyped device, Integer index) -> void
+
+    # : (Hash[String, untyped] device, Integer index) -> void
+    def validate_device_transport!: (Hash[String, untyped] device, Integer index) -> void
+
+    # : (Hash[String, untyped] device, Integer index) -> void
+    def validate_device_mp3_bitrate!: (Hash[String, untyped] device, Integer index) -> void
   end
 end

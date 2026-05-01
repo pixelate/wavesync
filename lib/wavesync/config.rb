@@ -10,12 +10,14 @@ module Wavesync
     DEFAULT_PATH = File.join(Dir.home, 'wavesync.yml')
 
     SUPPORTED_KEYS = %w[library devices].freeze
-    DEVICE_SUPPORTED_KEYS = %w[name model path transport].freeze
+    DEVICE_SUPPORTED_KEYS = %w[name model path transport mp3_bitrate].freeze
     DEVICE_REQUIRED_KEYS = %w[name model path].freeze
     SUPPORTED_TRANSPORTS = %w[filesystem mtp].freeze
+    SUPPORTED_MP3_BITRATES = [96, 128, 160, 192, 256, 320].freeze
+    DEFAULT_MP3_BITRATE = 192
 
     attr_reader :library #: String
-    attr_reader :device_configs #: Array[{ name: String, model: String, path: String, transport: String }]
+    attr_reader :device_configs #: Array[{ name: String, model: String, path: String, transport: String, mp3_bitrate: Integer }]
 
     #: (?String path) -> Config
     def self.load(path = DEFAULT_PATH)
@@ -38,7 +40,13 @@ module Wavesync
         validate_device!(device, i)
         transport = device['transport'] || 'filesystem'
         path = transport == 'filesystem' ? File.expand_path(device['path']) : device['path']
-        { name: device['name'], model: device['model'], path: path, transport: transport }
+        {
+          name: device['name'],
+          model: device['model'],
+          path: path,
+          transport: transport,
+          mp3_bitrate: device['mp3_bitrate'] || DEFAULT_MP3_BITRATE
+        }
       end
     end
 
@@ -75,12 +83,28 @@ module Wavesync
         raise ConfigError, "Device #{index + 1} '#{key}' must be a string" unless device[key].is_a?(String)
       end
 
+      validate_device_transport!(device, index)
+      validate_device_mp3_bitrate!(device, index)
+    end
+
+    #: (Hash[String, untyped] device, Integer index) -> void
+    def validate_device_transport!(device, index)
       return unless device.key?('transport')
 
       raise ConfigError, "Device #{index + 1} 'transport' must be a string" unless device['transport'].is_a?(String)
       return if SUPPORTED_TRANSPORTS.include?(device['transport'])
 
       raise ConfigError, "Device #{index + 1} 'transport' must be one of: #{SUPPORTED_TRANSPORTS.join(', ')}"
+    end
+
+    #: (Hash[String, untyped] device, Integer index) -> void
+    def validate_device_mp3_bitrate!(device, index)
+      return unless device.key?('mp3_bitrate')
+
+      raise ConfigError, "Device #{index + 1} 'mp3_bitrate' must be an integer" unless device['mp3_bitrate'].is_a?(Integer)
+      return if SUPPORTED_MP3_BITRATES.include?(device['mp3_bitrate'])
+
+      raise ConfigError, "Device #{index + 1} 'mp3_bitrate' must be one of: #{SUPPORTED_MP3_BITRATES.join(', ')}"
     end
   end
 end

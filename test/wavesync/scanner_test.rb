@@ -145,6 +145,17 @@ module Wavesync
       Scanner.new(@source_dir).sync(@target_dir, @device)
     end
 
+    test 'sync copies mp3 file as-is when device supports mp3' do
+      source_mp3 = File.join(@source_dir, 'track.mp3')
+      FileUtils.cp(fixture('44100.mp3'), source_mp3)
+
+      Audio.any_instance.expects(:transcode).never
+      Scanner.new(@source_dir).sync(@target_dir, @device)
+
+      target_mp3 = File.join(@target_dir, 'track.mp3')
+      assert File.exist?(target_mp3)
+    end
+
     test 'safe_copy logs error with source and target when ENOENT is raised' do
       source_wav = File.join(File.expand_path(@source_dir), 'track.wav')
       FileUtils.cp(fixture('44100_16.wav'), source_wav)

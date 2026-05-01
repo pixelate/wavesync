@@ -193,6 +193,15 @@ module Wavesync
       end
     end
 
+    test 'transcode encodes mp3 at the specified target_bitrate' do
+      audio_obj = audio('44100_16.wav')
+      Dir.mktmpdir do |dir|
+        output_path = File.join(dir, 'output.mp3')
+        audio_obj.transcode(output_path, target_file_type: 'mp3', target_bit_depth: 16, target_bitrate: 128)
+        assert_in_delta 128, Audio.new(output_path).bitrate, 10
+      end
+    end
+
     test 'transcode returns false and logs error with all arguments when ENOENT is raised' do
       audio_obj = audio('44100_16.wav')
       Wavesync::FFMPEG.any_instance.stubs(:run).raises(Errno::ENOENT)
@@ -204,7 +213,8 @@ module Wavesync
           target_sample_rate: 48_000,
           target_file_type: 'wav',
           target_bit_depth: 24,
-          padding_seconds: nil
+          padding_seconds: nil,
+          target_bitrate: 192
         }
       )
       result = audio_obj.transcode('/tmp/output.wav', target_sample_rate: 48_000, target_file_type: 'wav', target_bit_depth: 24)

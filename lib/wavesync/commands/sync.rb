@@ -52,7 +52,7 @@ module Wavesync
         pull_cue_points = options[:pull_cue_points] || false
 
         device_pairs.each do |pair|
-          device_config = pair[0] #: { name: String, model: String, path: String, transport: String }
+          device_config = pair[0] #: { name: String, model: String, path: String, transport: String, mp3_bitrate: Integer }
           device = pair[1] #: Wavesync::Device
           transport = Wavesync::Transport.for(device_config)
           with_mtp_retry(transport, device_config[:name]) do
@@ -61,7 +61,7 @@ module Wavesync
             transport.begin_push!
           end
           begin
-            scanner.sync(transport.working_directory, device, pad: options[:pad] || false, pull_cue_points: pull_cue_points, staged: transport.is_a?(Wavesync::Transport::Mtp)) do |relative_path|
+            scanner.sync(transport.working_directory, device, pad: options[:pad] || false, pull_cue_points: pull_cue_points, staged: transport.is_a?(Wavesync::Transport::Mtp), mp3_bitrate: device_config[:mp3_bitrate]) do |relative_path|
               transport.push_file!(relative_path)
             end
           ensure

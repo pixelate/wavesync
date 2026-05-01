@@ -31,7 +31,7 @@ module Wavesync
         sanitized.empty? ? 'device' : sanitized
       end
 
-      #: ({ name: String, model: String, path: String, transport: String? } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
+      #: ({ name: String, model: String, path: String, transport: String?, mp3_bitrate: Integer } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
       def initialize(device_config, libmtp: Libmtp.new, cache_root: DEFAULT_CACHE_ROOT)
         @name = device_config[:name]
         @device_path = device_config[:path]

@@ -5,7 +5,7 @@ module Wavesync
   module Transport
     SUPPORTED_KINDS = %w[filesystem mtp].freeze
 
-    #: ({ name: String, model: String, path: String, transport: String? } device_config) -> (Filesystem | Mtp)
+    #: ({ name: String, model: String, path: String, transport: String?, mp3_bitrate: Integer } device_config) -> (Filesystem | Mtp)
     def self.for(device_config)
       kind = device_config[:transport] || 'filesystem'
       case kind

@@ -10,8 +10,8 @@ require_relative '../../lib/wavesync/cli'
 
 module Wavesync
   class CLITest < Wavesync::TestCase
-    DEVICE_CONFIG_A = { name: 'TP-7', model: 'TP-7', path: '/tmp/tp7' }.freeze
-    DEVICE_CONFIG_B = { name: 'Octatrack', model: 'Octatrack', path: '/tmp/ot' }.freeze
+    DEVICE_CONFIG_A = { name: 'TP-7', model: 'TP-7', path: '/tmp/tp7', mp3_bitrate: 192 }.freeze
+    DEVICE_CONFIG_B = { name: 'Octatrack', model: 'Octatrack', path: '/tmp/ot', mp3_bitrate: 192 }.freeze
 
     def setup
       @saved_argv = ARGV.dup
@@ -62,7 +62,7 @@ module Wavesync
     end
 
     test 'syncs single device to its configured path' do
-      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false, pull_cue_points: false, staged: false)
+      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false, pull_cue_points: false, staged: false, mp3_bitrate: 192)
 
       Commands::Sync.new.run
     end
@@ -78,7 +78,7 @@ module Wavesync
       @config.stubs(:device_configs).returns([DEVICE_CONFIG_A, DEVICE_CONFIG_B])
       @ui.stubs(:select).returns('Octatrack')
 
-      @scanner.expects(:sync).with('/tmp/ot', @device, pad: false, pull_cue_points: false, staged: false).once
+      @scanner.expects(:sync).with('/tmp/ot', @device, pad: false, pull_cue_points: false, staged: false, mp3_bitrate: 192).once
 
       Commands::Sync.new.run
     end
@@ -88,7 +88,7 @@ module Wavesync
       @config.stubs(:device_configs).returns([DEVICE_CONFIG_A, DEVICE_CONFIG_B])
 
       @ui.expects(:select).never
-      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false, pull_cue_points: false, staged: false).once
+      @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false, pull_cue_points: false, staged: false, mp3_bitrate: 192).once
 
       Commands::Sync.new.run
     end

@@ -188,5 +188,46 @@ module Wavesync
       config = Config.new(data)
       assert_equal 2, config.device_configs.size
     end
+
+    test 'defaults device mp3_bitrate to 192 when not specified' do
+      config = Config.new(VALID_CONFIG)
+      assert_equal 192, config.device_configs.first[:mp3_bitrate]
+    end
+
+    test 'accepts a valid per-device mp3_bitrate' do
+      device = { 'name' => 'My Device', 'model' => 'TP-7', 'path' => '/tmp', 'mp3_bitrate' => 320 }
+      config = Config.new(VALID_CONFIG.merge('devices' => [device]))
+      assert_equal 320, config.device_configs.first[:mp3_bitrate]
+    end
+
+    test 'raises ConfigError when device mp3_bitrate is not an integer' do
+      device = { 'name' => 'My Device', 'model' => 'TP-7', 'path' => '/tmp', 'mp3_bitrate' => '320' }
+      data = VALID_CONFIG.merge('devices' => [device])
+      error = assert_raises(ConfigError) { Config.new(data) }
+      assert_match "Device 1 'mp3_bitrate' must be an integer", error.message
+    end
+
+    test 'raises ConfigError when device mp3_bitrate is not a supported value' do
+      device = { 'name' => 'My Device', 'model' => 'TP-7', 'path' => '/tmp', 'mp3_bitrate' => 100 }
+      data = VALID_CONFIG.merge('devices' => [device])
+      error = assert_raises(ConfigError) { Config.new(data) }
+      assert_match "Device 1 'mp3_bitrate' must be one of: 96, 128, 160, 192, 256, 320", error.message
+    end
+
+    test 'allows different mp3_bitrate per device' do
+      data = VALID_CONFIG.merge('devices' => [
+                                  { 'name' => 'A', 'model' => 'TP-7', 'path' => '/tmp/a', 'mp3_bitrate' => 128 },
+                                  { 'name' => 'B', 'model' => 'Octatrack', 'path' => '/tmp/b', 'mp3_bitrate' => 320 }
+                                ])
+      config = Config.new(data)
+      assert_equal 128, config.device_configs[0][:mp3_bitrate]
+      assert_equal 320, config.device_configs[1][:mp3_bitrate]
+    end
+
+    test 'raises ConfigError for top-level mp3_bitrate (now per-device)' do
+      data = VALID_CONFIG.merge('mp3_bitrate' => 192)
+      error = assert_raises(ConfigError) { Config.new(data) }
+      assert_match 'Unsupported config keys', error.message
+    end
   end
 end
