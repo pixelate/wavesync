@@ -23,8 +23,8 @@ module Wavesync
       # : (String name) -> String
       def self.sanitize_dir_name: (String name) -> String
 
-      # : ({ name: String, model: String, path: String, transport: String? } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
-      def initialize: ({ name: String, model: String, path: String, transport: String? } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
+      # : ({ name: String, model: String, path: String, transport: String?, mp3_bitrate: Integer } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
+      def initialize: ({ name: String, model: String, path: String, transport: String?, mp3_bitrate: Integer } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
 
       # : () ?{ (Integer, Integer, String) -> void } -> void
       def prepare!: () ?{ (Integer, Integer, String) -> void } -> void

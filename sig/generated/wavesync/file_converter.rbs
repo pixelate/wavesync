@@ -4,7 +4,7 @@ module Wavesync
   class FileConverter
     DURATION_TOLERANCE_SECONDS: ::Float
 
-    # : (Audio audio, String source_file_path, PathResolver path_resolver, AudioFormat source_format, AudioFormat target_format, ?padding_seconds: Numeric?, ?before_transcode: (^() -> void)?, ?metadata: Hash[String, String]) ?{ (String) -> void } -> bool
-    def convert: (Audio audio, String source_file_path, PathResolver path_resolver, AudioFormat source_format, AudioFormat target_format, ?padding_seconds: Numeric?, ?before_transcode: (^() -> void)?, ?metadata: Hash[String, String]) ?{ (String) -> void } -> bool
+    # : (Audio audio, String source_file_path, PathResolver path_resolver, AudioFormat source_format, AudioFormat target_format, ?padding_seconds: Numeric?, ?before_transcode: (^() -> void)?, ?metadata: Hash[String, String], ?mp3_bitrate: Integer) ?{ (String) -> void } -> bool
+    def convert: (Audio audio, String source_file_path, PathResolver path_resolver, AudioFormat source_format, AudioFormat target_format, ?padding_seconds: Numeric?, ?before_transcode: (^() -> void)?, ?metadata: Hash[String, String], ?mp3_bitrate: Integer) ?{ (String) -> void } -> bool
   end
 end

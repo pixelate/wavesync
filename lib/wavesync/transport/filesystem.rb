@@ -6,7 +6,7 @@ module Wavesync
     class Filesystem
       attr_reader :working_directory #: String
 
-      #: ({ name: String, model: String, path: String, transport: String? } device_config) -> void
+      #: ({ name: String, model: String, path: String, transport: String?, mp3_bitrate: Integer } device_config) -> void
       def initialize(device_config)
         @working_directory = device_config[:path]
       end

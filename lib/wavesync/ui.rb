@@ -42,12 +42,12 @@ module Wavesync
       sticky(parts.join(' '), 0)
     end
 
-    #: (AudioFormat source_format, AudioFormat target_format) -> void
-    def conversion_progress(source_format, target_format)
+    #: (AudioFormat source_format, AudioFormat target_format, Integer mp3_bitrate) -> void
+    def conversion_progress(source_format, target_format, mp3_bitrate)
       effective = source_format.merge(target_format)
 
       source_info = audio_info(source_format)
-      target_info = target_audio_info(effective)
+      target_info = target_audio_info(effective, mp3_bitrate)
 
       formatted_line = in_color(
         "Converting #{source_format.file_type} (#{source_info}) ⇢ #{effective.file_type} (#{target_info})", :highlight
@@ -123,8 +123,6 @@ module Wavesync
       print @cursor.move_to(0, 0)
     end
 
-    MP3_BITRATE_KBPS = 192
-
     private
 
     #: (AudioFormat format) -> String
@@ -136,9 +134,9 @@ module Wavesync
       ].compact.join('/')
     end
 
-    #: (AudioFormat format) -> String
-    def target_audio_info(format)
-      quality = format.file_type == 'mp3' ? MP3_BITRATE_KBPS.to_s : format.bit_depth&.to_s
+    #: (AudioFormat format, Integer mp3_bitrate) -> String
+    def target_audio_info(format, mp3_bitrate)
+      quality = format.file_type == 'mp3' ? mp3_bitrate.to_s : format.bit_depth&.to_s
       [
         sample_rate_to_khz(format.sample_rate),
         quality

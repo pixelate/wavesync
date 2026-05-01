@@ -65,8 +65,8 @@ module Wavesync
     # : (String | Integer | Float bpm) -> void
     def write_bpm: (String | Integer | Float bpm) -> void
 
-    # : (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?, ?metadata: Hash[String, String]) ?{ (String) -> void } -> bool
-    def transcode: (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?, ?metadata: Hash[String, String]) ?{ (String) -> void } -> bool
+    # : (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?, ?metadata: Hash[String, String], ?target_bitrate: Integer) ?{ (String) -> void } -> bool
+    def transcode: (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?, ?metadata: Hash[String, String], ?target_bitrate: Integer) ?{ (String) -> void } -> bool
 
     private
 

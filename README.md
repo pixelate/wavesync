@@ -86,6 +86,7 @@ devices:
     - For `transport: filesystem` (default): a path on your local filesystem (e.g. a mounted USB volume).
     - For `transport: mtp`: a folder path inside the device (e.g. `library` for the TP-7).
   - `transport` (optional): `filesystem` (default) or `mtp`. Use `mtp` for the TP-7.
+  - `mp3_bitrate` (optional): bitrate in kbps to use when encoding MP3 files for this device. Accepted values: `96`, `128`, `160`, `192`, `256`, `320`. Defaults to `192`. Source files that are already MP3 are copied as-is regardless of this setting.
 
 When syncing over MTP, wavesync caches converted files in `~/.cache/wavesync/<device-name>/` so subsequent syncs only push files that aren't already on the device.
 

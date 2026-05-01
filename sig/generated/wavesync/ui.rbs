@@ -13,8 +13,8 @@ module Wavesync
     # : (Integer index, Integer total_count, Device device) -> void
     def sync_progress: (Integer index, Integer total_count, Device device) -> void
 
-    # : (AudioFormat source_format, AudioFormat target_format) -> void
-    def conversion_progress: (AudioFormat source_format, AudioFormat target_format) -> void
+    # : (AudioFormat source_format, AudioFormat target_format, Integer mp3_bitrate) -> void
+    def conversion_progress: (AudioFormat source_format, AudioFormat target_format, Integer mp3_bitrate) -> void
 
     # : (AudioFormat source_format) -> void
     def copy: (AudioFormat source_format) -> void
@@ -46,15 +46,13 @@ module Wavesync
     # : () -> void
     def clear: () -> void
 
-    MP3_BITRATE_KBPS: ::Integer
-
     private
 
     # : (AudioFormat format) -> String
     def audio_info: (AudioFormat format) -> String
 
-    # : (AudioFormat format) -> String
-    def target_audio_info: (AudioFormat format) -> String
+    # : (AudioFormat format, Integer mp3_bitrate) -> String
+    def target_audio_info: (AudioFormat format, Integer mp3_bitrate) -> String
 
     # : (String string, Symbol key) -> String
     def in_color: (String string, Symbol key) -> String

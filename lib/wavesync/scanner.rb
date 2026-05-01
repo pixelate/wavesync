@@ -18,8 +18,8 @@ module Wavesync
       @converter = FileConverter.new #: FileConverter
     end
 
-    #: (String target_library_path, Device device, ?pad: bool, ?pull_cue_points: bool, ?staged: bool) ?{ (String) -> void } -> void
-    def sync(target_library_path, device, pad: false, pull_cue_points: false, staged: false, &on_file_synced)
+    #: (String target_library_path, Device device, ?pad: bool, ?pull_cue_points: bool, ?staged: bool, ?mp3_bitrate: Integer) ?{ (String) -> void } -> void
+    def sync(target_library_path, device, pad: false, pull_cue_points: false, staged: false, mp3_bitrate: 192, &on_file_synced)
       start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       target_library_pathname = Pathname.new(target_library_path)
       path_resolver = PathResolver.new(@source_library_path, target_library_path, device)
@@ -33,6 +33,7 @@ module Wavesync
 
         source_format = audio.format
         target_format = device.target_format(source_format, file)
+        target_format = target_format.with(sample_rate: nil, bit_depth: nil) if source_format.file_type == 'mp3' && target_format.file_type.nil?
 
         padding_seconds = nil #: Numeric?
         original_bars = nil #: Integer?
@@ -64,7 +65,8 @@ module Wavesync
           converted = @converter.convert(audio, file, path_resolver, source_format, target_format,
                                          padding_seconds: padding_seconds,
                                          metadata: transliterated_metadata,
-                                         before_transcode: -> { @ui.conversion_progress(source_format, target_format) }) do |local_temp_path|
+                                         mp3_bitrate: mp3_bitrate,
+                                         before_transcode: -> { @ui.conversion_progress(source_format, target_format, mp3_bitrate) }) do |local_temp_path|
             inject_acid_bpm(local_temp_path, bpm, device)
             inject_cue_points(local_temp_path, audio, source_format, target_format)
           end

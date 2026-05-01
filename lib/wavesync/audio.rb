@@ -140,14 +140,14 @@ module Wavesync
       @bpm = bpm
     end
 
-    #: (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?, ?metadata: Hash[String, String]) ?{ (String) -> void } -> bool
-    def transcode(target_path, target_sample_rate: nil, target_file_type: nil, target_bit_depth: nil, padding_seconds: nil, metadata: {})
+    #: (String target_path, ?target_sample_rate: Integer?, ?target_file_type: String?, ?target_bit_depth: Integer?, ?padding_seconds: Numeric?, ?metadata: Hash[String, String], ?target_bitrate: Integer) ?{ (String) -> void } -> bool
+    def transcode(target_path, target_sample_rate: nil, target_file_type: nil, target_bit_depth: nil, padding_seconds: nil, metadata: {}, target_bitrate: 192)
       ext = target_file_type || @file_ext.delete_prefix('.')
       temp_path = File.join(Dir.tmpdir, "wavesync_transcode_#{SecureRandom.hex}.#{ext}")
 
       begin
         command = Wavesync::FFMPEG.new.input(@file_path).audio_codec(transcode_codec(ext, target_bit_depth))
-        command.audio_bitrate('192k') if ext == 'mp3'
+        command.audio_bitrate("#{target_bitrate}k") if ext == 'mp3'
         command.sample_rate(target_sample_rate) if target_sample_rate
         if padding_seconds&.positive?
           total_duration = @audio.duration + padding_seconds
@@ -159,7 +159,7 @@ module Wavesync
         FileUtils.install(temp_path, target_path)
         true
       rescue Errno::ENOENT => e
-        Logger.log_error(e, call_site: 'Audio#transcode', arguments: { target_path:, target_sample_rate:, target_file_type:, target_bit_depth:, padding_seconds: })
+        Logger.log_error(e, call_site: 'Audio#transcode', arguments: { target_path:, target_sample_rate:, target_file_type:, target_bit_depth:, padding_seconds:, target_bitrate: })
         false
       ensure
         FileUtils.rm_f(temp_path)
