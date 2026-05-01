@@ -47,8 +47,12 @@ module Wavesync
       dest_path
     end
 
-    def sync(pad: false, pull_cue_points: false)
-      Wavesync::Scanner.new(@source_dir).sync(@device_test_path, @device, pad: pad, pull_cue_points: pull_cue_points)
+    def sync(pad: false)
+      Wavesync::Scanner.new(@source_dir).sync(@device_test_path, @device, pad: pad)
+    end
+
+    def pull_cue_points
+      Wavesync::Scanner.new(@source_dir).pull_cue_points(@device_test_path, @device)
     end
 
     def device_file(relative_path)
