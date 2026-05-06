@@ -52,7 +52,7 @@ module Wavesync
     test 'convert skips when converted file already exists in target location' do
       source_aiff = File.join(@source_dir, 'track.aiff')
       FileUtils.touch(source_aiff)
-      FileUtils.touch(File.join(@target_dir, 'track.mp3'))
+      FileUtils.touch(File.join(@target_dir, 'TRACK.MP3'))
 
       Audio.any_instance.stubs(:duration).returns(0)
       audio = stub(bpm: nil, duration: 0)

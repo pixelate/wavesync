@@ -17,7 +17,7 @@ module Wavesync
       audio = stub(bpm: nil)
       target_path = resolver_for('TP-7').resolve(source_file, audio)
 
-      assert_equal '/media/device/music/artist/album/song.wav', target_path.to_s
+      assert_equal '/media/device/music/ARTIST/ALBUM/SONG.WAV', target_path.to_s
     end
 
     test 'resolve changes file extension when target_file_type provided' do
@@ -25,7 +25,7 @@ module Wavesync
       audio = stub(bpm: nil)
       target_path = resolver_for('TP-7').resolve(source_file, audio, target_file_type: 'wav')
 
-      assert_equal '/media/device/music/artist/album/song.wav', target_path.to_s
+      assert_equal '/media/device/music/ARTIST/ALBUM/SONG.WAV', target_path.to_s
     end
 
     test 'resolve handles complex paths with spaces and special characters' do
@@ -33,7 +33,7 @@ module Wavesync
       audio = stub(bpm: nil)
       target_path = resolver_for('TP-7').resolve(source_file, audio, target_file_type: 'wav')
 
-      assert_equal '/media/device/music/electronic/aphex twin/selected ambient works/xtal.wav',
+      assert_equal '/media/device/music/ELECTRONIC/APHEX TWIN/SELECTED AMBIENT WORKS/XTAL.WAV',
                    target_path.to_s
     end
 
@@ -52,7 +52,7 @@ module Wavesync
       audio = stub(bpm: nil)
       target_path = resolver.resolve(source_file, audio)
 
-      assert_equal '/media/device/artist/song.wav', target_path.to_s
+      assert_equal '/media/device/ARTIST/SONG.WAV', target_path.to_s
     end
 
     test 'handles source library with trailing slash' do
@@ -62,7 +62,7 @@ module Wavesync
       audio = stub(bpm: nil)
       target_path = resolver.resolve(source_file, audio)
 
-      assert_equal '/media/device/artist/song.wav', target_path.to_s
+      assert_equal '/media/device/ARTIST/SONG.WAV', target_path.to_s
     end
 
     test 'adds bpm to filename when device has bpm_source :filename' do
@@ -78,7 +78,7 @@ module Wavesync
       audio = stub(bpm: 140)
       target_path = resolver_for('TP-7').resolve(source_file, audio)
 
-      assert_equal '/media/device/music/artist/song.wav', target_path.to_s
+      assert_equal '/media/device/music/ARTIST/SONG.WAV', target_path.to_s
     end
 
     test 'does not add bpm to filename when audio has no bpm' do
@@ -186,7 +186,7 @@ module Wavesync
       audio = stub(bpm: nil)
       target_path = resolver_for('TP-7').resolve(source_file, audio)
 
-      assert_equal '/media/device/music/artist/song.wav', target_path.to_s
+      assert_equal '/media/device/music/ARTIST/SONG.WAV', target_path.to_s
     end
 
     test 'resolve strips double-quote from filename' do
@@ -194,7 +194,7 @@ module Wavesync
       audio = stub(bpm: nil)
       target_path = resolver_for('TP-7').resolve(source_file, audio)
 
-      assert_equal '/media/device/music/artist/song remix.wav', target_path.to_s
+      assert_equal '/media/device/music/ARTIST/SONG REMIX.WAV', target_path.to_s
     end
 
     test 'resolve strips unsupported characters from filename for Octatrack with bpm' do
@@ -218,7 +218,7 @@ module Wavesync
       audio = stub(bpm: nil)
       target_path = resolver_for('TP-7').resolve(source_file, audio)
 
-      assert_equal '/media/device/music/artist/song.wav', target_path.to_s
+      assert_equal '/media/device/music/ARTIST/SONG.WAV', target_path.to_s
     end
 
     test 'resolve strips double-quote from directory names' do
@@ -226,7 +226,23 @@ module Wavesync
       audio = stub(bpm: nil)
       target_path = resolver_for('TP-7').resolve(source_file, audio)
 
-      assert_equal '/media/device/music/artist label/song.wav', target_path.to_s
+      assert_equal '/media/device/music/ARTIST LABEL/SONG.WAV', target_path.to_s
+    end
+
+    test 'resolve uppercases folder and file names for TP-7' do
+      source_file = '/home/user/music/Deep House/my track.wav'
+      audio = stub(bpm: nil)
+      target_path = resolver_for('TP-7').resolve(source_file, audio)
+
+      assert_equal '/media/device/music/DEEP HOUSE/MY TRACK.WAV', target_path.to_s
+    end
+
+    test 'resolve does not uppercase for Octatrack' do
+      source_file = '/home/user/music/Deep House/my track.wav'
+      audio = stub(bpm: nil)
+      target_path = resolver_for('Octatrack').resolve(source_file, audio)
+
+      assert_equal '/media/device/music/Deep House/my track.wav', target_path.to_s
     end
 
     test 'find_files_to_cleanup does not include the target file itself' do
