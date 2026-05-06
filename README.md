@@ -127,6 +127,21 @@ wavesync sync -p
 
 When a source file's sample rate isn't supported by the target device, Wavesync selects the closest supported rate. Example: If a 96kHz file is synced to an Octatrack (which only supports 44.1kHz), it will be downsampled to 44.1kHz.
 
+### Pull
+
+```bash
+# Read cue points from the device's WAV files and write them back into the
+# matching source files in your library. Useful when you've added or edited
+# cue points on the device and want them reflected in the source library.
+# If multiple devices are configured, you will be prompted to select one.
+wavesync pull
+
+# Pull from a specific device (by name as defined in config)
+wavesync pull -d TP-7
+```
+
+Only WAV source files with matching WAV target files on the device are updated. If the source already has the same cue points as the device, it is left untouched.
+
 ### Setlists (experimental)
 
 A setlist is a named, ordered selection of tracks from your library. Setlists are stored as YAML files inside a `.setlists` folder within the library directory. Syncing setlists to devices is not yet implemented.

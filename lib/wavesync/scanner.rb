@@ -18,8 +18,8 @@ module Wavesync
       @converter = FileConverter.new #: FileConverter
     end
 
-    #: (String target_library_path, Device device, ?pad: bool, ?pull_cue_points: bool, ?staged: bool, ?mp3_bitrate: Integer) ?{ (String) -> void } -> void
-    def sync(target_library_path, device, pad: false, pull_cue_points: false, staged: false, mp3_bitrate: 192, &on_file_synced)
+    #: (String target_library_path, Device device, ?pad: bool, ?staged: bool, ?mp3_bitrate: Integer) ?{ (String) -> void } -> void
+    def sync(target_library_path, device, pad: false, staged: false, mp3_bitrate: 192, &on_file_synced)
       start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       target_library_pathname = Pathname.new(target_library_path)
       path_resolver = PathResolver.new(@source_library_path, target_library_path, device)
@@ -46,17 +46,6 @@ module Wavesync
 
         @ui.bpm(bpm, original_bars: original_bars, target_bars: target_bars)
         @ui.file_progress(file)
-
-        if pull_cue_points && source_format.file_type == 'wav'
-          prospective_target_path = path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
-          if prospective_target_path.extname.downcase == '.wav' && prospective_target_path.exist?
-            target_cue_points = CueChunk.read(prospective_target_path.to_s)
-            if target_cue_points.any?
-              source_cue_points = audio.cue_points
-              audio.write_cue_points(target_cue_points) unless CueChunk.same?(source_cue_points, target_cue_points)
-            end
-          end
-        end
 
         if target_format.file_type || target_format.sample_rate || target_format.bit_depth || padding_seconds
           target_ext = target_format.file_type || source_format.file_type
@@ -110,6 +99,38 @@ module Wavesync
           relative_path = final_target_path.relative_path_from(target_library_pathname).to_s
           on_file_synced.call(relative_path)
         end
+      end
+
+      puts
+      system('sync')
+      elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
+      Logger.log_run_time(elapsed)
+    end
+
+    #: (String target_library_path, Device device) -> void
+    def pull_cue_points(target_library_path, device)
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      path_resolver = PathResolver.new(@source_library_path, target_library_path, device)
+      @ui.pull_progress(0, @audio_files.size, device)
+
+      @audio_files.each_with_index do |file, index|
+        audio = Audio.new(file)
+        source_format = audio.format
+        @ui.file_progress(file)
+
+        if source_format.file_type == 'wav'
+          target_format = device.target_format(source_format, file)
+          target_path = path_resolver.resolve(file, audio, target_file_type: target_format.file_type)
+          if target_path.extname.downcase == '.wav' && target_path.exist?
+            target_cue_points = CueChunk.read(target_path.to_s)
+            if target_cue_points.any?
+              source_cue_points = audio.cue_points
+              audio.write_cue_points(target_cue_points) unless CueChunk.same?(source_cue_points, target_cue_points)
+            end
+          end
+        end
+
+        @ui.pull_progress(index, @audio_files.size, device)
       end
 
       puts

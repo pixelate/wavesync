@@ -25,6 +25,12 @@ module Wavesync
     # : ((String | Integer)? tbpm, ?original_bars: Integer?, ?target_bars: Integer?) -> void
     def bpm: ((String | Integer)? tbpm, ?original_bars: Integer?, ?target_bars: Integer?) -> void
 
+    # : (Integer index, Integer total_count, Device device) -> void
+    def pull_progress: (Integer index, Integer total_count, Device device) -> void
+
+    # : (Integer index, Integer total_count, Device device) -> void
+    def pull_staging_progress: (Integer index, Integer total_count, Device device) -> void
+
     # : (Integer index, Integer total_count) -> void
     def analyze_progress: (Integer index, Integer total_count) -> void
 

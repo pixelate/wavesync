@@ -80,6 +80,26 @@ module Wavesync
       end
     end
 
+    #: (Integer index, Integer total_count, Device device) -> void
+    def pull_progress(index, total_count, device)
+      parts = [
+        in_color("wavesync pull #{device.name}", :primary),
+        in_color("#{index + 1}/#{total_count}", :extra)
+      ]
+
+      sticky(parts.join(' '), 0)
+    end
+
+    #: (Integer index, Integer total_count, Device device) -> void
+    def pull_staging_progress(index, total_count, device)
+      parts = [
+        in_color("wavesync pull #{device.name} (staging)", :primary),
+        in_color("#{index + 1}/#{total_count}", :extra)
+      ]
+
+      sticky(parts.join(' '), 0)
+    end
+
     #: (Integer index, Integer total_count) -> void
     def analyze_progress(index, total_count)
       parts = [

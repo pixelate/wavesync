@@ -5,8 +5,11 @@ module Wavesync
     # : (String source_library_path) -> void
     def initialize: (String source_library_path) -> void
 
-    # : (String target_library_path, Device device, ?pad: bool, ?pull_cue_points: bool, ?staged: bool, ?mp3_bitrate: Integer) ?{ (String) -> void } -> void
-    def sync: (String target_library_path, Device device, ?pad: bool, ?pull_cue_points: bool, ?staged: bool, ?mp3_bitrate: Integer) ?{ (String) -> void } -> void
+    # : (String target_library_path, Device device, ?pad: bool, ?staged: bool, ?mp3_bitrate: Integer) ?{ (String) -> void } -> void
+    def sync: (String target_library_path, Device device, ?pad: bool, ?staged: bool, ?mp3_bitrate: Integer) ?{ (String) -> void } -> void
+
+    # : (String target_library_path, Device device) -> void
+    def pull_cue_points: (String target_library_path, Device device) -> void
 
     private
 

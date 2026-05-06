@@ -29,6 +29,12 @@ module Wavesync
     # : (String path) -> Config
     def self.load_config: (String path) -> Config
 
+    # : (Config config, ?device_name: String?) -> Array[untyped]
+    def self.resolve_device_pairs: (Config config, ?device_name: String?) -> Array[untyped]
+
+    # : ((Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp) transport, String device_name) { () -> void } -> void
+    def self.with_mtp_retry: (Wavesync::Transport::Filesystem | Wavesync::Transport::Mtp transport, String device_name) { () -> void } -> void
+
     ALL: untyped
   end
 end
