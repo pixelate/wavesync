@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.0.0.beta1 - 2026-05-14
+
+- Uppercase folder and file names when syncing to TP-7 ([#64](https://github.com/pixelate/wavesync/pull/64))
+- Extract cue-point pull into its own `pull` command ([#63](https://github.com/pixelate/wavesync/pull/63))
+- Add per-device `mp3_bitrate` config and copy MP3 files as-is ([#62](https://github.com/pixelate/wavesync/pull/62))
+- Sync to TP-7 over MTP via libmtp instead of fieldkit container path ([#61](https://github.com/pixelate/wavesync/pull/61))
+- Sort audio library files alphabetically (case-insensitive) ([#60](https://github.com/pixelate/wavesync/pull/60))
+- Rename `Wavesync::Set` to `Wavesync::Setlist` ([#59](https://github.com/pixelate/wavesync/pull/59))
+- Log sync and analyze command invocations in the log ([#58](https://github.com/pixelate/wavesync/pull/58))
+- Strip curly apostrophe, colon, and question mark for Octatrack ([#57](https://github.com/pixelate/wavesync/pull/57))
+- Verify target file exists after sync writes ([#56](https://github.com/pixelate/wavesync/pull/56))
+- Log total run time at end of analyze and sync commands ([#55](https://github.com/pixelate/wavesync/pull/55))
+- Replace taglib-ruby with ffmpeg for metadata operations ([#54](https://github.com/pixelate/wavesync/pull/54))
+- Encode mp3 transcodes at 192 kbps and display source bitrate ([#53](https://github.com/pixelate/wavesync/pull/53))
+
 ## 1.0.0.alpha4 - 2026-04-19
 
 - Replace extended characters with ASCII equivalents in Playdate metadata tags ([#51](https://github.com/pixelate/wavesync/pull/51))

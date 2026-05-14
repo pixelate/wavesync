@@ -2,5 +2,5 @@
 # rbs_inline: enabled
 
 module Wavesync
-  VERSION = '1.0.0.alpha4'
+  VERSION = '1.0.0.beta1'
 end
