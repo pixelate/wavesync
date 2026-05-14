@@ -27,6 +27,10 @@ Unsupported file types will be ignored when syncing.
 
 ```bash
 brew install ffmpeg
+brew install libmtp
+brew install python@3.11
+python3.11 -m venv ~/.wavesync-venv
+~/.wavesync-venv/bin/pip install essentia
 ```
 
 3. Install Wavesync
@@ -34,27 +38,6 @@ brew install ffmpeg
 ```bash
 gem install wavesync --pre
 ```
-
-4. Set up the Python environment for BPM analysis
-
-```bash
-brew install python@3.11
-python3.11 -m venv ~/.wavesync-venv
-~/.wavesync-venv/bin/pip install essentia
-```
-
-5. Install libmtp (only required for syncing to TP-7)
-
-```bash
-brew install libmtp
-```
-
-Recent versions of field kit no longer expose the TP-7 as a filesystem path, so wavesync talks to the device over MTP directly.
-
-Before syncing the TP-7:
-
-- Quit field kit and any other app that may claim the TP-7. They cannot run at the same time as wavesync — only one process can hold the MTP session.
-- Put the TP-7 into MTP mode: hold down the Stop button while turning the TP-7 on, and keep holding until MTP mode is engaged.
 
 ## Configuration
 
@@ -125,6 +108,11 @@ wavesync sync -p
 ```
 
 When a source file's sample rate isn't supported by the target device, Wavesync selects the closest supported rate. Example: If a 96kHz file is synced to an Octatrack (which only supports 44.1kHz), it will be downsampled to 44.1kHz.
+
+Before syncing the TP-7:
+
+- Quit field kit and any other app that may claim the TP-7. They cannot run at the same time as wavesync — only one process can hold the MTP session.
+- Put the TP-7 into MTP mode: hold down the Stop button while turning the TP-7 on, and keep holding until MTP mode is engaged.
 
 ### Pull
 
