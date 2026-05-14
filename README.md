@@ -27,7 +27,6 @@ Unsupported file types will be ignored when syncing.
 
 ```bash
 brew install ffmpeg
-brew install taglib
 ```
 
 3. Install Wavesync
