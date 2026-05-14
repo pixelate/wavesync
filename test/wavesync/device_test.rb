@@ -51,6 +51,20 @@ module Wavesync
       assert_includes tp7.unsupported_characters, '"'
     end
 
+    test 'TP-7 has uppercase_paths enabled' do
+      tp7 = Device.find_by(name: 'TP-7')
+      assert_equal true, tp7.uppercase_paths
+    end
+
+    test 'uppercase_paths defaults to false' do
+      device = Device.new(
+        name: 'Test',
+        sample_rates: [44_100],
+        file_types: ['wav']
+      )
+      assert_equal false, device.uppercase_paths
+    end
+
     test 'Octatrack device attributes are correct' do
       octatrack = Device.find_by(name: 'Octatrack')
       refute_nil octatrack

@@ -40,7 +40,7 @@ module Wavesync
       source_wav = File.join(@source_dir, 'track.wav')
       FileUtils.cp(fixture('44100_16.wav'), source_wav)
 
-      target_wav = File.join(@target_dir, 'track.wav')
+      target_wav = File.join(@target_dir, 'TRACK.WAV')
       FileUtils.cp(fixture('44100_16.wav'), target_wav)
       cue_points = [{ identifier: 1, sample_offset: 44_100, label: 'Marker' }]
       CueChunk.write(target_wav, "#{target_wav}.tmp", cue_points)
@@ -61,7 +61,7 @@ module Wavesync
       CueChunk.write(source_wav, "#{source_wav}.tmp", cue_points)
       FileUtils.mv("#{source_wav}.tmp", source_wav)
 
-      target_wav = File.join(@target_dir, 'track.wav')
+      target_wav = File.join(@target_dir, 'TRACK.WAV')
       FileUtils.cp(source_wav, target_wav)
 
       Audio.any_instance.expects(:write_cue_points).never
@@ -97,7 +97,7 @@ module Wavesync
       source_wav = File.join(File.expand_path(@source_dir), 'track.wav')
       FileUtils.cp(fixture('44100_16.wav'), source_wav)
 
-      expected_target = Pathname(File.join(File.expand_path(@target_dir), 'track.wav'))
+      expected_target = Pathname(File.join(File.expand_path(@target_dir), 'TRACK.WAV'))
       Audio.any_instance.stubs(:bpm).returns(120)
       AcidChunk.stubs(:write_bpm)
       Logger.expects(:log_error).with(
@@ -112,7 +112,7 @@ module Wavesync
       source_wav = File.join(File.expand_path(@source_dir), 'track.wav')
       FileUtils.cp(fixture('44100_16.wav'), source_wav)
 
-      expected_target = Pathname(File.join(File.expand_path(@target_dir), 'track.wav'))
+      expected_target = Pathname(File.join(File.expand_path(@target_dir), 'TRACK.WAV'))
       Audio.any_instance.stubs(:bpm).returns(nil)
       FileUtils.stubs(:install)
       Logger.expects(:log_error).with(
@@ -127,7 +127,7 @@ module Wavesync
       source_aiff = File.join(File.expand_path(@source_dir), 'track.aiff')
       FileUtils.cp(fixture('44100_16.aiff'), source_aiff)
 
-      expected_target = Pathname(File.join(File.expand_path(@target_dir), 'track.wav'))
+      expected_target = Pathname(File.join(File.expand_path(@target_dir), 'TRACK.WAV'))
       Audio.any_instance.stubs(:transcode).returns(true)
       Logger.expects(:log_error).with(
         instance_of(RuntimeError),
@@ -152,7 +152,7 @@ module Wavesync
       Audio.any_instance.expects(:transcode).never
       Scanner.new(@source_dir).sync(@target_dir, @device)
 
-      target_mp3 = File.join(@target_dir, 'track.mp3')
+      target_mp3 = File.join(@target_dir, 'TRACK.MP3')
       assert File.exist?(target_mp3)
     end
 
@@ -160,7 +160,7 @@ module Wavesync
       source_wav = File.join(File.expand_path(@source_dir), 'track.wav')
       FileUtils.cp(fixture('44100_16.wav'), source_wav)
 
-      expected_target = Pathname(File.join(File.expand_path(@target_dir), 'track.wav'))
+      expected_target = Pathname(File.join(File.expand_path(@target_dir), 'TRACK.WAV'))
       FileUtils.stubs(:install).raises(Errno::ENOENT)
       Logger.expects(:log_error).with(
         instance_of(Errno::ENOENT),

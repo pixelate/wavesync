@@ -24,7 +24,8 @@ module Wavesync
       bpm = audio.bpm
       target_path = add_bpm_to_filename(target_path, bpm) if @device.bpm_source == :filename && bpm
 
-      strip_unsupported_characters(target_path)
+      target_path = strip_unsupported_characters(target_path)
+      uppercase_relative_path(target_path)
     end
 
     #: (Pathname target_path, Audio audio) -> Array[Pathname]
@@ -57,6 +58,15 @@ module Wavesync
       return path if @device.unsupported_characters.empty?
 
       Pathname(path.to_s.delete(@device.unsupported_characters.join))
+    end
+
+    #: (Pathname path) -> Pathname
+    def uppercase_relative_path(path)
+      return path unless @device.uppercase_paths
+
+      relative = path.relative_path_from(@target_library_path)
+      uppercased = relative.each_filename.map(&:upcase).join('/')
+      @target_library_path.join(uppercased)
     end
 
     #: (Pathname path) -> Pathname

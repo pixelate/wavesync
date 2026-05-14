@@ -17,6 +17,7 @@ devices:
   unsupported_characters:
     - "™"
     - '"'
+  uppercase_paths: true
 
 - name: Octatrack
   sample_rates:
