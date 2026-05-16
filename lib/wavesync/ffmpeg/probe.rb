@@ -3,6 +3,7 @@
 
 require 'open3'
 require 'json'
+require_relative '../timing'
 
 module Wavesync
   class FFMPEG
@@ -52,10 +53,13 @@ module Wavesync
       #: () -> Hash[String, untyped]
       def run_probe
         ffprobe = FFMPEG.binary.sub('ffmpeg', 'ffprobe')
-        stdout, _stderr, _status = Open3.capture3(
-          ffprobe, '-v', 'quiet', '-print_format', 'json',
-          '-show_streams', '-show_format', @file_path
-        )
+        stdout = Timing.current.measure(:probe) do
+          out, _stderr, _status = Open3.capture3(
+            ffprobe, '-v', 'quiet', '-print_format', 'json',
+            '-show_streams', '-show_format', @file_path
+          )
+          out
+        end
         JSON.parse(stdout)
       end
 
