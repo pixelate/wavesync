@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 # rbs_inline: enabled
 
+require_relative 'timing'
+
 module Wavesync
   class CueChunk
     RIFF_HEADER_SIZE = 12
@@ -18,41 +20,43 @@ module Wavesync
 
     #: (String filepath) -> Array[{identifier: Integer, sample_offset: Integer, label: String?}]
     def self.read(filepath)
-      cue_points = [] #: Array[{identifier: Integer, sample_offset: Integer, label: String?}]
-      labels = {} #: Hash[Integer, String]
+      Timing.current.measure(:wav_chunks) do
+        cue_points = [] #: Array[{identifier: Integer, sample_offset: Integer, label: String?}]
+        labels = {} #: Hash[Integer, String]
 
-      File.open(filepath, 'rb') do |file|
-        file.seek(RIFF_HEADER_SIZE)
+        File.open(filepath, 'rb') do |file|
+          file.seek(RIFF_HEADER_SIZE)
 
-        until file.eof?
-          chunk_id = file.read(CHUNK_ID_SIZE)
-          break if chunk_id.nil? || chunk_id.length < CHUNK_ID_SIZE
+          until file.eof?
+            chunk_id = file.read(CHUNK_ID_SIZE)
+            break if chunk_id.nil? || chunk_id.length < CHUNK_ID_SIZE
 
-          chunk_size_bytes = file.read(CHUNK_SIZE_FIELD_SIZE)
-          break if chunk_size_bytes.nil?
+            chunk_size_bytes = file.read(CHUNK_SIZE_FIELD_SIZE)
+            break if chunk_size_bytes.nil?
 
-          chunk_size = chunk_size_bytes.unpack1(UINT32_LE).to_i
-          chunk_data_start = file.tell
+            chunk_size = chunk_size_bytes.unpack1(UINT32_LE).to_i
+            chunk_data_start = file.tell
 
-          if chunk_id == CUE_CHUNK_ID
-            num_cues = file.read(4)&.unpack1(UINT32_LE).to_i
-            num_cues.times do
-              identifier = file.read(4)&.unpack1(UINT32_LE)&.to_i
-              file.read(16) # skip position, fcc_chunk, chunk_start, block_start
-              sample_offset = file.read(4)&.unpack1(UINT32_LE)&.to_i
-              cue_points << { identifier: identifier, sample_offset: sample_offset, label: nil } if identifier && sample_offset
+            if chunk_id == CUE_CHUNK_ID
+              num_cues = file.read(4)&.unpack1(UINT32_LE).to_i
+              num_cues.times do
+                identifier = file.read(4)&.unpack1(UINT32_LE)&.to_i
+                file.read(16) # skip position, fcc_chunk, chunk_start, block_start
+                sample_offset = file.read(4)&.unpack1(UINT32_LE)&.to_i
+                cue_points << { identifier: identifier, sample_offset: sample_offset, label: nil } if identifier && sample_offset
+              end
+            elsif chunk_id == LIST_CHUNK_ID && chunk_size >= 4
+              list_type = file.read(4)
+              read_adtl_labels(file, chunk_data_start + chunk_size, labels) if list_type == ADTL_LIST_TYPE
             end
-          elsif chunk_id == LIST_CHUNK_ID && chunk_size >= 4
-            list_type = file.read(4)
-            read_adtl_labels(file, chunk_data_start + chunk_size, labels) if list_type == ADTL_LIST_TYPE
+
+            chunk_padding = chunk_size.odd? ? 1 : 0
+            file.seek(chunk_data_start + chunk_size + chunk_padding)
           end
-
-          chunk_padding = chunk_size.odd? ? 1 : 0
-          file.seek(chunk_data_start + chunk_size + chunk_padding)
         end
-      end
 
-      cue_points.map { |cue_point| { identifier: cue_point[:identifier], sample_offset: cue_point[:sample_offset], label: labels[cue_point[:identifier]] } }
+        cue_points.map { |cue_point| { identifier: cue_point[:identifier], sample_offset: cue_point[:sample_offset], label: labels[cue_point[:identifier]] } }
+      end
     end
 
     #: (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_a, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points_b) -> bool
@@ -70,59 +74,63 @@ module Wavesync
     def self.append_to_file(filepath, cue_points)
       return if cue_points.empty?
 
-      File.open(filepath, 'ab') do |file|
-        write_cue_chunk(file, cue_points)
-        labeled_cue_points = cue_points.select { |cue_point| cue_point[:label] }
-        write_adtl_chunk(file, labeled_cue_points) if labeled_cue_points.any?
-      end
+      Timing.current.measure(:wav_chunks) do
+        File.open(filepath, 'ab') do |file|
+          write_cue_chunk(file, cue_points)
+          labeled_cue_points = cue_points.select { |cue_point| cue_point[:label] }
+          write_adtl_chunk(file, labeled_cue_points) if labeled_cue_points.any?
+        end
 
-      update_riff_size(filepath)
+        update_riff_size(filepath)
+      end
     end
 
     #: (String source_filepath, String output_filepath, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void
     def self.write(source_filepath, output_filepath, cue_points)
-      File.open(source_filepath, 'rb') do |input|
-        File.open(output_filepath, 'wb') do |output|
-          output.write(input.read(RIFF_HEADER_SIZE))
+      Timing.current.measure(:wav_chunks) do
+        File.open(source_filepath, 'rb') do |input|
+          File.open(output_filepath, 'wb') do |output|
+            output.write(input.read(RIFF_HEADER_SIZE))
 
-          until input.eof?
-            chunk_id = input.read(CHUNK_ID_SIZE)
-            break if chunk_id.nil? || chunk_id.length < CHUNK_ID_SIZE
+            until input.eof?
+              chunk_id = input.read(CHUNK_ID_SIZE)
+              break if chunk_id.nil? || chunk_id.length < CHUNK_ID_SIZE
 
-            chunk_size_bytes = input.read(CHUNK_SIZE_FIELD_SIZE)
-            break if chunk_size_bytes.nil?
+              chunk_size_bytes = input.read(CHUNK_SIZE_FIELD_SIZE)
+              break if chunk_size_bytes.nil?
 
-            chunk_size = chunk_size_bytes.unpack1(UINT32_LE).to_i
-            chunk_padding = chunk_size.odd? ? 1 : 0
+              chunk_size = chunk_size_bytes.unpack1(UINT32_LE).to_i
+              chunk_padding = chunk_size.odd? ? 1 : 0
 
-            if chunk_id == CUE_CHUNK_ID
-              input.read(chunk_size + chunk_padding)
-            elsif chunk_id == LIST_CHUNK_ID && chunk_size >= 4
-              list_type = input.read(4)
-              if list_type == ADTL_LIST_TYPE
-                input.read(chunk_size - 4 + chunk_padding)
+              if chunk_id == CUE_CHUNK_ID
+                input.read(chunk_size + chunk_padding)
+              elsif chunk_id == LIST_CHUNK_ID && chunk_size >= 4
+                list_type = input.read(4)
+                if list_type == ADTL_LIST_TYPE
+                  input.read(chunk_size - 4 + chunk_padding)
+                else
+                  output.write(chunk_id)
+                  output.write(chunk_size_bytes)
+                  output.write(list_type)
+                  output.write(input.read(chunk_size - 4 + chunk_padding))
+                end
               else
                 output.write(chunk_id)
                 output.write(chunk_size_bytes)
-                output.write(list_type)
-                output.write(input.read(chunk_size - 4 + chunk_padding))
+                output.write(input.read(chunk_size + chunk_padding))
               end
-            else
-              output.write(chunk_id)
-              output.write(chunk_size_bytes)
-              output.write(input.read(chunk_size + chunk_padding))
+            end
+
+            unless cue_points.empty?
+              write_cue_chunk(output, cue_points)
+              labeled_cue_points = cue_points.select { |cue_point| cue_point[:label] }
+              write_adtl_chunk(output, labeled_cue_points) if labeled_cue_points.any?
             end
           end
-
-          unless cue_points.empty?
-            write_cue_chunk(output, cue_points)
-            labeled_cue_points = cue_points.select { |cue_point| cue_point[:label] }
-            write_adtl_chunk(output, labeled_cue_points) if labeled_cue_points.any?
-          end
         end
-      end
 
-      update_riff_size(output_filepath)
+        update_riff_size(output_filepath)
+      end
     end
 
     #: (untyped output, Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void

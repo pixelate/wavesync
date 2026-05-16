@@ -20,6 +20,7 @@ module Wavesync
 
     #: (String target_library_path, Device device, ?pad: bool, ?staged: bool, ?mp3_bitrate: Integer) ?{ (String) -> void } -> void
     def sync(target_library_path, device, pad: false, staged: false, mp3_bitrate: 192, &on_file_synced)
+      Timing.reset
       start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       target_library_pathname = Pathname.new(target_library_path)
       path_resolver = PathResolver.new(@source_library_path, target_library_path, device)
@@ -102,9 +103,9 @@ module Wavesync
       end
 
       puts
-      system('sync')
+      Timing.current.measure(:filesystem) { system('sync') }
       elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
-      Logger.log_run_time(elapsed)
+      Logger.log_run_time(elapsed, timings: Timing.current.totals)
     end
 
     #: (String target_library_path, Device device) -> void
@@ -197,7 +198,7 @@ module Wavesync
 
     #: (String source, Pathname target) -> void
     def safe_copy(source, target)
-      FileUtils.install(source, target)
+      Timing.current.measure(:copy) { FileUtils.install(source, target) }
     rescue Errno::ENOENT => e
       Logger.log_error(e, call_site: 'Scanner#safe_copy', arguments: { source:, target: })
     end

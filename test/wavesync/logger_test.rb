@@ -190,5 +190,35 @@ module Wavesync
       assert_match(/Foo#bar/, lines[0])
       assert_match(/Run time:/, lines[1])
     end
+
+    test 'log_run_time writes bucket breakdown when timings are provided' do
+      Logger.log_run_time(100.0, timings: { transcode: 70.0, probe: 20.0 })
+
+      entry = File.read(log_path)
+      assert_match(/transcode\s+70\.0s\s+70\.0%/, entry)
+      assert_match(/probe\s+20\.0s\s+20\.0%/, entry)
+    end
+
+    test 'log_run_time includes an other bucket for unaccounted time' do
+      Logger.log_run_time(100.0, timings: { transcode: 60.0, probe: 30.0 })
+
+      entry = File.read(log_path)
+      assert_match(/other\s+10\.0s\s+10\.0%/, entry)
+    end
+
+    test 'log_run_time omits bucket breakdown when no timings are provided' do
+      Logger.log_run_time(50.0)
+
+      lines = File.readlines(log_path)
+      assert_equal 1, lines.size
+    end
+
+    test 'log_run_time omits buckets with zero time' do
+      Logger.log_run_time(10.0, timings: { transcode: 10.0, probe: 0.0 })
+
+      entry = File.read(log_path)
+      refute_match(/probe/, entry)
+      assert_match(/transcode/, entry)
+    end
   end
 end

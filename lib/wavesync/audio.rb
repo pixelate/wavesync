@@ -5,6 +5,7 @@ require 'securerandom'
 require 'tmpdir'
 require 'fileutils'
 require_relative 'logger'
+require_relative 'timing'
 
 module Wavesync
   class Audio
@@ -154,9 +155,9 @@ module Wavesync
           command.audio_filter("apad=whole_dur=#{total_duration.round(6)}")
         end
         metadata.each { |key, value| command.metadata(key, value) }
-        command.run(temp_path)
+        Timing.current.measure(:transcode) { command.run(temp_path) }
         yield temp_path if block_given?
-        FileUtils.install(temp_path, target_path)
+        Timing.current.measure(:copy) { FileUtils.install(temp_path, target_path) }
         true
       rescue Errno::ENOENT => e
         Logger.log_error(e, call_site: 'Audio#transcode', arguments: { target_path:, target_sample_rate:, target_file_type:, target_bit_depth:, padding_seconds:, target_bitrate: })
@@ -259,7 +260,7 @@ module Wavesync
       command.movflags('+use_metadata_tags') if ext == '.m4a'
       command.write_id3v2(1) if %w[.aif .aiff].include?(ext)
       metadata_hash.each { |key, value| command.metadata(key, value) }
-      command.run(temp_path)
+      Timing.current.measure(:ffmpeg_metadata) { command.run(temp_path) }
       FileUtils.mv(temp_path, @file_path)
     ensure
       FileUtils.rm_f(temp_path)
