@@ -547,6 +547,50 @@ module Wavesync
       e.playback_bar(0.0, 100.0, 10, cue_fractions: [0.5])
     end
 
+    test 'playback_bar renders loop start and end brackets' do
+      e = editor
+      e.ui.stubs(:color).returns('')
+      e.ui.expects(:color).with('⟨', :extra).returns('').once
+      e.ui.expects(:color).with('⟩', :extra).returns('').once
+      e.playback_bar(0.0, 100.0, 11, loop_fractions: [{ start_fraction: 0.25, end_fraction: 0.75 }])
+    end
+
+    test 'playback_bar colors cells inside loop range with extra color' do
+      e = editor
+      e.ui.stubs(:color).returns('')
+      e.ui.expects(:color).with('░░░░', :extra).returns('').once
+      e.playback_bar(0.0, 100.0, 11, loop_fractions: [{ start_fraction: 0.25, end_fraction: 0.75 }])
+    end
+
+    test 'track_loop_fractions returns empty array when no loops present' do
+      Audio.stubs(:new).returns(stub(sample_rate: 44_100, duration: 100.0, cue_points: []))
+      assert_equal [], editor.track_loop_fractions('/some/track.wav')
+    end
+
+    test 'track_loop_fractions returns fractions for loop ranges' do
+      cue_points = [
+        { identifier: 1, sample_offset: 44_100, label: nil, note: 'start' },
+        { identifier: 2, sample_offset: 88_200, label: nil, note: 'end' }
+      ]
+      Audio.stubs(:new).returns(stub(sample_rate: 44_100, duration: 100.0, cue_points: cue_points))
+      fractions = editor.track_loop_fractions('/some/track.wav')
+      assert_equal 1, fractions.size
+      assert_in_delta 0.01, fractions[0][:start_fraction], 0.0001
+      assert_in_delta 0.02, fractions[0][:end_fraction], 0.0001
+    end
+
+    test 'track_cue_fractions excludes cues that are loop start or end markers' do
+      cue_points = [
+        { identifier: 1, sample_offset: 44_100, label: nil, note: 'start' },
+        { identifier: 2, sample_offset: 88_200, label: 'Verse', note: nil },
+        { identifier: 3, sample_offset: 132_300, label: nil, note: 'end' }
+      ]
+      Audio.stubs(:new).returns(stub(sample_rate: 44_100, duration: 100.0, cue_points: cue_points))
+      fractions = editor.track_cue_fractions('/some/track.wav')
+      assert_equal 1, fractions.size
+      assert_in_delta 0.02, fractions[0], 0.0001
+    end
+
     test 'track_bpm logs error with path when audio raises' do
       error = StandardError.new('load failed')
       Audio.stubs(:new).raises(error)

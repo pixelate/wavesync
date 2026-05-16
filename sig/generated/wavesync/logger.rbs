@@ -20,13 +20,16 @@ module Wavesync
     # : (String message) -> void
     def self.log_event: (String message) -> void
 
-    # : (Float seconds) -> void
-    def self.log_run_time: (Float seconds) -> void
+    # : (Float seconds, ?timings: Hash[Symbol, Float]) -> void
+    def self.log_run_time: (Float seconds, ?timings: Hash[Symbol, Float]) -> void
 
     # : () -> String
     def self.timestamp: () -> String
 
     # : (Float seconds) -> String
     def self.format_duration: (Float seconds) -> String
+
+    # : (Float total_seconds, Hash[Symbol, Float] timings) -> String
+    def self.format_timings: (Float total_seconds, Hash[Symbol, Float] timings) -> String
   end
 end

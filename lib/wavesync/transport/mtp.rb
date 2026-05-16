@@ -40,8 +40,8 @@ module Wavesync
         FileUtils.mkdir_p(@working_directory)
       end
 
-      #: () ?{ (Integer, Integer, String) -> void } -> void
-      def prepare!(&progress)
+      #: (?stop_when: ^() -> bool) ?{ (Integer, Integer, String) -> void } -> void
+      def prepare!(stop_when: nil, &progress)
         device_files = @libmtp.files
         folder_paths = build_folder_paths(@libmtp.folders)
 
@@ -57,6 +57,8 @@ module Wavesync
 
         Dir.mktmpdir('wavesync_mtp_pull') do |tmpdir|
           candidates.each_with_index do |candidate, index|
+            break if stop_when&.call
+
             progress&.call(index, candidates.size, candidate[:relative_path])
             pull_if_cues_differ(candidate, tmpdir)
           end
@@ -271,14 +273,18 @@ module Wavesync
         local_path = candidate[:local_path]
         tmp_path = File.join(tmpdir, "#{device_file.id}.wav")
 
-        @libmtp.get_file(id: device_file.id, local_path: tmp_path)
+        begin
+          @libmtp.get_file(id: device_file.id, local_path: tmp_path)
 
-        device_cues = CueChunk.read(tmp_path)
-        local_cues = File.exist?(local_path) ? CueChunk.read(local_path) : [] #: Array[{identifier: Integer, sample_offset: Integer, label: String?}]
-        return if CueChunk.same?(device_cues, local_cues)
+          device_cues = CueChunk.read(tmp_path)
+          local_cues = File.exist?(local_path) ? CueChunk.read(local_path) : [] #: Array[{identifier: Integer, sample_offset: Integer, label: String?, note: String?}]
+          return if CueChunk.same?(device_cues, local_cues)
 
-        FileUtils.mkdir_p(File.dirname(local_path))
-        FileUtils.mv(tmp_path, local_path)
+          FileUtils.mkdir_p(File.dirname(local_path))
+          FileUtils.mv(tmp_path, local_path)
+        ensure
+          FileUtils.rm_f(tmp_path)
+        end
       end
     end
   end

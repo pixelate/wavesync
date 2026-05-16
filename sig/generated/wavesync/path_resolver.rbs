@@ -22,6 +22,9 @@ module Wavesync
     def strip_unsupported_characters: (Pathname path) -> Pathname
 
     # : (Pathname path) -> Pathname
+    def uppercase_relative_path: (Pathname path) -> Pathname
+
+    # : (Pathname path) -> Pathname
     def remove_bpm_from_filename: (Pathname path) -> Pathname
   end
 end

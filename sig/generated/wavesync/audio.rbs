@@ -28,11 +28,14 @@ module Wavesync
     # : () -> AudioFormat
     def format: () -> AudioFormat
 
-    # : () -> Array[{identifier: Integer, sample_offset: Integer, label: String?}]
-    def cue_points: () -> Array[{ identifier: Integer, sample_offset: Integer, label: String? }]
+    # : () -> Array[{identifier: Integer, sample_offset: Integer, label: String?, note: String?}]
+    def cue_points: () -> Array[{ identifier: Integer, sample_offset: Integer, label: String?, note: String? }]
 
-    # : (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void
-    def write_cue_points: (Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points) -> void
+    # : () -> Array[{start_sample: Integer, end_sample: Integer}]
+    def loops: () -> Array[{ start_sample: Integer, end_sample: Integer }]
+
+    # : (Array[{identifier: Integer, sample_offset: Integer, label: String?, note: String?}] cue_points) -> void
+    def write_cue_points: (Array[{ identifier: Integer, sample_offset: Integer, label: String?, note: String? }] cue_points) -> void
 
     ID3V2_FRAME_TITLE: ::String
 

@@ -1,0 +1,22 @@
+# Generated from lib/wavesync/timing.rb with RBS::Inline
+
+module Wavesync
+  class Timing
+    BUCKETS: untyped
+
+    # : () -> Timing
+    def self.current: () -> Timing
+
+    # : () -> void
+    def self.reset: () -> void
+
+    # : () -> void
+    def initialize: () -> void
+
+    # : (Symbol bucket) { () -> untyped } -> untyped
+    def measure: (Symbol bucket) { () -> untyped } -> untyped
+
+    # : () -> Hash[Symbol, Float]
+    def totals: () -> Hash[Symbol, Float]
+  end
+end
