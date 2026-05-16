@@ -187,12 +187,12 @@ module Wavesync
       CueChunk.append_to_file(local_temp_path, rescaled_cue_points)
     end
 
-    #: (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points, Integer? source_sample_rate, Integer? target_sample_rate) -> Array[{identifier: Integer, sample_offset: Integer, label: String?}]
+    #: (Array[{identifier: Integer, sample_offset: Integer, label: String?, note: String?}] cue_points, Integer? source_sample_rate, Integer? target_sample_rate) -> Array[{identifier: Integer, sample_offset: Integer, label: String?, note: String?}]
     def rescale_cue_points(cue_points, source_sample_rate, target_sample_rate)
       return cue_points if source_sample_rate == target_sample_rate || source_sample_rate.nil? || target_sample_rate.nil?
 
       cue_points.map do |cue_point|
-        cue_point.merge(sample_offset: (cue_point[:sample_offset] * target_sample_rate / source_sample_rate.to_f).round) #: {identifier: Integer, sample_offset: Integer, label: String?}
+        cue_point.merge(sample_offset: (cue_point[:sample_offset] * target_sample_rate / source_sample_rate.to_f).round) #: {identifier: Integer, sample_offset: Integer, label: String?, note: String?}
       end
     end
 

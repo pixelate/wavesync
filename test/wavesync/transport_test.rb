@@ -253,6 +253,32 @@ module Wavesync
       assert_equal [[0, 2, 'music/a.wav'], [1, 2, 'music/b.wav']], progress
     end
 
+    test 'prepare! stops iterating when stop_when returns true' do
+      cues = [{ identifier: 1, sample_offset: 100, label: 'A' }]
+      payload = build_wav_payload_with_cues(cues)
+      fake = build_fake_libmtp(
+        files: [
+          Libmtp::DeviceFile.new(id: 100, filename: 'a.wav', size: 0, parent_id: 50, storage_id: 0x00010001),
+          Libmtp::DeviceFile.new(id: 101, filename: 'b.wav', size: 0, parent_id: 50, storage_id: 0x00010001),
+          Libmtp::DeviceFile.new(id: 102, filename: 'c.wav', size: 0, parent_id: 50, storage_id: 0x00010001)
+        ],
+        folders: music_folders,
+        pull_payload: { 100 => payload, 101 => payload, 102 => payload }
+      )
+      transport = Transport::Mtp.new(@device_config, libmtp: fake, cache_root: @cache_root)
+
+      stop_after_index = 1
+      progress = []
+      transport.prepare!(stop_when: -> { progress.size >= stop_after_index }) do |index, total, path|
+        progress << [index, total, path]
+      end
+
+      assert_equal [[0, 3, 'music/a.wav']], progress
+      assert_path_exists File.join(@staging, 'music/a.wav')
+      refute_path_exists File.join(@staging, 'music/b.wav')
+      refute_path_exists File.join(@staging, 'music/c.wav')
+    end
+
     private
 
     def write_local_file(relative_path, content)

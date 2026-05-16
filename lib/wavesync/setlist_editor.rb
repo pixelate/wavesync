@@ -5,6 +5,7 @@ require 'tty-prompt'
 require 'io/console'
 require 'stringio'
 require_relative 'logger'
+require_relative 'cue_chunk'
 
 module Wavesync
   class SetlistEditor
@@ -87,26 +88,26 @@ module Wavesync
       end
     end
 
+    EMPTY_MARKERS = { cues: [], loops: [] }.freeze # steep:ignore UnannotatedEmptyCollection
+
     #: (String? path) -> Array[Float]
     def track_cue_fractions(path)
-      return [] if path.nil?
+      track_markers(path)[:cues]
+    end
 
-      @track_cue_fractions ||= {} #: Hash[String, Array[Float]]
-      return @track_cue_fractions[path] if @track_cue_fractions.key?(path)
+    #: (String? path) -> Array[{start_fraction: Float, end_fraction: Float}]
+    def track_loop_fractions(path)
+      track_markers(path)[:loops]
+    end
 
-      @track_cue_fractions[path] = begin
-        audio = Audio.new(path)
-        sample_rate = audio.sample_rate
-        duration = audio.duration
-        if sample_rate && duration&.positive?
-          audio.cue_points.map { |cue_point| cue_point[:sample_offset].to_f / sample_rate / duration }
-        else
-          [] #: Array[Float]
-        end
-      rescue StandardError => e
-        Logger.log_error(e, call_site: 'SetlistEditor#track_cue_fractions', arguments: { path: })
-        [] #: Array[Float]
-      end
+    #: (String? path) -> {cues: Array[Float], loops: Array[{start_fraction: Float, end_fraction: Float}]}
+    def track_markers(path)
+      return EMPTY_MARKERS if path.nil?
+
+      @track_markers ||= {} #: Hash[String, {cues: Array[Float], loops: Array[{start_fraction: Float, end_fraction: Float}]}]
+      return @track_markers[path] if @track_markers.key?(path)
+
+      @track_markers[path] = compute_track_markers(path)
     end
 
     #: ((String | Integer)? source_bpm, (String | Integer)? target_bpm) -> Float?
@@ -127,6 +128,29 @@ module Wavesync
     end
 
     private
+
+    #: (String path) -> {cues: Array[Float], loops: Array[{start_fraction: Float, end_fraction: Float}]}
+    def compute_track_markers(path)
+      audio = Audio.new(path)
+      sample_rate = audio.sample_rate
+      duration = audio.duration
+      return EMPTY_MARKERS unless sample_rate && duration&.positive?
+
+      cue_points = audio.cue_points
+      divisor = sample_rate.to_f * duration
+
+      cues = cue_points.reject { |cue_point| CueChunk.loop_marker?(cue_point) }
+                       .map { |cue_point| cue_point[:sample_offset].to_f / divisor }
+
+      loops = CueChunk.loops(cue_points).map do |loop_range|
+        loop_hash = { start_fraction: loop_range[:start_sample].to_f / divisor, end_fraction: loop_range[:end_sample].to_f / divisor }
+        loop_hash #: {start_fraction: Float, end_fraction: Float}
+      end
+      { cues: cues, loops: loops }
+    rescue StandardError => e
+      Logger.log_error(e, call_site: 'SetlistEditor#track_cue_fractions', arguments: { path: })
+      EMPTY_MARKERS
+    end
 
     #: () -> void
     def enter_fullscreen
@@ -212,30 +236,44 @@ module Wavesync
       string.gsub(/\e\[[0-9;]*[A-Za-z]/, '').length
     end
 
-    #: (Float elapsed, Float total_duration, Integer bar_width, ?cue_fractions: Array[Float]) -> String
-    def playback_bar(elapsed, total_duration, bar_width, cue_fractions: [])
+    #: (Float elapsed, Float total_duration, Integer bar_width, ?cue_fractions: Array[Float], ?loop_fractions: Array[{start_fraction: Float, end_fraction: Float}]) -> String
+    def playback_bar(elapsed, total_duration, bar_width, cue_fractions: [], loop_fractions: [])
       ratio = total_duration.positive? ? [elapsed / total_duration, 1.0].min : 0.0
       filled = (ratio * bar_width).round
 
       bar = Array.new(bar_width) { |i| i < filled ? '█' : '░' }
+      cell_colors = Array.new(bar_width, :surface) #: Array[Symbol]
+      marker_positions = {} #: Hash[Integer, bool]
 
-      cue_position_colors = {} #: Hash[Integer, Symbol]
+      loop_fractions.each do |loop_range|
+        loop_start_position = (loop_range[:start_fraction] * (bar_width - 1)).round.clamp(0, bar_width - 1)
+        loop_end_position = (loop_range[:end_fraction] * (bar_width - 1)).round.clamp(0, bar_width - 1)
+        next if loop_end_position <= loop_start_position
+
+        (loop_start_position..loop_end_position).each { |position| cell_colors[position] = :extra }
+        bar[loop_start_position] = '⟨'
+        bar[loop_end_position] = '⟩'
+        marker_positions[loop_start_position] = true
+        marker_positions[loop_end_position] = true
+      end
+
       cue_fractions.each do |fraction|
         position = (fraction * (bar_width - 1)).round.clamp(0, bar_width - 1)
-        cue_position_colors[position] = position == filled ? :highlight : :surface
+        bar[position] = '◆'
+        cell_colors[position] = position == filled ? :highlight : :surface
+        marker_positions[position] = true
       end
-      cue_position_colors.each_key { |position| bar[position] = '◆' }
 
       result = +''
       run_start = 0
       while run_start < bar_width
-        if cue_position_colors.key?(run_start)
-          result << @ui.color(bar[run_start], cue_position_colors[run_start])
+        if marker_positions[run_start]
+          result << @ui.color(bar[run_start], cell_colors[run_start])
           run_start += 1
         else
-          run_end = run_start
-          run_end += 1 while run_end < bar_width && !cue_position_colors.key?(run_end)
-          result << @ui.color((bar[run_start...run_end] || []).join, :surface)
+          run_end = run_start + 1
+          run_end += 1 while run_end < bar_width && !marker_positions[run_end] && cell_colors[run_end] == cell_colors[run_start]
+          result << @ui.color((bar[run_start...run_end] || []).join, cell_colors[run_start])
           run_start = run_end
         end
       end
@@ -289,7 +327,8 @@ module Wavesync
           pitch_shift = pitch_shift_semitones(current_bpm, track_bpm(@setlist.tracks[i + 1]))
           render_track(i, relative_path(track), i == @selected, i == @player_index,
                        bpm: current_bpm, pitch_shift: pitch_shift, duration: current_duration,
-                       duration_col_width: duration_col_width, cue_fractions: track_cue_fractions(track))
+                       duration_col_width: duration_col_width, cue_fractions: track_cue_fractions(track),
+                       loop_fractions: track_loop_fractions(track))
         end
       end
 
@@ -301,8 +340,8 @@ module Wavesync
       flush_render(buffer)
     end
 
-    #: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer, ?cue_fractions: Array[Float]) -> void
-    def render_track(index, relative, selected, playing, bpm: nil, pitch_shift: nil, duration: nil, duration_col_width: 0, cue_fractions: [])
+    #: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer, ?cue_fractions: Array[Float], ?loop_fractions: Array[{start_fraction: Float, end_fraction: Float}]) -> void
+    def render_track(index, relative, selected, playing, bpm: nil, pitch_shift: nil, duration: nil, duration_col_width: 0, cue_fractions: [], loop_fractions: [])
       name = display_name(relative)
       folder = File.dirname(relative)
       icon = if playing
@@ -350,7 +389,7 @@ module Wavesync
 
       if playing && @player_state != :stopped && duration
         bar_width = [terminal_width - 5, 20].max
-        puts "     #{playback_bar(playback_elapsed, duration, bar_width, cue_fractions: cue_fractions)}"
+        puts "     #{playback_bar(playback_elapsed, duration, bar_width, cue_fractions: cue_fractions, loop_fractions: loop_fractions)}"
       end
 
       return unless pitch_shift

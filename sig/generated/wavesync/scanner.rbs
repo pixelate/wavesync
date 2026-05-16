@@ -28,8 +28,8 @@ module Wavesync
     # : (String local_temp_path, Audio audio, AudioFormat source_format, AudioFormat target_format) -> void
     def inject_cue_points: (String local_temp_path, Audio audio, AudioFormat source_format, AudioFormat target_format) -> void
 
-    # : (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points, Integer? source_sample_rate, Integer? target_sample_rate) -> Array[{identifier: Integer, sample_offset: Integer, label: String?}]
-    def rescale_cue_points: (Array[{ identifier: Integer, sample_offset: Integer, label: String? }] cue_points, Integer? source_sample_rate, Integer? target_sample_rate) -> Array[{ identifier: Integer, sample_offset: Integer, label: String? }]
+    # : (Array[{identifier: Integer, sample_offset: Integer, label: String?, note: String?}] cue_points, Integer? source_sample_rate, Integer? target_sample_rate) -> Array[{identifier: Integer, sample_offset: Integer, label: String?, note: String?}]
+    def rescale_cue_points: (Array[{ identifier: Integer, sample_offset: Integer, label: String?, note: String? }] cue_points, Integer? source_sample_rate, Integer? target_sample_rate) -> Array[{ identifier: Integer, sample_offset: Integer, label: String?, note: String? }]
 
     # : (String source, Pathname target) -> void
     def safe_copy: (String source, Pathname target) -> void

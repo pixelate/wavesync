@@ -34,8 +34,16 @@ module Wavesync
     # : (String? path) -> Float?
     def track_duration: (String? path) -> Float?
 
+    EMPTY_MARKERS: { cues: Array[Float], loops: Array[{ start_fraction: Float, end_fraction: Float }] }
+
     # : (String? path) -> Array[Float]
     def track_cue_fractions: (String? path) -> Array[Float]
+
+    # : (String? path) -> Array[{start_fraction: Float, end_fraction: Float}]
+    def track_loop_fractions: (String? path) -> Array[{ start_fraction: Float, end_fraction: Float }]
+
+    # : (String? path) -> {cues: Array[Float], loops: Array[{start_fraction: Float, end_fraction: Float}]}
+    def track_markers: (String? path) -> { cues: Array[Float], loops: Array[{ start_fraction: Float, end_fraction: Float }] }
 
     # : ((String | Integer)? source_bpm, (String | Integer)? target_bpm) -> Float?
     def pitch_shift_semitones: ((String | Integer)? source_bpm, (String | Integer)? target_bpm) -> Float?
@@ -44,6 +52,9 @@ module Wavesync
     def format_pitch_shift: (Float semitones) -> String
 
     private
+
+    # : (String path) -> {cues: Array[Float], loops: Array[{start_fraction: Float, end_fraction: Float}]}
+    def compute_track_markers: (String path) -> { cues: Array[Float], loops: Array[{ start_fraction: Float, end_fraction: Float }] }
 
     # : () -> void
     def enter_fullscreen: () -> void
@@ -72,8 +83,8 @@ module Wavesync
     # : (String? string) -> Integer
     def visible_length: (String? string) -> Integer
 
-    # : (Float elapsed, Float total_duration, Integer bar_width, ?cue_fractions: Array[Float]) -> String
-    def playback_bar: (Float elapsed, Float total_duration, Integer bar_width, ?cue_fractions: Array[Float]) -> String
+    # : (Float elapsed, Float total_duration, Integer bar_width, ?cue_fractions: Array[Float], ?loop_fractions: Array[{start_fraction: Float, end_fraction: Float}]) -> String
+    def playback_bar: (Float elapsed, Float total_duration, Integer bar_width, ?cue_fractions: Array[Float], ?loop_fractions: Array[{ start_fraction: Float, end_fraction: Float }]) -> String
 
     # : (Float elapsed, Float total_duration) -> String
     def remaining_display: (Float elapsed, Float total_duration) -> String
@@ -84,8 +95,8 @@ module Wavesync
     # : (?String title) -> void
     def render: (?String title) -> void
 
-    # : (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer, ?cue_fractions: Array[Float]) -> void
-    def render_track: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer, ?cue_fractions: Array[Float]) -> void
+    # : (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer, ?cue_fractions: Array[Float], ?loop_fractions: Array[{start_fraction: Float, end_fraction: Float}]) -> void
+    def render_track: (Integer index, String relative, bool selected, bool playing, ?bpm: (String | Integer)?, ?pitch_shift: Float?, ?duration: Float?, ?duration_col_width: Integer, ?cue_fractions: Array[Float], ?loop_fractions: Array[{ start_fraction: Float, end_fraction: Float }]) -> void
 
     # : (Symbol action) -> Symbol?
     def handle_action: (Symbol action) -> Symbol?

@@ -26,8 +26,8 @@ module Wavesync
       # : ({ name: String, model: String, path: String, transport: String?, mp3_bitrate: Integer } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
       def initialize: ({ name: String, model: String, path: String, transport: String?, mp3_bitrate: Integer } device_config, ?libmtp: Libmtp, ?cache_root: String) -> void
 
-      # : () ?{ (Integer, Integer, String) -> void } -> void
-      def prepare!: () ?{ (Integer, Integer, String) -> void } -> void
+      # : (?stop_when: ^() -> bool) ?{ (Integer, Integer, String) -> void } -> void
+      def prepare!: (?stop_when: ^() -> bool) ?{ (Integer, Integer, String) -> void } -> void
 
       # : () -> void
       def begin_push!: () -> void

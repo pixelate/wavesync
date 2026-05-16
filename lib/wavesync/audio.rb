@@ -62,14 +62,19 @@ module Wavesync
       )
     end
 
-    #: () -> Array[{identifier: Integer, sample_offset: Integer, label: String?}]
+    #: () -> Array[{identifier: Integer, sample_offset: Integer, label: String?, note: String?}]
     def cue_points
       return [] unless @file_ext == '.wav'
 
       CueChunk.read(@file_path)
     end
 
-    #: (Array[{identifier: Integer, sample_offset: Integer, label: String?}] cue_points) -> void
+    #: () -> Array[{start_sample: Integer, end_sample: Integer}]
+    def loops
+      CueChunk.loops(cue_points)
+    end
+
+    #: (Array[{identifier: Integer, sample_offset: Integer, label: String?, note: String?}] cue_points) -> void
     def write_cue_points(cue_points)
       temp_path = "#{@file_path}.tmp"
       CueChunk.write(@file_path, temp_path, cue_points)
