@@ -76,6 +76,31 @@ module Wavesync
       Analyzer.new(@library_path).analyze
     end
 
+    test 'confirmation message refers to the library when no path is given' do
+      audio = stub(bpm: nil, write_bpm: nil)
+      Audio.stubs(:new).returns(audio)
+      BpmDetector.stubs(:detect).returns(120)
+
+      @ui.expects(:confirm).with(regexp_matches(/files in library/)).returns(false)
+
+      Analyzer.new(@library_path).analyze
+    end
+
+    test 'confirmation message refers to a folder when a folder path is given' do
+      folder_path = '/fake/library/Artist'
+      File.stubs(:directory?).with(folder_path).returns(true)
+
+      @ui.expects(:confirm).with(regexp_matches(/files in folder/)).returns(false)
+
+      Analyzer.new(@library_path).analyze(path: folder_path)
+    end
+
+    test 'confirmation message refers to a single file when a file path is given' do
+      @ui.expects(:confirm).with(regexp_matches(/add bpm meta data to file\./)).returns(false)
+
+      Analyzer.new(@library_path).analyze(path: '/fake/library/Artist/01 Track.wav')
+    end
+
     test 'stops analyzing when user declines confirmation' do
       audio = stub(bpm: nil)
       Audio.stubs(:new).returns(audio)
@@ -104,6 +129,48 @@ module Wavesync
       Logger.expects(:log_run_time).never
 
       Analyzer.new(@library_path).analyze
+    end
+
+    test 'analyzes only the given file when a file path is provided' do
+      audio = stub(bpm: nil)
+      Audio.stubs(:new).with('/fake/library/Artist/01 Track.wav').returns(audio)
+      BpmDetector.stubs(:detect).returns(120)
+
+      audio.expects(:write_bpm).with(120).once
+
+      Analyzer.new(@library_path).analyze(path: '/fake/library/Artist/01 Track.wav')
+    end
+
+    test 'expands the given path before analyzing' do
+      relative_path = 'Artist/01 Track.wav'
+      expanded_path = File.expand_path(relative_path)
+      audio = stub(bpm: nil, write_bpm: nil)
+
+      Audio.expects(:new).with(expanded_path).returns(audio)
+      BpmDetector.stubs(:detect).returns(120)
+
+      Analyzer.new(@library_path).analyze(path: relative_path)
+    end
+
+    test 'ignores other library files when a file path is provided' do
+      audio = stub(bpm: nil, write_bpm: nil)
+      Audio.expects(:new).with('/fake/library/Artist/01 Track.wav').once.returns(audio)
+      BpmDetector.stubs(:detect).returns(120)
+
+      Analyzer.new(@library_path).analyze(path: '/fake/library/Artist/01 Track.wav')
+    end
+
+    test 'analyzes all audio files in the folder when a folder path is provided' do
+      folder_path = '/fake/library/Artist'
+      File.stubs(:directory?).with(folder_path).returns(true)
+
+      audio = stub(bpm: nil)
+      Audio.stubs(:new).returns(audio)
+      BpmDetector.stubs(:detect).returns(120)
+
+      audio.expects(:write_bpm).with(120).twice
+
+      Analyzer.new(@library_path).analyze(path: folder_path)
     end
 
     test 'counts detected, skipped and failed correctly' do

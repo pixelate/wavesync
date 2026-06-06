@@ -65,7 +65,9 @@ module Wavesync
           GLOBAL_OPTIONS.each { |option| puts "  #{option.short}, #{option.long}  #{option.description}" }
         else
           OptionParser.new do |opts|
-            opts.banner = "Usage: wavesync #{command.name} [options]"
+            banner = "Usage: wavesync #{command.name} [options]"
+            banner += " #{command.positional_args}" unless command.positional_args.empty?
+            opts.banner = banner
             (command.options + GLOBAL_OPTIONS).each { |option| opts.on(*option.to_a) }
             puts opts
           end

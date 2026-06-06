@@ -7,10 +7,11 @@ module Wavesync
     class Command
       class << self
         attr_accessor :name, :description
-        attr_writer :options, :subcommands
+        attr_writer :options, :subcommands, :positional_args
 
         def options = @options || []
         def subcommands = @subcommands || []
+        def positional_args = @positional_args || ''
       end
 
       #: (banner: String) ?{ (OptionParser, Hash[Symbol, untyped]) -> void } -> [Hash[Symbol, untyped], Config]
