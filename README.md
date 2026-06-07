@@ -90,6 +90,12 @@ wavesync analyze
 
 # Overwrite existing BPM values
 wavesync analyze -f
+
+# Analyze a single file instead of the whole library
+wavesync analyze "/path/to/track.m4a"
+
+# Analyze all files in a folder instead of the whole library
+wavesync analyze "/path/to/folder"
 ```
 
 ### Sync

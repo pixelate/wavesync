@@ -2,17 +2,21 @@
 
 module Wavesync
   class Analyzer
-    CONFIRM_MESSAGE: ::String
-
     SETUP_INSTRUCTIONS: ::String
 
     # : (String library_path) -> void
     def initialize: (String library_path) -> void
 
-    # : (?overwrite: bool) -> void
-    def analyze: (?overwrite: bool) -> void
+    # : (?overwrite: bool, ?path: String?) -> void
+    def analyze: (?overwrite: bool, ?path: String?) -> void
 
     private
+
+    # : (String? path) -> String
+    def confirm_message: (String? path) -> String
+
+    # : (String? path) -> Array[String]
+    def files_for: (String? path) -> Array[String]
 
     # : () -> Array[String]
     def find_audio_files: () -> Array[String]

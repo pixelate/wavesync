@@ -6,6 +6,7 @@ require_relative '../../lib/wavesync/device'
 require_relative '../../lib/wavesync/ui'
 require_relative '../../lib/wavesync/scanner'
 require_relative '../../lib/wavesync/commands'
+require_relative '../../lib/wavesync/analyzer'
 require_relative '../../lib/wavesync/cli'
 
 module Wavesync
@@ -91,6 +92,50 @@ module Wavesync
       @scanner.expects(:sync).with('/tmp/tp7', @device, pad: false, staged: false, mp3_bitrate: 192).once
 
       Commands::Sync.new.run
+    end
+
+    test 'analyze command passes positional path argument to Analyzer' do
+      ARGV.replace(['/tmp/library/track.m4a'])
+      analyzer = mock('analyzer')
+      analyzer.expects(:analyze).with(overwrite: false, path: '/tmp/library/track.m4a')
+      Analyzer.stubs(:new).with('/tmp/library').returns(analyzer)
+
+      Commands::Analyze.new.run
+    end
+
+    test 'analyze command passes folder path argument to Analyzer' do
+      ARGV.replace(['/tmp/library/Artist'])
+      analyzer = mock('analyzer')
+      analyzer.expects(:analyze).with(overwrite: false, path: '/tmp/library/Artist')
+      Analyzer.stubs(:new).with('/tmp/library').returns(analyzer)
+
+      Commands::Analyze.new.run
+    end
+
+    test 'analyze command passes nil path when no path argument is given' do
+      ARGV.clear
+      analyzer = mock('analyzer')
+      analyzer.expects(:analyze).with(overwrite: false, path: nil)
+      Analyzer.stubs(:new).returns(analyzer)
+
+      Commands::Analyze.new.run
+    end
+
+    test 'analyze command passes overwrite flag with path argument' do
+      ARGV.replace(['-f', '/tmp/library/track.m4a'])
+      analyzer = mock('analyzer')
+      analyzer.expects(:analyze).with(overwrite: true, path: '/tmp/library/track.m4a')
+      Analyzer.stubs(:new).returns(analyzer)
+
+      Commands::Analyze.new.run
+    end
+
+    test 'analyze help banner includes optional path argument' do
+      ARGV.replace(['analyze'])
+
+      output = capture_io { Commands::Help.new.run }.first
+
+      assert_includes output, 'Usage: wavesync analyze [options] [file_or_folder]'
     end
 
     test 'exits with error for unknown device flag' do

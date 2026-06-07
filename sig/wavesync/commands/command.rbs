@@ -19,6 +19,10 @@ module Wavesync
 
       def self.subcommands=: (Array[untyped] subcommands) -> Array[untyped]
 
+      def self.positional_args: () -> String
+
+      def self.positional_args=: (String positional_args) -> String
+
       def parse_options: (banner: String) ?{ (OptionParser, Hash[Symbol, untyped]) -> void } -> [ Hash[Symbol, untyped], Config ]
     end
   end

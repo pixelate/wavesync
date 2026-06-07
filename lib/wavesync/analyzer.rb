@@ -5,7 +5,6 @@ require_relative 'logger'
 
 module Wavesync
   class Analyzer
-    CONFIRM_MESSAGE = 'wavesync analyze will add bpm meta data to files in library. Continue? [y/N] '
     SETUP_INSTRUCTIONS = 'brew install python@3.11 && python3.11 -m venv ~/.wavesync-venv && ~/.wavesync-venv/bin/pip install essentia'
 
     #: (String library_path) -> void
@@ -16,29 +15,30 @@ module Wavesync
       @ui = UI.new #: UI
     end
 
-    #: (?overwrite: bool) -> void
-    def analyze(overwrite: false)
+    #: (?overwrite: bool, ?path: String?) -> void
+    def analyze(overwrite: false, path: nil)
       unless BpmDetector.available?
         puts "Error: essentia is not installed. Set up the Python venv with:\n  #{SETUP_INSTRUCTIONS}"
         exit 1
       end
 
-      return unless @ui.confirm(CONFIRM_MESSAGE)
+      files = files_for(path)
+      return unless @ui.confirm(confirm_message(path))
 
       start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-      @audio_files.each_with_index do |file, index|
+      files.each_with_index do |file, index|
         audio = Audio.new(file)
 
         if audio.bpm && !overwrite
-          @ui.analyze_progress(index, @audio_files.size)
+          @ui.analyze_progress(index, files.size)
           @ui.analyze_skip(file, audio.bpm)
           next
         end
 
         bpm = BpmDetector.detect(file)
         audio.write_bpm(bpm) if bpm
-        @ui.analyze_progress(index, @audio_files.size)
+        @ui.analyze_progress(index, files.size)
         @ui.analyze_result(file, bpm)
       end
 
@@ -47,6 +47,28 @@ module Wavesync
     end
 
     private
+
+    #: (String? path) -> String
+    def confirm_message(path)
+      target =
+        if path.nil?
+          'files in library'
+        elsif File.directory?(File.expand_path(path))
+          'files in folder'
+        else
+          'file'
+        end
+
+      "wavesync analyze will add bpm meta data to #{target}. Continue? [y/N] "
+    end
+
+    #: (String? path) -> Array[String]
+    def files_for(path)
+      return @audio_files unless path
+
+      expanded_path = File.expand_path(path)
+      File.directory?(expanded_path) ? Audio.find_all(expanded_path) : [expanded_path]
+    end
 
     #: () -> Array[String]
     def find_audio_files
