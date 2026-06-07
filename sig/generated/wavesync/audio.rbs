@@ -57,8 +57,6 @@ module Wavesync
 
     FFMPEG_KEY_TO_FRAME_ID: untyped
 
-    COMBINING_MARKS: ::Regexp
-
     # : () -> Hash[String, String]
     def transliterated_tag_changes: () -> Hash[String, String]
 

@@ -18,10 +18,12 @@ module Wavesync
 
     attr_reader transliterate_metadata: bool
 
+    attr_reader transliterate_paths: bool
+
     attr_reader uppercase_paths: bool
 
-    # : (name: String, sample_rates: Array[Integer], file_types: Array[String], ?bit_depths: Array[Integer], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?unsupported_characters: Array[String], ?transliterate_metadata: bool, ?uppercase_paths: bool) -> void
-    def initialize: (name: String, sample_rates: Array[Integer], file_types: Array[String], ?bit_depths: Array[Integer], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?unsupported_characters: Array[String], ?transliterate_metadata: bool, ?uppercase_paths: bool) -> void
+    # : (name: String, sample_rates: Array[Integer], file_types: Array[String], ?bit_depths: Array[Integer], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?unsupported_characters: Array[String], ?transliterate_metadata: bool, ?transliterate_paths: bool, ?uppercase_paths: bool) -> void
+    def initialize: (name: String, sample_rates: Array[Integer], file_types: Array[String], ?bit_depths: Array[Integer], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?unsupported_characters: Array[String], ?transliterate_metadata: bool, ?transliterate_paths: bool, ?uppercase_paths: bool) -> void
 
     # : () -> String
     def self.config_path: () -> String
