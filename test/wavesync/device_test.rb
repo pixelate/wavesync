@@ -56,6 +56,20 @@ module Wavesync
       assert_equal true, tp7.uppercase_paths
     end
 
+    test 'TP-7 has transliterate_paths enabled' do
+      tp7 = Device.find_by(name: 'TP-7')
+      assert_equal true, tp7.transliterate_paths
+    end
+
+    test 'transliterate_paths defaults to false' do
+      device = Device.new(
+        name: 'Test',
+        sample_rates: [44_100],
+        file_types: ['wav']
+      )
+      assert_equal false, device.transliterate_paths
+    end
+
     test 'uppercase_paths defaults to false' do
       device = Device.new(
         name: 'Test',

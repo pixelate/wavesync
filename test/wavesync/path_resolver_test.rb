@@ -229,6 +229,30 @@ module Wavesync
       assert_equal '/media/device/music/ARTIST LABEL/SONG.WAV', target_path.to_s
     end
 
+    test 'resolve transliterates umlauts in filename for TP-7' do
+      source_file = '/home/user/music/artist/über.wav'
+      audio = stub(bpm: nil)
+      target_path = resolver_for('TP-7').resolve(source_file, audio)
+
+      assert_equal '/media/device/music/ARTIST/UBER.WAV', target_path.to_s
+    end
+
+    test 'resolve transliterates umlauts in directory names for TP-7' do
+      source_file = '/home/user/music/björk/song.wav'
+      audio = stub(bpm: nil)
+      target_path = resolver_for('TP-7').resolve(source_file, audio)
+
+      assert_equal '/media/device/music/BJORK/SONG.WAV', target_path.to_s
+    end
+
+    test 'resolve does not transliterate for Octatrack' do
+      source_file = '/home/user/music/björk/song.wav'
+      audio = stub(bpm: nil)
+      target_path = resolver_for('Octatrack').resolve(source_file, audio)
+
+      assert_equal '/media/device/music/björk/song.wav', target_path.to_s
+    end
+
     test 'resolve uppercases folder and file names for TP-7' do
       source_file = '/home/user/music/Deep House/my track.wav'
       audio = stub(bpm: nil)

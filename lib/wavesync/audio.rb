@@ -6,6 +6,7 @@ require 'tmpdir'
 require 'fileutils'
 require_relative 'logger'
 require_relative 'timing'
+require_relative 'transliterator'
 
 module Wavesync
   class Audio
@@ -102,8 +103,6 @@ module Wavesync
     }.freeze
 
     FFMPEG_KEY_TO_FRAME_ID = FRAME_ID_TO_FFMPEG_KEY.invert.freeze
-
-    COMBINING_MARKS = /\p{Mn}/
 
     #: () -> Hash[String, String]
     def transliterated_tag_changes
@@ -273,9 +272,7 @@ module Wavesync
 
     #: (String string) -> String
     def transliterate(string)
-      string
-        .unicode_normalize(:nfd)
-        .gsub(COMBINING_MARKS, '')
+      Transliterator.transliterate(string)
     end
   end
 end

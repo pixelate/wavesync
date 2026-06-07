@@ -12,10 +12,11 @@ module Wavesync
     attr_reader :bar_multiple #: Integer?
     attr_reader :unsupported_characters #: Array[String]
     attr_reader :transliterate_metadata #: bool
+    attr_reader :transliterate_paths #: bool
     attr_reader :uppercase_paths #: bool
 
-    #: (name: String, sample_rates: Array[Integer], file_types: Array[String], ?bit_depths: Array[Integer], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?unsupported_characters: Array[String], ?transliterate_metadata: bool, ?uppercase_paths: bool) -> void
-    def initialize(name:, sample_rates:, file_types:, bit_depths: [], bpm_source: nil, bar_multiple: nil, unsupported_characters: [], transliterate_metadata: false, uppercase_paths: false)
+    #: (name: String, sample_rates: Array[Integer], file_types: Array[String], ?bit_depths: Array[Integer], ?bpm_source: Symbol?, ?bar_multiple: Integer?, ?unsupported_characters: Array[String], ?transliterate_metadata: bool, ?transliterate_paths: bool, ?uppercase_paths: bool) -> void
+    def initialize(name:, sample_rates:, file_types:, bit_depths: [], bpm_source: nil, bar_multiple: nil, unsupported_characters: [], transliterate_metadata: false, transliterate_paths: false, uppercase_paths: false)
       @name = name
       @sample_rates = sample_rates
       @bit_depths = bit_depths
@@ -24,6 +25,7 @@ module Wavesync
       @bar_multiple = bar_multiple
       @unsupported_characters = unsupported_characters
       @transliterate_metadata = transliterate_metadata
+      @transliterate_paths = transliterate_paths
       @uppercase_paths = uppercase_paths
     end
 
@@ -55,6 +57,7 @@ module Wavesync
           bar_multiple: attrs['bar_multiple'],
           unsupported_characters: attrs['unsupported_characters'] || [],
           transliterate_metadata: attrs['transliterate_metadata'] || false,
+          transliterate_paths: attrs['transliterate_paths'] || false,
           uppercase_paths: attrs['uppercase_paths'] || false
         )
       end

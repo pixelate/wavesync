@@ -17,6 +17,7 @@ devices:
   unsupported_characters:
     - "™"
     - '"'
+  transliterate_paths: true
   uppercase_paths: true
 
 - name: Octatrack

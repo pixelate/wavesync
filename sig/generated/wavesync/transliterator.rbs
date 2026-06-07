@@ -1,0 +1,10 @@
+# Generated from lib/wavesync/transliterator.rb with RBS::Inline
+
+module Wavesync
+  module Transliterator
+    COMBINING_MARKS: ::Regexp
+
+    # : (String string) -> String
+    def self.transliterate: (String string) -> String
+  end
+end

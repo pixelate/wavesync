@@ -2,6 +2,7 @@
 # rbs_inline: enabled
 
 require 'pathname'
+require_relative 'transliterator'
 
 module Wavesync
   class PathResolver
@@ -25,6 +26,7 @@ module Wavesync
       target_path = add_bpm_to_filename(target_path, bpm) if @device.bpm_source == :filename && bpm
 
       target_path = strip_unsupported_characters(target_path)
+      target_path = transliterate_relative_path(target_path)
       uppercase_relative_path(target_path)
     end
 
@@ -58,6 +60,15 @@ module Wavesync
       return path if @device.unsupported_characters.empty?
 
       Pathname(path.to_s.delete(@device.unsupported_characters.join))
+    end
+
+    #: (Pathname path) -> Pathname
+    def transliterate_relative_path(path)
+      return path unless @device.transliterate_paths
+
+      relative = path.relative_path_from(@target_library_path)
+      transliterated = relative.each_filename.map { |filename| Transliterator.transliterate(filename) }.join('/')
+      @target_library_path.join(transliterated)
     end
 
     #: (Pathname path) -> Pathname
