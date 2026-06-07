@@ -15,6 +15,16 @@ module Wavesync
       loader.audio >> rhythm.signal
       rhythm.bpm >> (pool, 'bpm')
       rhythm.confidence >> (pool, 'confidence')
+      rhythm.beats_position >> None
+      rhythm.bpm_estimates >> None
+      rhythm.bpm_intervals >> None
+      rhythm.first_peak_bpm >> None
+      rhythm.first_peak_spread >> None
+      rhythm.first_peak_weight >> None
+      rhythm.second_peak_bpm >> None
+      rhythm.second_peak_spread >> None
+      rhythm.second_peak_weight >> None
+      rhythm.histogram >> None
       essentia.run(loader)
       print(json.dumps({'bpm': round(float(pool['bpm'])), 'confidence': round(float(pool['confidence']), 2)}))
     PYTHON
