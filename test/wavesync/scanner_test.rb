@@ -170,6 +170,20 @@ module Wavesync
       Scanner.new(@source_dir).sync(@target_dir, @device)
     end
 
+    test 'safe_copy logs error and continues syncing when EINVAL is raised' do
+      source_wav = File.join(File.expand_path(@source_dir), 'track.wav')
+      FileUtils.cp(fixture('44100_16.wav'), source_wav)
+
+      expected_target = Pathname(File.join(File.expand_path(@target_dir), 'TRACK.WAV'))
+      FileUtils.stubs(:install).raises(Errno::EINVAL)
+      Logger.expects(:log_error).with(
+        instance_of(Errno::EINVAL),
+        call_site: 'Scanner#safe_copy',
+        arguments: { source: source_wav, target: expected_target }
+      )
+      Scanner.new(@source_dir).sync(@target_dir, @device)
+    end
+
     private
 
     def fixture(name)

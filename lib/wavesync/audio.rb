@@ -163,7 +163,7 @@ module Wavesync
         yield temp_path if block_given?
         Timing.current.measure(:copy) { FileUtils.install(temp_path, target_path) }
         true
-      rescue Errno::ENOENT => e
+      rescue SystemCallError => e
         Logger.log_error(e, call_site: 'Audio#transcode', arguments: { target_path:, target_sample_rate:, target_file_type:, target_bit_depth:, padding_seconds:, target_bitrate: })
         false
       ensure
