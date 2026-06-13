@@ -221,6 +221,25 @@ module Wavesync
       assert_equal false, result
     end
 
+    test 'transcode returns false and logs error when EINVAL is raised' do
+      audio_obj = audio('44100_16.wav')
+      FileUtils.stubs(:install).raises(Errno::EINVAL)
+      Logger.expects(:log_error).with(
+        instance_of(Errno::EINVAL),
+        call_site: 'Audio#transcode',
+        arguments: {
+          target_path: '/tmp/output.mp3',
+          target_sample_rate: nil,
+          target_file_type: 'mp3',
+          target_bit_depth: 16,
+          padding_seconds: nil,
+          target_bitrate: 192
+        }
+      )
+      result = audio_obj.transcode('/tmp/output.mp3', target_file_type: 'mp3', target_bit_depth: 16)
+      assert_equal false, result
+    end
+
     private
 
     def audio(name)

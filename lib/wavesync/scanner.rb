@@ -199,7 +199,7 @@ module Wavesync
     #: (String source, Pathname target) -> void
     def safe_copy(source, target)
       Timing.current.measure(:copy) { FileUtils.install(source, target) }
-    rescue Errno::ENOENT => e
+    rescue SystemCallError => e
       Logger.log_error(e, call_site: 'Scanner#safe_copy', arguments: { source:, target: })
     end
 
