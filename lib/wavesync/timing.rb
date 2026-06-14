@@ -3,7 +3,7 @@
 
 module Wavesync
   class Timing
-    BUCKETS = %i[transcode probe ffmpeg_metadata copy wav_chunks filesystem].freeze
+    BUCKETS = %i[transcode probe ffmpeg_metadata copy wav_chunks mp4_chunks filesystem].freeze
 
     #: () -> Timing
     def self.current
