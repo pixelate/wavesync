@@ -1,0 +1,116 @@
+# Generated from lib/wavesync/mp4_tmpo.rb with RBS::Inline
+
+module Wavesync
+  # Reads and writes the iTunes `tmpo` atom (BPM) in MP4/M4A files.
+  #
+  # ffmpeg/ffprobe cannot read or write `tmpo`, so we parse the atom tree
+  # directly — the same hand-rolled approach used for WAV in `AcidChunk` and
+  # `CueChunk`. `tmpo` lives at moov → udta → meta → ilst → tmpo → data, where
+  # the value is a big-endian integer. This is the form Apple Music writes and
+  # the one `AVFoundation` (and thus audioplayer) reads.
+  class Mp4Tmpo
+    HEADER_SIZE: ::Integer
+
+    TYPE_SIZE: ::Integer
+
+    FULLBOX_FLAGS_SIZE: ::Integer
+
+    LOCALE_SIZE: ::Integer
+
+    DATA_TYPE_UTF8: ::Integer
+
+    DATA_TYPE_INTEGER: ::Integer
+
+    UINT16: ::String
+
+    UINT32: ::String
+
+    UINT64: ::String
+
+    ZERO_FLAGS: untyped
+
+    # : (String filepath) -> Integer?
+    def self.read_bpm: (String filepath) -> Integer?
+
+    # : (String filepath, Integer | Float | String bpm) -> void
+    def self.write_bpm: (String filepath, Integer | Float | String bpm) -> void
+
+    # : (String data, Integer ilst_start, Integer ilst_finish) -> Integer?
+    def self.tmpo_value: (String data, Integer ilst_start, Integer ilst_finish) -> Integer?
+
+    # : (String bytes, Integer type_flag) -> Integer?
+    def self.decode_value: (String bytes, Integer type_flag) -> Integer?
+
+    # Returns the byte range [start, finish) spanning the ilst children, or nil.
+    # : (String data) -> [Integer, Integer]?
+    def self.locate_ilst: (String data) -> [ Integer, Integer ]?
+
+    # Rebuilds the moov atom with `tmpo` set to `bpm`, fixing up chunk offsets
+    # if moov precedes mdat. Returns the same object unchanged when there is no
+    # moov atom (not an MP4 we understand).
+    # : (String data, Integer bpm) -> String
+    def self.set_tmpo: (String data, Integer bpm) -> String
+
+    # : (String moov, String tmpo_box) -> String
+    def self.rebuild_moov: (String moov, String tmpo_box) -> String
+
+    # Replaces the child of `type` in `payload` with the result of the block
+    # (called with the child's payload), or appends a new child if absent.
+    # : (String payload, String type) { (String) -> String } -> String
+    def self.update_container: (String payload, String type) { (String) -> String } -> String
+
+    # : (String ilst, String tmpo_box) -> String
+    def self.set_tmpo_box: (String ilst, String tmpo_box) -> String
+
+    # : (Integer bpm) -> String
+    def self.build_tmpo: (Integer bpm) -> String
+
+    # Adds `delta` to every stco/co64 chunk offset, so audio data references
+    # stay valid after moov grows ahead of mdat.
+    # : (String moov, Integer delta) -> String
+    def self.patch_chunk_offsets: (String moov, Integer delta) -> String
+
+    # : (String type, String payload) -> String
+    def self.box: (String type, String payload) -> String
+
+    # `meta` is a FullBox in MP4 (4-byte version/flags before its children) but
+    # a plain box in some QuickTime files. Detect which, and synthesize a valid
+    # FullBox header (with an `mdir` handler) when creating `meta` from scratch.
+    # : (String meta_payload) -> String
+    def self.meta_prefix: (String meta_payload) -> String
+
+    # : (String meta_payload) -> Integer
+    def self.meta_prefix_size: (String meta_payload) -> Integer
+
+    # A plain (non-FullBox) meta starts with a child box, so a known child type
+    # ('hdlr') appears at the type offset of the first box.
+    # : (String meta_payload) -> bool
+    def self.non_fullbox_meta?: (String meta_payload) -> bool
+
+    # : () -> String
+    def self.hdlr_mdir_box: () -> String
+
+    # Returns [offset, size, header_size] of the first direct child of `type`
+    # within [start, finish), or nil.
+    # : (String data, String type, Integer start, Integer finish) -> [Integer, Integer, Integer]?
+    def self.find_box: (String data, String type, Integer start, Integer finish) -> [ Integer, Integer, Integer ]?
+
+    # : (String data, Integer start, Integer finish) { (String, Integer, Integer, Integer) -> void } -> void
+    def self.each_box: (String data, Integer start, Integer finish) { (String, Integer, Integer, Integer) -> void } -> void
+
+    # : (String data, Integer start, Integer finish, Array[String] containers) { (String, Integer, Integer, Integer) -> void } -> void
+    def self.each_descendant: (String data, Integer start, Integer finish, Array[String] containers) { (String, Integer, Integer, Integer) -> void } -> void
+
+    # : (String data, Integer offset) -> Integer
+    def self.box_header_size: (String data, Integer offset) -> Integer
+
+    # : (Integer value) -> Integer
+    def self.clamp_uint16: (Integer value) -> Integer
+
+    # : (String data, Integer offset) -> Integer
+    def self.u32: (String data, Integer offset) -> Integer
+
+    # : (String data, Integer offset) -> Integer
+    def self.u64: (String data, Integer offset) -> Integer
+  end
+end

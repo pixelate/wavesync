@@ -7,6 +7,7 @@ require 'fileutils'
 require_relative 'logger'
 require_relative 'timing'
 require_relative 'transliterator'
+require_relative 'mp4_tmpo'
 
 module Wavesync
   class Audio
@@ -196,11 +197,7 @@ module Wavesync
 
     #: () -> Integer?
     def bpm_from_m4a
-      value = find_in_tags(@audio.tags, 'BPM')
-      return nil if value.nil?
-
-      int_value = value.to_i
-      int_value.zero? ? nil : int_value
+      Mp4Tmpo.read_bpm(@file_path)
     end
 
     #: () -> String?
@@ -248,7 +245,7 @@ module Wavesync
 
     #: (String | Integer | Float bpm) -> void
     def write_bpm_to_m4a(bpm)
-      write_file_metadata('BPM' => bpm.to_i.to_s)
+      Mp4Tmpo.write_bpm(@file_path, bpm)
     end
 
     #: (String | Integer | Float bpm) -> void
@@ -261,7 +258,6 @@ module Wavesync
       ext = File.extname(@file_path)
       temp_path = File.join(Dir.tmpdir, "wavesync_meta_#{SecureRandom.hex}#{ext}")
       command = FFMPEG.new.input(@file_path).copy_streams.map_metadata(0)
-      command.movflags('+use_metadata_tags') if ext == '.m4a'
       command.write_id3v2(1) if %w[.aif .aiff].include?(ext)
       metadata_hash.each { |key, value| command.metadata(key, value) }
       Timing.current.measure(:ffmpeg_metadata) { command.run(temp_path) }
