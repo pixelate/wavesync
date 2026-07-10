@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.0.beta2 - 2026-07-10
+
+- Read and write the iTunes tmpo atom for M4A BPM ([#74](https://github.com/pixelate/wavesync/pull/74))
+- Rescue all SystemCallError in safe copy paths ([#73](https://github.com/pixelate/wavesync/pull/73))
+- Connect unused RhythmDescriptors sources in EssentiaBpmDetector ([#72](https://github.com/pixelate/wavesync/pull/72))
+- Transliterate umlauts in TP-7 paths ([#71](https://github.com/pixelate/wavesync/pull/71))
+- Allow analyze to target a single file or folder ([#70](https://github.com/pixelate/wavesync/pull/70))
+- Read TP-7 loop markers from device and show in setlist player ([#69](https://github.com/pixelate/wavesync/pull/69))
+- Log per-bucket timing breakdown after each sync ([#68](https://github.com/pixelate/wavesync/pull/68))
+- Simplify install instructions and move TP-7 sync notes ([#67](https://github.com/pixelate/wavesync/pull/67))
+- Remove taglib install step from README ([#66](https://github.com/pixelate/wavesync/pull/66))
+
 ## 1.0.0.beta1 - 2026-05-14
 
 - Uppercase folder and file names when syncing to TP-7 ([#64](https://github.com/pixelate/wavesync/pull/64))
